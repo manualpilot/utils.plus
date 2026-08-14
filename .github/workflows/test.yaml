@@ -1,0 +1,17 @@
+name: test
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - uses: actions/setup-node@main
+        with:
+          node-version-file: '.node-version'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci
+      - run: npm run build
+      - run: npm test

@@ -1,0 +1,23 @@
+{
+  "lineWidth": 120,
+  "indentWidth": 2,
+  "typescript": {
+    "quoteStyle": "alwaysDouble",
+    "importDeclaration.forceSingleLine": true
+  },
+  "json": {},
+  "markdown": {},
+  "excludes": [
+    "**/node_modules",
+    "**/package-lock.json",
+    "inline/attributions.json",
+    "dist",
+    "playwright-report",
+    "test-results"
+  ],
+  "plugins": [
+    "./node_modules/@dprint/typescript/plugin.wasm",
+    "./node_modules/@dprint/json/plugin.wasm",
+    "./node_modules/@dprint/markdown/plugin.wasm"
+  ]
+}

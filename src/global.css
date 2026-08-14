@@ -1,0 +1,138 @@
+.main-region {
+  display: flex;
+  flex-direction: column;
+}
+
+.main-container {
+  max-width: calc(71.25rem * var(--mantine-scale));
+  margin-inline: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  container-type: inline-size;
+  container-name: main;
+}
+
+.site-footer {
+  margin-top: auto;
+  padding-top: var(--mantine-spacing-xl);
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--mantine-spacing-md);
+}
+
+.settings-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-row.has-error {
+    gap: var(--mantine-spacing-xl);
+  }
+}
+
+.diff-panes {
+  display: flex;
+  flex-direction: row;
+  gap: var(--mantine-spacing-md);
+  flex: 1;
+  min-height: 0;
+}
+
+.diff-panes > * {
+  flex: 1;
+  min-width: 0;
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .diff-panes {
+    flex-direction: column;
+  }
+
+  .diff-panes > * {
+    min-height: 16rem;
+  }
+}
+
+.split-panes {
+  display: flex;
+  flex-direction: row;
+  flex: 2;
+  min-height: 12rem;
+}
+
+.split-panes > .split-main {
+  flex: 1 1 0;
+  min-width: 12rem;
+}
+
+.split-panes > .split-panel {
+  flex: 0 1 var(--split-panel-width);
+  min-width: 10rem;
+}
+
+.split-grip {
+  flex: 0 0 var(--mantine-spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.split-grip::before {
+  content: "";
+  width: 2px;
+  height: 2rem;
+  border-radius: 2px;
+  background-color: var(--mantine-color-dark-4);
+}
+
+.split-grip:hover::before,
+.split-grip:focus-visible::before {
+  background-color: var(--mantine-color-blue-5);
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .split-panes {
+    flex-direction: column;
+    gap: var(--mantine-spacing-md);
+  }
+
+  .split-grip {
+    display: none;
+  }
+
+  .split-panes > .split-main {
+    min-height: 16rem;
+  }
+
+  .split-panes > .split-panel {
+    flex: 0 0 14rem;
+  }
+}
+
+.absolute-error {
+  position: absolute !important;
+  top: calc(100% + var(--mantine-spacing-xs) / 2);
+  left: 0;
+}
+
+.relative-root {
+  position: relative !important;
+}
+
+.relative-root .mantine-Input-wrapper {
+  margin-bottom: 0px !important;
+}
