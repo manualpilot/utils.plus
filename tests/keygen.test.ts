@@ -2,7 +2,7 @@ import { x25519 } from "@noble/curves/ed25519.js";
 import { createRequire } from "node:module";
 import sshpk from "sshpk";
 import { describe, expect, it } from "vitest";
-import { generateCertificate } from "../src/utilities/keygen/certificate";
+import { generateCertificate, unsignedBytes } from "../src/utilities/keygen/certificate";
 import { formatSecret } from "../src/utilities/keygen/encoding";
 import { generateJwkSet } from "../src/utilities/keygen/jwk";
 import { generateSshKey } from "../src/utilities/keygen/keys";
@@ -237,6 +237,34 @@ describe("TLS certificates", () => {
     expect(first.fingerprint).not.toBe(second.fingerprint);
     expect(new X509Certificate(first.certificate).serialNumber)
       .not.toBe(new X509Certificate(second.certificate).serialNumber);
+  });
+
+  describe("unsigned integers", () => {
+    const bytes = (...values: number[]) => Array.from(unsignedBytes(new Uint8Array(values)));
+
+    it("leaves a value alone when the top bit is already clear", () => {
+      expect(bytes(0x7f, 0x00, 0x2a)).toEqual([0x7f, 0x00, 0x2a]);
+    });
+
+    it("clears the sign with one zero byte and no more", () => {
+      expect(bytes(0x80, 0x2a)).toEqual([0x00, 0x80, 0x2a]);
+      expect(bytes(0xff)).toEqual([0x00, 0xff]);
+    });
+
+    it("takes off every leading zero the value does not need, not just the first", () => {
+      expect(bytes(0x00, 0x2a)).toEqual([0x2a]);
+      expect(bytes(0x00, 0x00, 0x2a)).toEqual([0x2a]);
+      expect(bytes(0x00, 0x00, 0x00, 0x00, 0x01)).toEqual([0x01]);
+    });
+
+    it("keeps the one zero a value that needs the sign cleared is left with", () => {
+      expect(bytes(0x00, 0x00, 0x80)).toEqual([0x00, 0x80]);
+    });
+
+    it("writes zero itself as the one byte rather than nothing at all", () => {
+      expect(bytes(0x00)).toEqual([0x00]);
+      expect(bytes(0x00, 0x00, 0x00)).toEqual([0x00]);
+    });
   });
 });
 

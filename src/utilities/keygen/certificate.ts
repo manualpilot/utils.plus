@@ -120,11 +120,18 @@ function derSignature(forge: Forge, signature: Uint8Array): string {
 }
 
 function unsignedInteger(forge: Forge, bytes: Uint8Array) {
+  const value = toBinary(unsignedBytes(bytes));
+  return forge.asn1.create(forge.asn1.Class.UNIVERSAL, forge.asn1.Type.INTEGER, false, value);
+}
+
+export function unsignedBytes(bytes: Uint8Array): Uint8Array {
   let start = 0;
   while (start < bytes.length - 1 && bytes[start] === 0) start += 1;
   const trimmed = bytes.subarray(start);
-  const value = (trimmed[0] & 0x80 ? "\0" : "") + toBinary(trimmed);
-  return forge.asn1.create(forge.asn1.Class.UNIVERSAL, forge.asn1.Type.INTEGER, false, value);
+  if ((trimmed[0] & 0x80) === 0) return trimmed;
+  const padded = new Uint8Array(trimmed.length + 1);
+  padded.set(trimmed, 1);
+  return padded;
 }
 
 function encryptedPrivateKey(forge: Forge, pkcs8: Uint8Array, passphrase: string) {
@@ -137,7 +144,7 @@ function unixPem(pem: string): string {
 }
 
 function serialNumber(): string {
-  return `00${toHex(randomBytes(16))}`;
+  return toHex(unsignedBytes(randomBytes(16)));
 }
 
 async function loadForge(): Promise<Forge> {
