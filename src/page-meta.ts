@@ -19,6 +19,22 @@ export const PAGE_META = {
       "no upload tools",
     ],
   },
+  "/calculator": {
+    title: "Programmer & Scientific Calculator",
+    description:
+      "Add, shift, rotate and mask 8- to 64-bit words in hex, octal or decimal, with every bit on screen — or switch to powers, roots, logs and trigonometry.",
+    keywords: [
+      "programmer calculator",
+      "hex calculator",
+      "binary calculator",
+      "bitwise calculator",
+      "two's complement",
+      "bit shift calculator",
+      "scientific calculator",
+      "trigonometry calculator",
+      "hex to decimal",
+    ],
+  },
   "/codec": {
     title: "Base64, Base32, Hex & Morse Codec",
     description:

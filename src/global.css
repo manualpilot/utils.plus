@@ -1,3 +1,23 @@
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: var(--mantine-spacing-md);
+  z-index: 400;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-md);
+  background-color: var(--mantine-color-default);
+  border: 1px solid var(--mantine-color-default-border);
+  transition: top 100ms ease;
+}
+
+.skip-link:focus-visible {
+  top: var(--mantine-spacing-xs);
+}
+
+.main-container:focus {
+  outline: none;
+}
+
 .main-region {
   display: flex;
   flex-direction: column;
@@ -120,6 +140,89 @@
 
   .split-panes > .split-panel {
     flex: 0 0 14rem;
+  }
+}
+
+.calculator-pad {
+  display: flex;
+  flex-direction: row;
+  gap: var(--mantine-spacing-md);
+}
+
+.calculator-pad > .calculator-keys {
+  display: grid;
+  grid-template-columns: repeat(var(--calculator-columns), minmax(0, 1fr));
+  gap: var(--mantine-spacing-xs);
+  flex: var(--calculator-columns) 1 0;
+}
+
+.calculator-key[data-flash] {
+  background-color: var(--mantine-color-orange-9);
+  outline: 2px solid var(--mantine-color-orange-4);
+  outline-offset: -2px;
+}
+
+.calculator-display {
+  font-size: clamp(1.75rem, 7cqi, 2.75rem);
+  line-height: 1.2;
+}
+
+.calculator-readout {
+  overflow-x: auto;
+}
+
+.bit-grid {
+  overflow-x: auto;
+}
+
+.calculator-history {
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.calculator-history-row {
+  padding: 2px var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.calculator-history-row:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.calculator-history-expression {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator-history-result {
+  flex: none;
+  white-space: nowrap;
+}
+
+.bit-key {
+  width: 1.1rem;
+  text-align: center;
+  font-family: monospace;
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-dimmed);
+}
+
+.bit-key[data-set="true"] {
+  color: var(--mantine-color-orange-6);
+}
+
+.bit-key:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .calculator-pad {
+    flex-direction: column;
   }
 }
 

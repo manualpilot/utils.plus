@@ -1,4 +1,4 @@
-import { ActionIcon, Anchor, AppShell, Box, Burger, Button, Group, Modal, NavLink, Stack, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, AppShell, Box, Burger, Button, Group, Modal, NavLink, Stack, Text, Title, Tooltip, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Fragment, ReactNode, useCallback, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -10,6 +10,8 @@ import { ATTRIBUTIONS_PATH, utilities } from "./utility-registry";
 interface LayoutProps {
   children?: ReactNode;
 }
+
+const MAIN_CONTENT_ID = "main-content";
 
 function ResetStateButton({ onReset }: { onReset: () => void }) {
   const ctx = useShareStateContext();
@@ -136,6 +138,10 @@ export function Layout({ children }: LayoutProps) {
         navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
         padding="md"
       >
+        <UnstyledButton className="skip-link" onClick={() => document.getElementById(MAIN_CONTENT_ID)?.focus()}>
+          Skip to the utility
+        </UnstyledButton>
+
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
             <Group gap={0}>
@@ -177,7 +183,7 @@ export function Layout({ children }: LayoutProps) {
         </AppShell.Navbar>
 
         <AppShell.Main className="main-region">
-          <Box className="main-container">
+          <Box className="main-container" id={MAIN_CONTENT_ID} tabIndex={-1}>
             <Fragment key={stateKey}>{children}</Fragment>
             <SiteFooter />
           </Box>

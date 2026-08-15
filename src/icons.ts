@@ -9,6 +9,7 @@ export { default as IconBrackets } from "@tabler/icons-react/dist/esm/icons/Icon
 export { default as IconBrandGithub } from "@tabler/icons-react/dist/esm/icons/IconBrandGithub.mjs";
 export { default as IconBrandJavascript } from "@tabler/icons-react/dist/esm/icons/IconBrandJavascript.mjs";
 export { default as IconBrandPython } from "@tabler/icons-react/dist/esm/icons/IconBrandPython.mjs";
+export { default as IconCalculator } from "@tabler/icons-react/dist/esm/icons/IconCalculator.mjs";
 export { default as IconCalendarClock } from "@tabler/icons-react/dist/esm/icons/IconCalendarClock.mjs";
 export { default as IconCalendarRepeat } from "@tabler/icons-react/dist/esm/icons/IconCalendarRepeat.mjs";
 export { default as IconCertificate } from "@tabler/icons-react/dist/esm/icons/IconCertificate.mjs";

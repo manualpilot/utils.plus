@@ -1,11 +1,17 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAbc, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalendarRepeat, IconCertificate, IconClock, IconGitCompare, IconHash, IconId, IconKey, IconPalette, IconShieldLock } from "./icons";
+import { IconAbc, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconGitCompare, IconHash, IconId, IconKey, IconPalette, IconShieldLock } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
 
 const routes: UtilityRoute[] = [
+  {
+    path: "/calculator",
+    label: "Calculator",
+    Icon: IconCalculator,
+    Component: lazy(() => import("./utilities/calculator")),
+  },
   {
     path: "/codec",
     label: "Codec",

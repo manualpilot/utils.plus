@@ -9,6 +9,18 @@ test("every navbar item is a real link", async ({ page }) => {
   }
 });
 
+test("the first stop of the page is past the navbar", async ({ page }) => {
+  await page.goto("/calculator");
+
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Skip to the utility" })).toBeFocused();
+
+  await page.keyboard.press("Enter");
+  expect(await page.evaluate(() => document.activeElement?.id)).toBe("main-content");
+
+  expect(new URL(page.url()).hash).toBe("");
+});
+
 test("a plain click still routes without a reload", async ({ page }) => {
   await page.goto("/");
 
