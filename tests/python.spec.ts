@@ -108,7 +108,7 @@ test("a traceback opens on the line of the script that raised", async ({ page })
   await expect(text).toContainText("ValueError: nope", { timeout: BOOT });
   await expect(text).toContainText("line 4, in <module>");
   await expect(text).toContainText("line 2, in boom");
-  await expect(text).not.toContainText("python-worker");
+  await expect(text).not.toContainText("worker.py");
 });
 
 test("a script that cannot be compiled says so where it broke", async ({ page }) => {
@@ -360,7 +360,7 @@ test("a failing entry answers with a traceback of the line somebody wrote", asyn
 
   await expect(transcript(page)).toContainText("ZeroDivisionError", { timeout: BOOT });
   await expect(transcript(page)).toContainText("File \"<repl>\", line 1");
-  await expect(transcript(page)).not.toContainText("python-worker");
+  await expect(transcript(page)).not.toContainText("worker.py");
 
   await enter(page, "2 ** 8");
   await expect(transcript(page)).toContainText("256");

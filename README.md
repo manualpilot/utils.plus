@@ -31,8 +31,8 @@ npx playwright test  # end-to-end tests, requires `npm run dev` running
 
 ## Project layout
 
-- [src/utilities/](src/utilities/) — one file per utility, plus the worker, engine and guest a utility that runs code
-  needs beside it
+- [src/utilities/](src/utilities/) — a directory per utility: the page named after it holds the components, and the
+  modules beside it hold the parsing, formatting and generating the page reads
 - [src/utility-registry.ts](src/utility-registry.ts) — the list the router, navbar and random picker all read; adding a
   utility is one entry here
 - [src/page-meta.ts](src/page-meta.ts) — the title, description and keywords of every page, read by the browser and by

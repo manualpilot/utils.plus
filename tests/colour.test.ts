@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { nearestName, parseColour, type Rgba, writeCmyk, writeHex, writeHsl, writeHsv, writeLab, writeLch, writeName, writeOklab, writeOklch, writeRgb } from "../src/utilities/colour";
+import { parseColour } from "../src/utilities/colour/parse";
+import type { Rgba } from "../src/utilities/colour/rgba";
+import { nearestName, writeCmyk, writeHex, writeHsl, writeHsv, writeLab, writeLch, writeName, writeOklab, writeOklch, writeRgb } from "../src/utilities/colour/write";
 
 const rgb = (r: number, g: number, b: number, a = 1): Rgba => ({ r, g, b, a });
 

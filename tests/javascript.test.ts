@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeAll, describe, expect, it } from "vitest";
-import { type Scope, ScriptEngine } from "../src/utilities/javascript-engine";
-import { unfinished } from "../src/utilities/javascript-syntax";
+import { type Scope, ScriptEngine } from "../src/utilities/javascript/engine";
+import { unfinished } from "../src/utilities/javascript/syntax";
 
 describe("running a script", () => {
   it("writes what the script printed, in the order it wrote it", async () => {
@@ -29,7 +29,7 @@ describe("running a script", () => {
     expect(output).toContain("TypeError: nope");
     expect(output).toContain("at boom (<script>:2:");
     expect(output).toContain("at <eval> (<script>:3:");
-    expect(output).not.toContain("javascript-runtime");
+    expect(output).not.toContain("runtime.js");
   });
 
   it("reports a syntax error rather than running anything", async () => {

@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { exportPKCS8, exportSPKI, generateKeyPair } from "jose";
 import { describe, expect, it } from "vitest";
-import { type Field, generateSigningKey, parseFieldValue, readToken, signToken, verifySignature, writeFieldValue } from "../src/utilities/jwt";
+import { parseFieldValue, writeFieldValue } from "../src/utilities/jwt/fields";
+import { generateSigningKey, signToken, verifySignature } from "../src/utilities/jwt/sign";
+import { readToken } from "../src/utilities/jwt/token";
+import type { Field } from "../src/utilities/jwt/types";
 
 const HS256_TOKEN =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";

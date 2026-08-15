@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diffText, type LineMark } from "../src/utilities/diff";
+import { diffText, type LineMark } from "../src/utilities/diff/myers";
 
 function covered(text: string, marks: LineMark[]): string[] {
   const lines = text.split("\n");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bitPattern, characterOf, clearHistory, current, display, dropHistoryEntry, expressionText, fromShare, type Key, type Machine, newMachine, press, readout, setBase, setBits, setMode, toggleBit, toShare, writeInBase } from "../src/utilities/calculator-machine";
+import { bitPattern, characterOf, clearHistory, current, display, dropHistoryEntry, expressionText, fromShare, type Key, type Machine, newMachine, press, readout, setBase, setBits, setMode, toggleBit, toShare, writeInBase } from "../src/utilities/calculator/machine";
 
 function type(machine: Machine, ...keys: Key[]): Machine {
   return keys.reduce(press, machine);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TIME_ZONES, zoneClock } from "../src/common/zone-clock";
-import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, readTimestamp, relativeTime, rfc2822, wallToIso } from "../src/utilities/time";
+import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, relativeTime, rfc2822 } from "../src/utilities/time/formats";
+import { readTimestamp, wallToIso } from "../src/utilities/time/read";
 
 const BERLIN_SUMMER = new Date("2026-08-10T12:34:56.789Z");
 const BERLIN_WINTER = new Date("2026-01-10T12:34:56.000Z");

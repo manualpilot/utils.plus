@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generatePassphrase, type Weights, WORDS } from "../src/utilities/passphrase";
+import { generatePassphrase, type Weights, WORDS } from "../src/utilities/passphrase/generate";
 
 const mix = (nouns: number, verbs: number, adjectives: number): Weights => ({ nouns, verbs, adjectives });
 

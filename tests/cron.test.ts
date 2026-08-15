@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { type Flavour, nextRuns, readCron } from "../src/utilities/cron";
+import type { Flavour } from "../src/utilities/cron/fields";
+import { readCron } from "../src/utilities/cron/parse";
+import { nextRuns } from "../src/utilities/cron/schedule";
 
 const FROM = Date.parse("2026-08-10T12:34:56.789Z");
 

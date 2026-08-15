@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { decodeToBytes, encodeBytes, type Format } from "../src/utilities/codec";
+import { decodeToBytes, encodeBytes } from "../src/utilities/codec/convert";
+import type { Format } from "../src/utilities/codec/formats";
 
 const bytes = (text: string) => new TextEncoder().encode(text);
 const text = (data: Uint8Array) => new TextDecoder().decode(data);

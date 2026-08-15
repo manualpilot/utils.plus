@@ -2,7 +2,13 @@ import { x25519 } from "@noble/curves/ed25519.js";
 import { createRequire } from "node:module";
 import sshpk from "sshpk";
 import { describe, expect, it } from "vitest";
-import { formatSecret, generateCertificate, generateJwkSet, generateSshKey, generateWireguardConfigs, isHostOrAddress, type Jwk } from "../src/utilities/keygen";
+import { generateCertificate } from "../src/utilities/keygen/certificate";
+import { formatSecret } from "../src/utilities/keygen/encoding";
+import { generateJwkSet } from "../src/utilities/keygen/jwk";
+import { generateSshKey } from "../src/utilities/keygen/keys";
+import type { Jwk } from "../src/utilities/keygen/types";
+import { isHostOrAddress } from "../src/utilities/keygen/validate";
+import { generateWireguardConfigs } from "../src/utilities/keygen/wireguard";
 
 const { createHash, createPrivateKey, createPublicKey, X509Certificate } = createRequire(import.meta.url)(
   "node:crypto",

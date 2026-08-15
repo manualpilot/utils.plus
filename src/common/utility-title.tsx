@@ -1,14 +1,14 @@
 import { ActionIcon, Group, Title, Tooltip } from "@mantine/core";
 import { IconBrandGithub } from "../icons";
 
-export function UtilityTitle({ file, children }: UtilityTitleProps) {
+export function UtilityTitle({ directory, children }: UtilityTitleProps) {
   return (
     <Group gap={4} align="center">
       <Title order={2} lh={1.15}>{children}</Title>
       <Tooltip label="View source on GitHub" withArrow>
         <ActionIcon
           component="a"
-          href={`${SOURCE_BASE}/${file}`}
+          href={`${SOURCE_BASE}/${directory}`}
           target="_blank"
           rel="noopener noreferrer"
           variant="subtle"
@@ -24,8 +24,8 @@ export function UtilityTitle({ file, children }: UtilityTitleProps) {
 }
 
 interface UtilityTitleProps {
-  file: string;
+  directory: string;
   children: string;
 }
 
-const SOURCE_BASE = "https://github.com/manualpilot/utils.plus/blob/main/src/utilities";
+const SOURCE_BASE = "https://github.com/manualpilot/utils.plus/tree/main/src/utilities";

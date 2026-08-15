@@ -120,7 +120,7 @@ test("a stack opens on the line of the script that threw", async ({ page }) => {
   await expect(text).toContainText("TypeError: nope", { timeout: BOOT });
   await expect(text).toContainText("at boom (<script>:2");
   await expect(text).toContainText("at <eval> (<script>:5");
-  await expect(text).not.toContainText("javascript-runtime");
+  await expect(text).not.toContainText("runtime.js");
 });
 
 test("a script that cannot be parsed says so", async ({ page }) => {
@@ -409,7 +409,7 @@ test("a failing entry answers with a stack of the line somebody wrote", async ({
 
   await expect(transcript(page)).toContainText("ReferenceError", { timeout: BOOT });
   await expect(transcript(page)).toContainText("<repl>");
-  await expect(transcript(page)).not.toContainText("javascript-runtime");
+  await expect(transcript(page)).not.toContainText("runtime.js");
 
   await enter(page, "2 ** 8");
   await expect(transcript(page)).toContainText("256");

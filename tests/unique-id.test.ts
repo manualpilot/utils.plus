@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { generateId, ID_TYPES, type IdSettings } from "../src/utilities/unique-id";
+import { generateId } from "../src/utilities/unique-id/generate";
+import { ID_TYPES, type IdSettings } from "../src/utilities/unique-id/types";
 
 const DNS_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 

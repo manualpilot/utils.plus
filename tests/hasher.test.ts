@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { bcryptBase64Decode, bcryptBase64Encode, deriveKdf, formatDigest, hashBytes } from "../src/utilities/hasher";
+import { bcryptBase64Decode, bcryptBase64Encode } from "../src/utilities/hasher/bcrypt";
+import { formatDigest, hashBytes } from "../src/utilities/hasher/digest";
+import { deriveKdf } from "../src/utilities/hasher/kdf";
 
 const bytes = (text: string) => new TextEncoder().encode(text);
 const digest = (variant: string, text: string, seed = 0) => formatDigest(hashBytes(variant, bytes(text), seed), "hex");

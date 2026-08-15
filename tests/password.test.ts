@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generatePassword, type Weights } from "../src/utilities/password";
+import { generatePassword, type Weights } from "../src/utilities/password/generate";
 
 const mix = (lowercase: number, uppercase: number, numbers: number, symbols: number): Weights => ({
   lowercase,
