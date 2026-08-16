@@ -21,6 +21,19 @@ test("the first stop of the page is past the navbar", async ({ page }) => {
   expect(new URL(page.url()).hash).toBe("");
 });
 
+test("the navbar scrolls to its last link without moving the page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 400 });
+  await page.goto("/");
+
+  const last = page.locator(`nav a[href="${utilities[utilities.length - 1].path}"]`);
+  await expect(last).not.toBeInViewport();
+
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toBeInViewport();
+
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});
+
 test("a plain click still routes without a reload", async ({ page }) => {
   await page.goto("/");
 

@@ -170,16 +170,18 @@ export function Layout({ children }: LayoutProps) {
         </AppShell.Header>
 
         <AppShell.Navbar p="md">
-          {utilities.map(({ path, label, Icon }) => (
-            <Link key={path} href={path} onClick={close} asChild>
-              <NavLink
-                label={label}
-                leftSection={<Icon size="1rem" stroke={1.5} />}
-                active={location === path}
-                style={{ borderRadius: "var(--mantine-radius-md)" }}
-              />
-            </Link>
-          ))}
+          <Box className="navbar-links">
+            {utilities.map(({ path, label, Icon }) => (
+              <Link key={path} href={path} onClick={close} asChild>
+                <NavLink
+                  label={label}
+                  leftSection={<Icon size="1rem" stroke={1.5} />}
+                  active={location === path}
+                  style={{ borderRadius: "var(--mantine-radius-md)" }}
+                />
+              </Link>
+            ))}
+          </Box>
         </AppShell.Navbar>
 
         <AppShell.Main className="main-region">

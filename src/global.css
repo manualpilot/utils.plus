@@ -18,6 +18,18 @@
   outline: none;
 }
 
+.navbar-links {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.navbar-links::-webkit-scrollbar {
+  display: none;
+}
+
 .main-region {
   display: flex;
   flex-direction: column;
