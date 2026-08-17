@@ -69,6 +69,22 @@ export const PAGE_META = {
       "colour picker",
     ],
   },
+  "/converter": {
+    title: "Unit Converter for Length, Mass & Data",
+    description:
+      "Convert distance, area, volume, mass, temperature, speed, data, energy, power and pressure between metric, imperial and SI units, to twelve digits.",
+    keywords: [
+      "unit converter",
+      "metric to imperial",
+      "length converter",
+      "temperature converter",
+      "celsius to fahrenheit",
+      "kg to lbs",
+      "km to miles",
+      "data storage converter",
+      "pressure converter",
+    ],
+  },
   "/cron": {
     title: "Cron Expression Builder & Parser",
     description:
