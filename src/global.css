@@ -273,3 +273,66 @@
 .relative-root .mantine-Input-wrapper {
   margin-bottom: 0px !important;
 }
+
+.markdown-panes {
+  display: flex;
+  flex-direction: row;
+  gap: var(--mantine-spacing-md);
+  flex: 1;
+  min-height: 0;
+}
+
+.markdown-panes > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.markdown-panes[data-view="editor"] > .markdown-preview-pane,
+.markdown-panes[data-view="preview"] > .markdown-editor-pane {
+  display: none;
+}
+
+.markdown-editor-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.markdown-toolbar {
+  flex: none;
+  padding: var(--mantine-spacing-xs);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  row-gap: var(--mantine-spacing-xs);
+}
+
+.markdown-editor-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.markdown-preview-pane {
+  position: relative;
+  overflow: hidden;
+}
+
+.markdown-preview {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: var(--mantine-spacing-md);
+}
+
+.markdown-preview li:has(> input[type="checkbox"]) {
+  list-style: none;
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .markdown-panes {
+    flex-direction: column;
+  }
+
+  .markdown-panes > * {
+    min-height: 16rem;
+  }
+}

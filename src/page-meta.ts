@@ -200,6 +200,22 @@ export const PAGE_META = {
       "ecdsa key",
     ],
   },
+  "/markdown": {
+    title: "Markdown Editor with Live Preview",
+    description:
+      "Write Markdown with a formatting bar and read it back rendered as you type, side by side or one at a time, in GitHub, CommonMark or original flavour.",
+    keywords: [
+      "markdown editor",
+      "markdown preview",
+      "live markdown preview",
+      "markdown to html",
+      "github flavored markdown",
+      "gfm",
+      "commonmark",
+      "readme editor",
+      "markdown viewer",
+    ],
+  },
   "/passphrase": {
     title: "Memorable Passphrase Generator",
     description:

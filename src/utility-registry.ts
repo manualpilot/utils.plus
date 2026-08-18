@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAbc, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconGitCompare, IconHash, IconId, IconKey, IconPalette, IconRulerMeasure, IconShieldLock } from "./icons";
+import { IconAbc, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconGitCompare, IconHash, IconId, IconKey, IconMarkdown, IconPalette, IconRulerMeasure, IconShieldLock } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -71,6 +71,12 @@ const routes: UtilityRoute[] = [
     label: "Keygen",
     Icon: IconCertificate,
     Component: lazy(() => import("./utilities/keygen/keygen")),
+  },
+  {
+    path: "/markdown",
+    label: "Markdown",
+    Icon: IconMarkdown,
+    Component: lazy(() => import("./utilities/markdown/markdown")),
   },
   {
     path: "/passphrase",

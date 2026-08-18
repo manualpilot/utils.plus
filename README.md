@@ -3,7 +3,7 @@
 A collection of handy developer tools, hosted at [https://utils.plus](https://utils.plus).
 
 Everything runs locally in the browser: no server-side processing, no third-party requests, and no invasive tracking.
-Fonts, the JSON editor, the key generators and the Python and JavaScript engines are bundled or served from this site
+Fonts, the editors, the key generators and the Python and JavaScript engines are bundled or served from this site
 rather than fetched from anyone else, so content blockers have nothing to break — a private key is built in the tab and
 never leaves it. Each utility keeps its state in the URL fragment, so copying the address bar shares exactly what you
 see.

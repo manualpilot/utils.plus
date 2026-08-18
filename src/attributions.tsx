@@ -127,6 +127,19 @@ export default function Attributions() {
           </Box>
 
           <Box>
+            <Title order={4}>DOMPurify</Title>
+            <Text size="sm" mt={4}>
+              The preview on <Anchor href="/markdown" inherit>Markdown</Anchor> is sanitised with{" "}
+              <Anchor href="https://github.com/cure53/DOMPurify" target="_blank" rel="noopener noreferrer" inherit>
+                DOMPurify
+              </Anchor>, which its authors offer under either the Mozilla Public License 2.0 or version 2.0 of the
+              Apache License. utils+ takes it under{" "}
+              <strong>Apache-2.0</strong>, which is the text the package itself ships and the licence utils+ is released
+              under.
+            </Text>
+          </Box>
+
+          <Box>
             <Title order={4}>Roboto</Title>
             <Text size="sm" mt={4}>
               The typeface is{" "}
