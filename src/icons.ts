@@ -1,4 +1,5 @@
 export { default as IconAbc } from "@tabler/icons-react/dist/esm/icons/IconAbc.mjs";
+export { default as IconAlertTriangle } from "@tabler/icons-react/dist/esm/icons/IconAlertTriangle.mjs";
 export { default as IconArrowsLeftRight } from "@tabler/icons-react/dist/esm/icons/IconArrowsLeftRight.mjs";
 export { default as IconArrowsMaximize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMaximize.mjs";
 export { default as IconArrowsMinimize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMinimize.mjs";
@@ -48,13 +49,16 @@ export { default as IconRefresh } from "@tabler/icons-react/dist/esm/icons/IconR
 export { default as IconRegex } from "@tabler/icons-react/dist/esm/icons/IconRegex.mjs";
 export { default as IconRestore } from "@tabler/icons-react/dist/esm/icons/IconRestore.mjs";
 export { default as IconRulerMeasure } from "@tabler/icons-react/dist/esm/icons/IconRulerMeasure.mjs";
+export { default as IconSchema } from "@tabler/icons-react/dist/esm/icons/IconSchema.mjs";
 export { default as IconSearch } from "@tabler/icons-react/dist/esm/icons/IconSearch.mjs";
 export { default as IconSeparator } from "@tabler/icons-react/dist/esm/icons/IconSeparator.mjs";
 export { default as IconServerCog } from "@tabler/icons-react/dist/esm/icons/IconServerCog.mjs";
 export { default as IconShieldLock } from "@tabler/icons-react/dist/esm/icons/IconShieldLock.mjs";
 export { default as IconSortAscendingLetters } from "@tabler/icons-react/dist/esm/icons/IconSortAscendingLetters.mjs";
 export { default as IconSourceCode } from "@tabler/icons-react/dist/esm/icons/IconSourceCode.mjs";
+export { default as IconSparkles } from "@tabler/icons-react/dist/esm/icons/IconSparkles.mjs";
 export { default as IconStrikethrough } from "@tabler/icons-react/dist/esm/icons/IconStrikethrough.mjs";
 export { default as IconTable } from "@tabler/icons-react/dist/esm/icons/IconTable.mjs";
+export { default as IconTransform } from "@tabler/icons-react/dist/esm/icons/IconTransform.mjs";
 export { default as IconTrash } from "@tabler/icons-react/dist/esm/icons/IconTrash.mjs";
 export { default as IconX } from "@tabler/icons-react/dist/esm/icons/IconX.mjs";

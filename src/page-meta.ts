@@ -273,6 +273,22 @@ export const PAGE_META = {
       "test regex online",
     ],
   },
+  "/schema": {
+    title: "JSON Schema, Zod & Pydantic Validator",
+    description:
+      "Check a JSON payload against a JSON Schema, Zod or Pydantic model with every error marked in place, and convert a schema between all three.",
+    keywords: [
+      "json schema validator",
+      "zod schema",
+      "pydantic model",
+      "json schema to zod",
+      "zod to json schema",
+      "pydantic to json schema",
+      "json schema generator",
+      "json to json schema",
+      "schema converter",
+    ],
+  },
   "/time": {
     title: "Timestamp & Time Zone Converter",
     description:

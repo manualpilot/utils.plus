@@ -144,7 +144,7 @@ export default function Diff() {
         </Group>
       </Card>
 
-      <Box className="diff-panes">
+      <Box className="editor-panes">
         <DiffPane
           label="Original"
           note={result && result.left.length > 0 ? `${plural(result.left.length, "line")} removed` : null}
