@@ -5,6 +5,7 @@ import { Link, useLocation } from "wouter";
 import { useDocumentHead } from "./common/document-head";
 import { ShareStateProvider, useShareStateContext } from "./common/share-state";
 import { IconBrandGithub, IconCheck, IconLink, IconRestore, IconServerCog } from "./icons";
+import { UtilitySpotlight } from "./spotlight";
 import { ATTRIBUTIONS_PATH, utilities } from "./utility-registry";
 
 interface LayoutProps {
@@ -138,6 +139,8 @@ export function Layout({ children }: LayoutProps) {
         navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
         padding="md"
       >
+        <UtilitySpotlight />
+
         <UnstyledButton className="skip-link" onClick={() => document.getElementById(MAIN_CONTENT_ID)?.focus()}>
           Skip to the utility
         </UnstyledButton>

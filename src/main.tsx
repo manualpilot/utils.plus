@@ -5,6 +5,7 @@ import { Route, Switch, useLocation } from "wouter";
 
 import "@fontsource-variable/roboto";
 import "@mantine/core/styles.css";
+import "@mantine/spotlight/styles.css";
 import "./global.css";
 
 import { IconArrowsShuffle } from "./icons";
