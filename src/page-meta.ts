@@ -258,6 +258,21 @@ export const PAGE_META = {
       "webassembly python",
     ],
   },
+  "/regex": {
+    title: "Regex Tester & Explainer",
+    description:
+      "Write a regular expression, watch every match and capture group light up in your own text, and read a line-by-line breakdown of what the pattern does.",
+    keywords: [
+      "regex tester",
+      "regular expression tester",
+      "regex explainer",
+      "regex debugger",
+      "javascript regex",
+      "named capture groups",
+      "regex highlighter",
+      "test regex online",
+    ],
+  },
   "/time": {
     title: "Timestamp & Time Zone Converter",
     description:

@@ -233,12 +233,20 @@
       "text": 3
     },
     {
+      "name": "@eslint-community/regexpp",
+      "version": "4.12.2",
+      "license": "MIT",
+      "publisher": "Toru Nagashima",
+      "url": "https://github.com/eslint-community/regexpp",
+      "text": 4
+    },
+    {
       "name": "@floating-ui/core",
       "version": "1.8.0",
       "license": "MIT",
       "publisher": "atomiks",
       "url": "https://github.com/floating-ui/floating-ui",
-      "text": 4
+      "text": 5
     },
     {
       "name": "@floating-ui/dom",
@@ -246,7 +254,7 @@
       "license": "MIT",
       "publisher": "atomiks",
       "url": "https://github.com/floating-ui/floating-ui",
-      "text": 4
+      "text": 5
     },
     {
       "name": "@floating-ui/react",
@@ -254,7 +262,7 @@
       "license": "MIT",
       "publisher": "atomiks",
       "url": "https://github.com/floating-ui/floating-ui",
-      "text": 4
+      "text": 5
     },
     {
       "name": "@floating-ui/react-dom",
@@ -262,7 +270,7 @@
       "license": "MIT",
       "publisher": "atomiks",
       "url": "https://github.com/floating-ui/floating-ui",
-      "text": 4
+      "text": 5
     },
     {
       "name": "@floating-ui/utils",
@@ -270,7 +278,7 @@
       "license": "MIT",
       "publisher": "atomiks",
       "url": "https://github.com/floating-ui/floating-ui",
-      "text": 4
+      "text": 5
     },
     {
       "name": "@fontsource-variable/roboto",
@@ -278,7 +286,7 @@
       "license": "OFL-1.1",
       "publisher": "Google Inc.",
       "url": "https://github.com/fontsource/font-files",
-      "text": 5
+      "text": 6
     },
     {
       "name": "@jitl/quickjs-ffi-types",
@@ -286,7 +294,7 @@
       "license": "MIT",
       "publisher": "Jake Teton-Landis",
       "url": "https://github.com/justjake/quickjs-emscripten",
-      "text": 6
+      "text": 7
     },
     {
       "name": "@jitl/quickjs-ng-wasmfile-release-sync",
@@ -294,7 +302,7 @@
       "license": "MIT",
       "publisher": "Jake Teton-Landis",
       "url": "https://github.com/justjake/quickjs-emscripten",
-      "text": 7
+      "text": 8
     },
     {
       "name": "@jridgewell/gen-mapping",
@@ -302,7 +310,7 @@
       "license": "MIT",
       "publisher": "Justin Ridgewell",
       "url": "https://github.com/jridgewell/sourcemaps",
-      "text": 8
+      "text": 9
     },
     {
       "name": "@jridgewell/resolve-uri",
@@ -310,7 +318,7 @@
       "license": "MIT",
       "publisher": "Justin Ridgewell",
       "url": "https://github.com/jridgewell/resolve-uri",
-      "text": 9
+      "text": 10
     },
     {
       "name": "@jridgewell/sourcemap-codec",
@@ -318,7 +326,7 @@
       "license": "MIT",
       "publisher": "Justin Ridgewell",
       "url": "https://github.com/jridgewell/sourcemaps",
-      "text": 8
+      "text": 9
     },
     {
       "name": "@jridgewell/trace-mapping",
@@ -326,7 +334,7 @@
       "license": "MIT",
       "publisher": "Justin Ridgewell",
       "url": "https://github.com/jridgewell/sourcemaps",
-      "text": 8
+      "text": 9
     },
     {
       "name": "@lezer/common",
@@ -334,7 +342,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/common",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/cpp",
@@ -342,7 +350,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/lezer/cpp",
-      "text": 11
+      "text": 12
     },
     {
       "name": "@lezer/css",
@@ -350,7 +358,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/lezer/css",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/go",
@@ -358,7 +366,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/go",
-      "text": 11
+      "text": 12
     },
     {
       "name": "@lezer/highlight",
@@ -366,7 +374,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/highlight",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/html",
@@ -374,7 +382,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/html",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/java",
@@ -382,7 +390,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/java",
-      "text": 11
+      "text": 12
     },
     {
       "name": "@lezer/javascript",
@@ -390,7 +398,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/javascript",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/json",
@@ -398,7 +406,7 @@
       "license": "MIT",
       "publisher": "Arun Srinivasan",
       "url": "https://github.com/lezer-parser/json",
-      "text": 12
+      "text": 13
     },
     {
       "name": "@lezer/lr",
@@ -406,7 +414,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/lezer/lr",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/markdown",
@@ -414,7 +422,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/lezer/markdown",
-      "text": 11
+      "text": 12
     },
     {
       "name": "@lezer/php",
@@ -422,7 +430,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/php",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/python",
@@ -430,7 +438,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/lezer/python",
-      "text": 11
+      "text": 12
     },
     {
       "name": "@lezer/rust",
@@ -438,7 +446,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/rust",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/xml",
@@ -446,7 +454,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/xml",
-      "text": 10
+      "text": 11
     },
     {
       "name": "@lezer/yaml",
@@ -454,7 +462,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/lezer-parser/yaml",
-      "text": 13
+      "text": 14
     },
     {
       "name": "@mantine/core",
@@ -462,7 +470,7 @@
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
-      "text": 14
+      "text": 15
     },
     {
       "name": "@mantine/dates",
@@ -470,7 +478,7 @@
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
-      "text": 14
+      "text": 15
     },
     {
       "name": "@mantine/hooks",
@@ -478,7 +486,7 @@
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
-      "text": 14
+      "text": 15
     },
     {
       "name": "@marijn/find-cluster-break",
@@ -486,7 +494,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/marijn/find-cluster-break",
-      "text": 15
+      "text": 16
     },
     {
       "name": "@noble/curves",
@@ -494,7 +502,7 @@
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-curves",
-      "text": 16
+      "text": 17
     },
     {
       "name": "@noble/hashes",
@@ -502,7 +510,7 @@
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-hashes",
-      "text": 16
+      "text": 17
     },
     {
       "name": "@pyscript/core",
@@ -510,7 +518,7 @@
       "license": "APACHE-2.0",
       "publisher": "Anaconda Inc.",
       "url": "https://github.com/pyscript/pyscript",
-      "text": 17
+      "text": 18
     },
     {
       "name": "@tabler/icons",
@@ -518,7 +526,7 @@
       "license": "MIT",
       "publisher": "codecalm",
       "url": "https://github.com/tabler/tabler-icons",
-      "text": 18
+      "text": 19
     },
     {
       "name": "@tabler/icons-react",
@@ -526,7 +534,7 @@
       "license": "MIT",
       "publisher": "codecalm",
       "url": "https://github.com/tabler/tabler-icons",
-      "text": 18
+      "text": 19
     },
     {
       "name": "@types/emscripten",
@@ -534,7 +542,7 @@
       "license": "MIT",
       "publisher": "Kensuke Matsuzaki",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "text": 19
+      "text": 20
     },
     {
       "name": "@types/react",
@@ -542,7 +550,7 @@
       "license": "MIT",
       "publisher": "Asana",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "text": 19
+      "text": 20
     },
     {
       "name": "@types/trusted-types",
@@ -550,7 +558,7 @@
       "license": "MIT",
       "publisher": "Jakub Vrana",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "text": 19
+      "text": 20
     },
     {
       "name": "@uiw/codemirror-extensions-basic-setup",
@@ -558,7 +566,7 @@
       "license": "MIT",
       "publisher": "kenny wong",
       "url": "https://github.com/uiwjs/react-codemirror",
-      "text": 20,
+      "text": 21,
       "reconstructed": true
     },
     {
@@ -567,7 +575,7 @@
       "license": "MIT",
       "publisher": "kenny wong",
       "url": "https://github.com/uiwjs/react-codemirror",
-      "text": 20,
+      "text": 21,
       "reconstructed": true
     },
     {
@@ -576,7 +584,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/ungap/with-resolvers",
-      "text": 21,
+      "text": 22,
       "reconstructed": true
     },
     {
@@ -585,7 +593,7 @@
       "license": "MIT",
       "publisher": "Vincent Voyer",
       "url": "https://github.com/vvo/tzdb",
-      "text": 22
+      "text": 23
     },
     {
       "name": "@webreflection/fetch",
@@ -593,7 +601,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/fetch",
-      "text": 23
+      "text": 24
     },
     {
       "name": "@webreflection/idb-map",
@@ -601,7 +609,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/idb-map",
-      "text": 24
+      "text": 25
     },
     {
       "name": "@webreflection/utils",
@@ -609,7 +617,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/utils",
-      "text": 25
+      "text": 26
     },
     {
       "name": "acorn",
@@ -617,7 +625,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/acornjs/acorn",
-      "text": 26
+      "text": 27
     },
     {
       "name": "add-promise-listener",
@@ -625,7 +633,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/add-promise-listener",
-      "text": 24
+      "text": 25
     },
     {
       "name": "any-promise",
@@ -633,7 +641,7 @@
       "license": "MIT",
       "publisher": "Kevin Beaty",
       "url": "https://github.com/kevinbeaty/any-promise",
-      "text": 27
+      "text": 28
     },
     {
       "name": "asn1",
@@ -641,7 +649,7 @@
       "license": "MIT",
       "publisher": "Joyent",
       "url": "https://github.com/joyent/node-asn1",
-      "text": 28
+      "text": 29
     },
     {
       "name": "assert-plus",
@@ -649,7 +657,7 @@
       "license": "MIT",
       "publisher": "Mark Cavage",
       "url": "https://github.com/mcavage/node-assert-plus",
-      "text": 29,
+      "text": 30,
       "reconstructed": true
     },
     {
@@ -658,7 +666,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/basic-devtools",
-      "text": 30
+      "text": 31
     },
     {
       "name": "bcrypt-pbkdf",
@@ -666,7 +674,7 @@
       "license": "BSD-3-Clause",
       "publisher": "",
       "url": "https://github.com/joyent/node-bcrypt-pbkdf",
-      "text": 31
+      "text": 32
     },
     {
       "name": "bcryptjs",
@@ -674,7 +682,7 @@
       "license": "BSD-3-Clause",
       "publisher": "Daniel Wirtz",
       "url": "https://github.com/dcodeIO/bcrypt.js",
-      "text": 32
+      "text": 33
     },
     {
       "name": "clsx",
@@ -682,7 +690,7 @@
       "license": "MIT",
       "publisher": "Luke Edwards",
       "url": "lukeed/clsx",
-      "text": 33
+      "text": 34
     },
     {
       "name": "codedent",
@@ -690,7 +698,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "",
-      "text": 21,
+      "text": 22,
       "reconstructed": true
     },
     {
@@ -707,7 +715,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/coincident",
-      "text": 24
+      "text": 25
     },
     {
       "name": "commander",
@@ -715,7 +723,7 @@
       "license": "MIT",
       "publisher": "TJ Holowaychuk",
       "url": "https://github.com/tj/commander.js",
-      "text": 34
+      "text": 35
     },
     {
       "name": "crelt",
@@ -723,7 +731,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/marijn/crelt",
-      "text": 35
+      "text": 36
     },
     {
       "name": "csstype",
@@ -731,7 +739,7 @@
       "license": "MIT",
       "publisher": "Fredrik Nicol",
       "url": "https://github.com/frenic/csstype",
-      "text": 36
+      "text": 37
     },
     {
       "name": "dashdash",
@@ -739,7 +747,7 @@
       "license": "MIT",
       "publisher": "Trent Mick",
       "url": "https://github.com/trentm/node-dashdash",
-      "text": 37
+      "text": 38
     },
     {
       "name": "dayjs",
@@ -747,7 +755,7 @@
       "license": "MIT",
       "publisher": "iamkun",
       "url": "https://github.com/iamkun/dayjs",
-      "text": 38
+      "text": 39
     },
     {
       "name": "detect-node-es",
@@ -755,7 +763,7 @@
       "license": "MIT",
       "publisher": "Ilya Kantor",
       "url": "https://github.com/thekashey/detect-node",
-      "text": 39
+      "text": 40
     },
     {
       "name": "dompurify",
@@ -763,7 +771,7 @@
       "license": "(MPL-2.0 OR Apache-2.0)",
       "publisher": "Dr.-Ing. Mario Heiderich, Cure53",
       "url": "https://github.com/cure53/DOMPurify",
-      "text": 40
+      "text": 41
     },
     {
       "name": "ecc-jsbn",
@@ -771,7 +779,7 @@
       "license": "MIT",
       "publisher": "Jeremie Miller",
       "url": "https://github.com/quartzjer/ecc-jsbn",
-      "text": 41
+      "text": 42
     },
     {
       "name": "fdir",
@@ -779,7 +787,7 @@
       "license": "MIT",
       "publisher": "thecodrr",
       "url": "https://github.com/thecodrr/fdir",
-      "text": 42
+      "text": 43
     },
     {
       "name": "get-nonce",
@@ -787,7 +795,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "git@github.com:theKashey/get-nonce",
-      "text": 43
+      "text": 44
     },
     {
       "name": "getpass",
@@ -795,7 +803,7 @@
       "license": "MIT",
       "publisher": "Alex Wilson",
       "url": "https://github.com/arekinath/node-getpass",
-      "text": 44
+      "text": 45
     },
     {
       "name": "html-escaper",
@@ -803,7 +811,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/html-escaper",
-      "text": 45
+      "text": 46
     },
     {
       "name": "jose",
@@ -811,7 +819,7 @@
       "license": "MIT",
       "publisher": "Filip Skokan",
       "url": "panva/jose",
-      "text": 46
+      "text": 47
     },
     {
       "name": "jsbn",
@@ -819,7 +827,7 @@
       "license": "MIT",
       "publisher": "Tom Wu",
       "url": "https://github.com/andyperlitch/jsbn",
-      "text": 47
+      "text": 48
     },
     {
       "name": "lines-and-columns",
@@ -827,7 +835,7 @@
       "license": "MIT",
       "publisher": "Brian Donovan",
       "url": "https://github.com/eventualbuddha/lines-and-columns",
-      "text": 48
+      "text": 49
     },
     {
       "name": "marked",
@@ -835,7 +843,7 @@
       "license": "MIT",
       "publisher": "Christopher Jeffrey",
       "url": "https://github.com/markedjs/marked",
-      "text": 49
+      "text": 50
     },
     {
       "name": "mitt",
@@ -843,7 +851,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "developit/mitt",
-      "text": 50
+      "text": 51
     },
     {
       "name": "mz",
@@ -851,7 +859,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "normalize/mz",
-      "text": 51
+      "text": 52
     },
     {
       "name": "next-resolver",
@@ -859,7 +867,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/next-resolver",
-      "text": 25
+      "text": 26
     },
     {
       "name": "node-forge",
@@ -867,7 +875,7 @@
       "license": "(BSD-3-Clause OR GPL-2.0)",
       "publisher": "Digital Bazaar, Inc.",
       "url": "https://github.com/digitalbazaar/forge",
-      "text": 52
+      "text": 53
     },
     {
       "name": "object-assign",
@@ -875,7 +883,7 @@
       "license": "MIT",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/object-assign",
-      "text": 53
+      "text": 54
     },
     {
       "name": "openpgp",
@@ -883,7 +891,7 @@
       "license": "LGPL-3.0+",
       "publisher": "",
       "url": "https://github.com/openpgpjs/openpgpjs",
-      "text": 54
+      "text": 55
     },
     {
       "name": "picomatch",
@@ -891,7 +899,7 @@
       "license": "MIT",
       "publisher": "Jon Schlinkert",
       "url": "micromatch/picomatch",
-      "text": 55
+      "text": 56
     },
     {
       "name": "pirates",
@@ -899,7 +907,7 @@
       "license": "MIT",
       "publisher": "Ari Porad",
       "url": "https://github.com/danez/pirates",
-      "text": 56
+      "text": 57
     },
     {
       "name": "plain-tag",
@@ -907,7 +915,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/plain-tag",
-      "text": 57
+      "text": 58
     },
     {
       "name": "polyscript",
@@ -915,7 +923,7 @@
       "license": "APACHE-2.0",
       "publisher": "Anaconda Inc.",
       "url": "",
-      "text": 58
+      "text": 59
     },
     {
       "name": "pyodide",
@@ -923,7 +931,7 @@
       "license": "MPL-2.0",
       "publisher": "",
       "url": "https://github.com/pyodide/pyodide",
-      "text": 59,
+      "text": 60,
       "reconstructed": true
     },
     {
@@ -932,7 +940,7 @@
       "license": "MIT",
       "publisher": "Jake Teton-Landis",
       "url": "https://github.com/justjake/quickjs-emscripten",
-      "text": 6
+      "text": 7
     },
     {
       "name": "react",
@@ -940,7 +948,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
-      "text": 60
+      "text": 61
     },
     {
       "name": "react-dom",
@@ -948,7 +956,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
-      "text": 60
+      "text": 61
     },
     {
       "name": "react-number-format",
@@ -956,7 +964,7 @@
       "license": "MIT",
       "publisher": "Sudhanshu Yadav",
       "url": "https://github.com/s-yadav/react-number-format",
-      "text": 61
+      "text": 62
     },
     {
       "name": "react-remove-scroll",
@@ -964,7 +972,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-remove-scroll",
-      "text": 62
+      "text": 63
     },
     {
       "name": "react-remove-scroll-bar",
@@ -972,7 +980,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-remove-scroll-bar",
-      "text": 63,
+      "text": 64,
       "reconstructed": true
     },
     {
@@ -981,7 +989,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-style-singleton",
-      "text": 62
+      "text": 63
     },
     {
       "name": "reflected-ffi",
@@ -989,7 +997,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/reflected-ffi",
-      "text": 25
+      "text": 26
     },
     {
       "name": "regexparam",
@@ -997,7 +1005,7 @@
       "license": "MIT",
       "publisher": "Luke Edwards",
       "url": "lukeed/regexparam",
-      "text": 64
+      "text": 65
     },
     {
       "name": "safer-buffer",
@@ -1005,7 +1013,7 @@
       "license": "MIT",
       "publisher": "Nikita Skovoroda",
       "url": "https://github.com/ChALkeR/safer-buffer",
-      "text": 65
+      "text": 66
     },
     {
       "name": "scheduler",
@@ -1013,7 +1021,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/facebook/react",
-      "text": 60
+      "text": 61
     },
     {
       "name": "sshpk",
@@ -1021,7 +1029,7 @@
       "license": "MIT",
       "publisher": "Joyent, Inc",
       "url": "https://github.com/joyent/node-sshpk",
-      "text": 44
+      "text": 45
     },
     {
       "name": "sticky-module",
@@ -1029,7 +1037,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/sticky-module",
-      "text": 30
+      "text": 31
     },
     {
       "name": "style-mod",
@@ -1037,7 +1045,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/marijnh/style-mod",
-      "text": 66
+      "text": 67
     },
     {
       "name": "sucrase",
@@ -1045,7 +1053,7 @@
       "license": "MIT",
       "publisher": "Alan Pierce",
       "url": "https://github.com/alangpierce/sucrase",
-      "text": 67
+      "text": 68
     },
     {
       "name": "tabbable",
@@ -1053,7 +1061,7 @@
       "license": "MIT",
       "publisher": "David Clark",
       "url": "https://github.com/focus-trap/tabbable",
-      "text": 68
+      "text": 69
     },
     {
       "name": "tagged-tag",
@@ -1061,7 +1069,7 @@
       "license": "MIT",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/tagged-tag",
-      "text": 69
+      "text": 70
     },
     {
       "name": "thenify",
@@ -1069,7 +1077,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "thenables/thenify",
-      "text": 70
+      "text": 71
     },
     {
       "name": "thenify-all",
@@ -1077,7 +1085,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "thenables/thenify-all",
-      "text": 71
+      "text": 72
     },
     {
       "name": "tinyglobby",
@@ -1085,7 +1093,7 @@
       "license": "MIT",
       "publisher": "Superchupu",
       "url": "https://github.com/SuperchupuDev/tinyglobby",
-      "text": 72
+      "text": 73
     },
     {
       "name": "to-json-callback",
@@ -1093,7 +1101,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/to-json-callback",
-      "text": 21,
+      "text": 22,
       "reconstructed": true
     },
     {
@@ -1102,7 +1110,7 @@
       "license": "Apache-2.0",
       "publisher": "Dmitry S, Grist Labs",
       "url": "https://github.com/gristlabs/ts-interface-checker",
-      "text": 73
+      "text": 74
     },
     {
       "name": "tslib",
@@ -1110,7 +1118,7 @@
       "license": "0BSD",
       "publisher": "Microsoft Corp.",
       "url": "https://github.com/Microsoft/tslib",
-      "text": 74
+      "text": 75
     },
     {
       "name": "tweetnacl",
@@ -1118,7 +1126,7 @@
       "license": "Unlicense",
       "publisher": "TweetNaCl-js contributors",
       "url": "https://github.com/dchest/tweetnacl-js",
-      "text": 75
+      "text": 76
     },
     {
       "name": "type-checked-collections",
@@ -1126,7 +1134,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/type-checked-collections",
-      "text": 30
+      "text": 31
     },
     {
       "name": "type-fest",
@@ -1134,7 +1142,7 @@
       "license": "(MIT OR CC0-1.0)",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/type-fest",
-      "text": 76
+      "text": 77
     },
     {
       "name": "use-callback-ref",
@@ -1142,7 +1150,7 @@
       "license": "MIT",
       "publisher": "theKashey",
       "url": "https://github.com/theKashey/use-callback-ref/",
-      "text": 62
+      "text": 63
     },
     {
       "name": "use-sidecar",
@@ -1150,7 +1158,7 @@
       "license": "MIT",
       "publisher": "theKashey",
       "url": "https://github.com/theKashey/use-sidecar",
-      "text": 62
+      "text": 63
     },
     {
       "name": "use-sync-external-store",
@@ -1158,7 +1166,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/facebook/react",
-      "text": 60
+      "text": 61
     },
     {
       "name": "w3c-keyname",
@@ -1166,7 +1174,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/marijnh/w3c-keyname",
-      "text": 77
+      "text": 78
     },
     {
       "name": "weak-id",
@@ -1174,7 +1182,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/weak-id",
-      "text": 25
+      "text": 26
     },
     {
       "name": "wouter",
@@ -1182,7 +1190,7 @@
       "license": "Unlicense",
       "publisher": "Alexey Taktarov",
       "url": "https://github.com/molefrog/wouter",
-      "text": 78,
+      "text": 79,
       "reconstructed": true
     },
     {
@@ -1191,7 +1199,7 @@
       "license": "MIT",
       "publisher": "Einar Otto Stangvik",
       "url": "https://github.com/websockets/ws",
-      "text": 79
+      "text": 80
     }
   ],
   "texts": [
@@ -1199,6 +1207,7 @@
     "MIT License\n\nCopyright (C) 2018-2021 by Marijn Haverbeke <marijn@haverbeke.berlin> and others\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "MIT License\n\nCopyright (C) 2024 by Marijn Haverbeke <marijn@haverbeke.berlin> and others\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "MIT License\n\nCopyright (c) 2021, Claudéric Demers\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
+    "MIT License\n\nCopyright (c) 2018 Toru Nagashima\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
     "MIT License\n\nCopyright (c) 2021-present Floating UI contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
     "Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic) Roboto-Italic[wdth,wght].ttf: Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.\nThis license is copied below, and is also available with a FAQ at:\nhttp://scripts.sil.org/OFL\n\n\n-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded,\nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE.",
     "The MIT License\n\nquickjs-emscripten copyright (c) 2019-2024 Jake Teton-Landis\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",

@@ -45,6 +45,7 @@ export { default as IconPlayerPlay } from "@tabler/icons-react/dist/esm/icons/Ic
 export { default as IconPlayerStop } from "@tabler/icons-react/dist/esm/icons/IconPlayerStop.mjs";
 export { default as IconPlus } from "@tabler/icons-react/dist/esm/icons/IconPlus.mjs";
 export { default as IconRefresh } from "@tabler/icons-react/dist/esm/icons/IconRefresh.mjs";
+export { default as IconRegex } from "@tabler/icons-react/dist/esm/icons/IconRegex.mjs";
 export { default as IconRestore } from "@tabler/icons-react/dist/esm/icons/IconRestore.mjs";
 export { default as IconRulerMeasure } from "@tabler/icons-react/dist/esm/icons/IconRulerMeasure.mjs";
 export { default as IconSearch } from "@tabler/icons-react/dist/esm/icons/IconSearch.mjs";

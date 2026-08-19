@@ -37,6 +37,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@eslint-community/regexpp": "^4.12.2",
     "@fontsource-variable/roboto": "^5.3.0",
     "@jitl/quickjs-ng-wasmfile-release-sync": "^0.32.0",
     "@mantine/core": "^9.5.0",

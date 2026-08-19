@@ -336,3 +336,48 @@
     min-height: 16rem;
   }
 }
+
+.regex-pattern {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+
+.regex-pattern-box {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+}
+
+.regex-delimiter {
+  font-family: var(--mantine-font-family-monospace);
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+}
+
+.regex-subject {
+  position: relative;
+  overflow: hidden;
+  height: 22rem;
+}
+
+.regex-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
+  border-radius: 3px;
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.regex-children {
+  margin-left: var(--mantine-spacing-xs);
+  padding-left: var(--mantine-spacing-sm);
+  border-left: 1px solid var(--mantine-color-default-border);
+}
+
+.regex-raw {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
