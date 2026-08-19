@@ -1,10 +1,11 @@
-import { ActionIcon, Box, Button, Card, CopyButton, Group, NumberInput, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { ActionIcon, Box, Button, Card, CopyButton, FileInput, Group, NumberInput, Progress, SegmentedControl, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconRefresh, IconX } from "../../icons";
 import { ALGORITHM_OPTIONS, ALGORITHMS, ARGON2_ITERATIONS, ARGON2_MEMORY, BCRYPT_COST, BCRYPT_MAX_BYTES, type Derived, EMPTY_OUTPUT, FORMAT_OPTIONS, type KdfSettings, MAX_SEED, PARALLELISM, type Params, PBKDF2_ITERATIONS, SCRYPT_BLOCK, SCRYPT_COST, sharedParams } from "./algorithms";
-import { formatDigest, hashBytes } from "./digest";
+import { formatDigest, hashBytes, streams } from "./digest";
+import { byteSize, hashBlob, type Source, SOURCE_OPTIONS } from "./file";
 import { deriveKdf } from "./kdf";
 import { defaultParams, initialParams, memoryProblem, message, parseInteger, pickAlgorithm, pickFormat, pickVariant, randomSalt, range, saltProblem, scryptMemoryProblem } from "./settings";
 
@@ -30,6 +31,12 @@ export default function Hasher() {
   const [format, setFormat] = useState(() => pickFormat(initialAlgorithm, initialState?.format));
   const [params, setParams] = useState(() => initialParams(initialAlgorithm, initialState));
   const [input, setInput] = useState(typeof initialState?.input === "string" ? initialState.input : "");
+  const [source, setSource] = useState<Source>("text");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileDigest, setFileDigest] = useState<Uint8Array | null>(null);
+  const [fileError, setFileError] = useState("");
+  const [progress, setProgress] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const [derived, setDerived] = useState<Derived | null>(null);
   const [running, setRunning] = useState(false);
   const runIdRef = useRef(0);
@@ -40,7 +47,7 @@ export default function Hasher() {
     algorithm,
     variant: spec.variants.length > 1 ? variant : undefined,
     format: spec.formats ? format : undefined,
-    input: input || undefined,
+    input: source === "text" ? input || undefined : undefined,
     ...sharedParams(spec, params),
   }));
 
@@ -88,6 +95,37 @@ export default function Hasher() {
     }
   }, [variant, input, settings, request]);
 
+  useEffect(() => {
+    if (source !== "file" || file === null) {
+      setFileDigest(null);
+      setFileError("");
+      setProgress(0);
+      setRunning(false);
+      return;
+    }
+    const runId = ++runIdRef.current;
+    const live = () => runIdRef.current === runId;
+    setFileDigest(null);
+    setFileError("");
+    setProgress(0);
+    setRunning(true);
+    hashBlob(file, variant, seed ?? 0, (percent) => {
+      if (live()) setProgress(percent);
+    }, live)
+      .then((digest) => {
+        if (live() && digest) setFileDigest(digest);
+      })
+      .catch((e: unknown) => {
+        if (live()) setFileError(message(e));
+      })
+      .finally(() => {
+        if (live()) setRunning(false);
+      });
+    return () => {
+      runIdRef.current++;
+    };
+  }, [source, file, variant, seed]);
+
   const { output, error, bits } = useMemo(() => {
     if (spec.kdf) {
       if (stale || derived === null) return EMPTY_OUTPUT;
@@ -95,21 +133,28 @@ export default function Hasher() {
       const { digest, encoded } = derived.result;
       return { output: encoded, error: "", bits: digest.length * 8 };
     }
+    if (source === "file") {
+      if (fileError) return { output: "", error: fileError, bits: 0 };
+      if (fileDigest === null) return EMPTY_OUTPUT;
+      return { output: formatDigest(fileDigest, format), error: "", bits: fileDigest.length * 8 };
+    }
     try {
       const digest = hashBytes(variant, new TextEncoder().encode(input), seed ?? 0);
       return { output: formatDigest(digest, format), error: "", bits: digest.length * 8 };
     } catch (e) {
       return { output: "", error: message(e), bits: 0 };
     }
-  }, [spec, stale, derived, format, variant, input, seed]);
+  }, [spec, stale, derived, format, variant, input, seed, source, fileDigest, fileError]);
 
   const inputBytes = useMemo(() => new TextEncoder().encode(input).length, [input]);
+  const size = source === "file" ? file?.size ?? 0 : inputBytes;
   const variants = spec.variants;
   const formats = spec.formats;
 
   const handleAlgorithmChange = (value: string | null) => {
     if (value === null || !(value in ALGORITHMS)) return;
     setAlgorithm(value);
+    if (ALGORITHMS[value].kdf) setSource("text");
     setVariant(ALGORITHMS[value].variants[0].value);
     setFormat(pickFormat(value, null));
     setParams(defaultParams(value));
@@ -117,6 +162,13 @@ export default function Hasher() {
 
   const updateParam = <K extends keyof Params>(key: K, value: Params[K]) => {
     setParams((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    const dropped = event.dataTransfer.files[0];
+    if (dropped) setFile(dropped);
   };
 
   return (
@@ -354,35 +406,76 @@ export default function Hasher() {
           <Group justify="space-between">
             <Group gap="sm" align="baseline">
               <Title order={4}>{spec.kdf ? "Password" : "Input"}</Title>
-              {inputBytes > 0 && (
-                <Text size="sm" c="dimmed">
-                  {inputBytes} {inputBytes === 1 ? "byte" : "bytes"}
-                </Text>
-              )}
+              {size > 0 && <Text size="sm" c="dimmed">{byteSize(size)}</Text>}
             </Group>
-            <Tooltip label="Clear" withArrow position="left">
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => setInput("")}
-                disabled={input === ""}
-                aria-label="Clear input"
-              >
-                <IconX size="1.2rem" />
-              </ActionIcon>
-            </Tooltip>
+            <Group gap="xs">
+              {!spec.kdf && (
+                <SegmentedControl
+                  size="xs"
+                  data={SOURCE_OPTIONS}
+                  value={source}
+                  onChange={(value) => setSource(value as Source)}
+                  aria-label="Input source"
+                />
+              )}
+              <Tooltip label="Clear" withArrow position="left">
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => source === "file" ? setFile(null) : setInput("")}
+                  disabled={source === "file" ? file === null : input === ""}
+                  aria-label="Clear input"
+                >
+                  <IconX size="1.2rem" />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
           </Group>
-          <Textarea
-            value={input}
-            onChange={(event) => setInput(event.currentTarget.value)}
-            placeholder={spec.kdf ? "Password to hash" : "Text to hash"}
-            aria-label={spec.kdf ? "Password" : "Input"}
-            autosize
-            minRows={4}
-            maxRows={12}
-            spellCheck={false}
-            styles={{ input: { fontFamily: "monospace" } }}
-          />
+          {source === "file"
+            ? (
+              <Box
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+                }}
+                onDrop={handleDrop}
+                style={{
+                  borderRadius: "var(--mantine-radius-sm)",
+                  outline: dragging ? "2px dashed var(--mantine-color-blue-5)" : "none",
+                  outlineOffset: "4px",
+                }}
+              >
+                <FileInput
+                  value={file}
+                  onChange={setFile}
+                  placeholder="Choose a file, or drop one here"
+                  aria-label="File to hash"
+                  clearable
+                />
+              </Box>
+            )
+            : (
+              <Textarea
+                value={input}
+                onChange={(event) => setInput(event.currentTarget.value)}
+                placeholder={spec.kdf ? "Password to hash" : "Text to hash"}
+                aria-label={spec.kdf ? "Password" : "Input"}
+                autosize
+                minRows={4}
+                maxRows={12}
+                spellCheck={false}
+                styles={{ input: { fontFamily: "monospace" } }}
+              />
+            )}
+          {source === "file" && running && <Progress value={progress} size="xs" aria-label="Reading the file" />}
+          {source === "file" && file !== null && !streams(variant) && (
+            <Text size="sm" c="dimmed">
+              This one is written as a single pass, so the whole file is held in memory while it runs.
+            </Text>
+          )}
           {algorithm === "bcrypt" && inputBytes > BCRYPT_MAX_BYTES && (
             <Text size="sm" c="dimmed">
               bcrypt reads the first {BCRYPT_MAX_BYTES} bytes and drops the rest.
@@ -426,7 +519,11 @@ export default function Hasher() {
             aria-label="Digest"
             readOnly
             error={error || undefined}
-            placeholder={spec.kdf ? "Password hashing is deliberately slow — press Compute to run it" : ""}
+            placeholder={spec.kdf
+              ? "Password hashing is deliberately slow — press Compute to run it"
+              : source === "file" && file === null
+              ? "Choose a file to hash it"
+              : ""}
             autosize
             minRows={2}
             maxRows={12}

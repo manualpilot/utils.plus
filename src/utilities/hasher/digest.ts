@@ -3,7 +3,7 @@ import { blake3 } from "@noble/hashes/blake3.js";
 import { md5, sha1 } from "@noble/hashes/legacy.js";
 import { sha224, sha256, sha384, sha512, sha512_224, sha512_256 } from "@noble/hashes/sha2.js";
 import { keccak_256, sha3_224, sha3_256, sha3_384, sha3_512 } from "@noble/hashes/sha3.js";
-import { crc, CRC32_TABLE, CRC32C_TABLE, murmur3x64128, murmur3x8632, xxh32, xxh64 } from "./checksums";
+import { crc, CRC32_TABLE, CRC32C_TABLE, CRC_INITIAL, crcFinish, crcUpdate, murmur3x64128, murmur3x8632, xxh32, xxh64 } from "./checksums";
 
 export const HASHES: Record<string, (bytes: Uint8Array, seed: number) => Uint8Array> = {
   md5: (bytes) => md5(bytes),
@@ -34,10 +34,82 @@ export const HASHES: Record<string, (bytes: Uint8Array, seed: number) => Uint8Ar
   "murmur3-128": (bytes, seed) => bigIntToBytes(murmur3x64128(bytes, seed), 16),
 };
 
+export interface Streaming {
+  update(chunk: Uint8Array): void;
+  digest(): Uint8Array;
+}
+
+const STREAMS: Record<string, () => Streaming> = {
+  md5: () => md5.create(),
+  "sha-1": () => sha1.create(),
+  "sha-256": () => sha256.create(),
+  "sha-224": () => sha224.create(),
+  "sha-512": () => sha512.create(),
+  "sha-384": () => sha384.create(),
+  "sha-512-256": () => sha512_256.create(),
+  "sha-512-224": () => sha512_224.create(),
+  "sha3-224": () => sha3_224.create(),
+  "sha3-256": () => sha3_256.create(),
+  "sha3-384": () => sha3_384.create(),
+  "sha3-512": () => sha3_512.create(),
+  "keccak-256": () => keccak_256.create(),
+  "blake2b-512": () => blake2b.create({ dkLen: 64 }),
+  "blake2b-256": () => blake2b.create({ dkLen: 32 }),
+  "blake2s-256": () => blake2s.create({ dkLen: 32 }),
+  "blake2s-128": () => blake2s.create({ dkLen: 16 }),
+  "blake3-256": () => blake3.create({ dkLen: 32 }),
+  "blake3-512": () => blake3.create({ dkLen: 64 }),
+  "blake3-128": () => blake3.create({ dkLen: 16 }),
+  crc32: () => crcStream(CRC32_TABLE),
+  crc32c: () => crcStream(CRC32C_TABLE),
+};
+
 export function hashBytes(variant: string, bytes: Uint8Array, seed = 0): Uint8Array {
   const hash = HASHES[variant];
   if (!hash) throw new Error(`"${variant}" is not an algorithm this page knows`);
   return hash(bytes, seed);
+}
+
+export function hashStream(variant: string, seed = 0): Streaming {
+  const create = STREAMS[variant];
+  if (create) return create();
+  const hash = HASHES[variant];
+  if (!hash) throw new Error(`"${variant}" is not an algorithm this page knows`);
+  return buffered((bytes) => hash(bytes, seed));
+}
+
+export function streams(variant: string): boolean {
+  return variant in STREAMS;
+}
+
+function crcStream(table: Uint32Array): Streaming {
+  let register = CRC_INITIAL;
+  return {
+    update: (chunk) => {
+      register = crcUpdate(register, chunk, table);
+    },
+    digest: () => bigIntToBytes(BigInt(crcFinish(register)), 4),
+  };
+}
+
+function buffered(hash: (bytes: Uint8Array) => Uint8Array): Streaming {
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  return {
+    update: (chunk) => {
+      chunks.push(chunk);
+      length += chunk.length;
+    },
+    digest: () => {
+      const bytes = new Uint8Array(length);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return hash(bytes);
+    },
+  };
 }
 
 export function formatDigest(digest: Uint8Array, format: string): string {

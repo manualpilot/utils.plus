@@ -118,7 +118,7 @@ export const PAGE_META = {
   "/hasher": {
     title: "Hash & Key Derivation Calculator",
     description:
-      "Hash text with MD5, SHA-1, SHA-2, SHA-3, BLAKE2, BLAKE3, CRC32, xxHash or MurmurHash, or derive a key with Argon2, bcrypt, scrypt or PBKDF2, in the tab.",
+      "Hash text or a file with MD5, SHA-1, SHA-2, SHA-3, BLAKE2, BLAKE3, CRC32, xxHash or MurmurHash, or derive a key with Argon2, bcrypt, scrypt or PBKDF2, in the tab.",
     keywords: [
       "hash calculator",
       "md5 generator",
@@ -128,6 +128,8 @@ export const PAGE_META = {
       "blake3",
       "crc32 checksum",
       "xxhash",
+      "file checksum",
+      "sha256 file hash",
       "argon2",
       "bcrypt generator",
       "scrypt",

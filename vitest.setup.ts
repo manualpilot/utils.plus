@@ -27,4 +27,21 @@ if (typeof window !== "undefined") {
   }
 
   window.ResizeObserver = ResizeObserver;
+
+  if (typeof Blob.prototype.stream !== "function") {
+    Blob.prototype.stream = function(this: Blob) {
+      const whole = this.arrayBuffer().then((buffer) => new Uint8Array(buffer));
+      let offset = 0;
+      return new ReadableStream<Uint8Array<ArrayBuffer>>({
+        async pull(controller) {
+          const bytes = await whole;
+          if (offset >= bytes.length) return controller.close();
+          controller.enqueue(bytes.subarray(offset, offset + STREAM_CHUNK));
+          offset += STREAM_CHUNK;
+        },
+      });
+    };
+  }
 }
+
+const STREAM_CHUNK = 1024;

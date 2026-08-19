@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bcryptBase64Decode, bcryptBase64Encode } from "../src/utilities/hasher/bcrypt";
-import { formatDigest, hashBytes } from "../src/utilities/hasher/digest";
+import { formatDigest, hashBytes, HASHES, hashStream, streams } from "../src/utilities/hasher/digest";
+import { byteSize, hashBlob } from "../src/utilities/hasher/file";
 import { deriveKdf } from "../src/utilities/hasher/kdf";
 
 const bytes = (text: string) => new TextEncoder().encode(text);
@@ -227,5 +228,57 @@ describe("password hashing", () => {
 
   it("rejects a password hash it does not know", async () => {
     await expect(deriveKdf("argon2x", "password", settings)).rejects.toThrow(/not an algorithm/);
+  });
+});
+
+describe("streaming a file", () => {
+  const CHUNKS = [bytes("The quick "), bytes("brown fox jumps over "), bytes("the lazy dog")];
+
+  it.each(Object.keys(HASHES))("feeds %s in pieces and lands where one pass does", (variant) => {
+    const stream = hashStream(variant, 42);
+    for (const chunk of CHUNKS) stream.update(chunk);
+    expect(formatDigest(stream.digest(), "hex")).toBe(digest(variant, PANGRAM, 42));
+  });
+
+  it("says which hashes it can walk through and which it has to buffer", () => {
+    expect(streams("sha-256")).toBe(true);
+    expect(streams("crc32")).toBe(true);
+    expect(streams("xxh64")).toBe(false);
+    expect(streams("murmur3-128")).toBe(false);
+  });
+
+  it("refuses a variant it does not know rather than hashing nothing", () => {
+    expect(() => hashStream("runes")).toThrow(/not an algorithm/);
+  });
+
+  it("hashes a blob into the digest of the bytes inside it", async () => {
+    const result = await hashBlob(new Blob([bytes(PANGRAM)]), "sha-256", 0, () => {}, () => true);
+    expect(formatDigest(result!, "hex")).toBe(digest("sha-256", PANGRAM));
+  });
+
+  it("hashes an empty file rather than refusing it", async () => {
+    const result = await hashBlob(new Blob([]), "sha-256", 0, () => {}, () => true);
+    expect(formatDigest(result!, "hex")).toBe(digest("sha-256", ""));
+  });
+
+  it("counts its way to the end and hands back a buffered digest too", async () => {
+    const percents: number[] = [];
+    const result = await hashBlob(new Blob([new Uint8Array(4096)]), "xxh64", 7, (p) => percents.push(p), () => true);
+    expect(percents.at(-1)).toBe(100);
+    expect(formatDigest(result!, "hex")).toBe(digest("xxh64", "\0".repeat(4096), 7));
+  });
+
+  it("gives up on a run nothing is waiting for any more", async () => {
+    const result = await hashBlob(new Blob([new Uint8Array(1024)]), "sha-256", 0, () => {}, () => false);
+    expect(result).toBeNull();
+  });
+
+  it("writes a size in something somebody can read", () => {
+    expect(byteSize(0)).toBe("0 bytes");
+    expect(byteSize(1)).toBe("1 byte");
+    expect(byteSize(1023)).toBe("1023 bytes");
+    expect(byteSize(1024)).toBe("1.0 KiB");
+    expect(byteSize(1536)).toBe("1.5 KiB");
+    expect(byteSize(5 * 1024 ** 3)).toBe("5.0 GiB");
   });
 });

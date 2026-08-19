@@ -6,6 +6,12 @@ const KDF_TIMEOUT = 20000;
 
 const digestBox = (page: Page) => page.getByRole("textbox", { name: "Digest" });
 
+const SHA256_ABC = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+const SHA256_EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+const sourceTab = (page: Page, label: string) =>
+  page.getByRole("radiogroup", { name: "Input source" }).getByText(label, { exact: true });
+
 async function openHasher(page: Page) {
   await page.goto(`${BASE}/hasher`);
   await expect(page.getByRole("heading", { name: "Hasher" })).toBeVisible();
@@ -114,6 +120,78 @@ test("PBKDF2 names its hash in the string it writes and counts its own iteration
   await page.getByRole("option", { name: "PBKDF2-HMAC-SHA512" }).click();
   await page.getByRole("button", { name: "Compute" }).click();
   await expect(digestBox(page)).toHaveValue(/^\$pbkdf2-sha512\$i=1000\$c29tZXNhbHQ\$/, { timeout: KDF_TIMEOUT });
+});
+
+test("a file is hashed in place of the text box, and the box comes back with it", async ({ page }) => {
+  await openHasher(page);
+  await sourceTab(page, "File").click();
+
+  await page.locator("input[type=file]").setInputFiles({
+    name: "note.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("abc"),
+  });
+  await expect(digestBox(page)).toHaveValue(SHA256_ABC);
+  await expect(page.getByText("note.txt")).toBeVisible();
+  await expect(page.getByText("3 bytes")).toBeVisible();
+
+  await page.getByRole("combobox", { name: "Variant" }).click();
+  await page.getByRole("option", { name: "SHA-224" }).click();
+  await expect(digestBox(page)).toHaveValue("23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7");
+
+  await sourceTab(page, "Text").click();
+  await page.getByPlaceholder("Text to hash").fill("abc");
+  await expect(digestBox(page)).toHaveValue("23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7");
+});
+
+test("a checksum reads a file the same way a cryptographic hash does", async ({ page }) => {
+  await openHasher(page);
+  await selectAlgorithm(page, "CRC32");
+  await sourceTab(page, "File").click();
+
+  await page.locator("input[type=file]").setInputFiles({
+    name: "check.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("123456789"),
+  });
+  await expect(digestBox(page)).toHaveValue("cbf43926");
+});
+
+test("nothing about a file crosses a share link", async ({ page }) => {
+  await openHasher(page);
+  await page.getByPlaceholder("Text to hash").fill("typed into the box");
+  await expect.poll(() => new URL(page.url()).hash).not.toBe("");
+  const typed = new URL(page.url()).hash;
+
+  await sourceTab(page, "File").click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "note.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("abc"),
+  });
+  await expect(digestBox(page)).toHaveValue(SHA256_ABC);
+  await expect.poll(() => new URL(page.url()).hash).not.toBe(typed);
+
+  const other = await page.context().newPage();
+  await other.goto(page.url());
+  await expect(other.getByPlaceholder("Text to hash")).toHaveValue("");
+  await expect(other.getByRole("textbox", { name: "Digest" })).toHaveValue(SHA256_EMPTY);
+});
+
+test("a password hash asks for a password, not a file", async ({ page }) => {
+  await openHasher(page);
+  await sourceTab(page, "File").click();
+  await page.locator("input[type=file]").setInputFiles({
+    name: "note.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("abc"),
+  });
+  await expect(digestBox(page)).toHaveValue(SHA256_ABC);
+
+  await selectAlgorithm(page, "bcrypt");
+  await expect(page.getByRole("radiogroup", { name: "Input source" })).toBeHidden();
+  await expect(page.getByPlaceholder("Password to hash")).toBeVisible();
+  await expect(digestBox(page)).toHaveValue("");
 });
 
 test("the share link carries the algorithm settings, not just the input", async ({ page }) => {

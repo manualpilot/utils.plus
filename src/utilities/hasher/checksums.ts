@@ -12,8 +12,17 @@ export const CRC32_TABLE = crcTable(0xedb88320);
 export const CRC32C_TABLE = crcTable(0x82f63b78);
 
 export function crc(bytes: Uint8Array, table: Uint32Array): number {
-  let register = 0xffffffff;
+  return crcFinish(crcUpdate(CRC_INITIAL, bytes, table));
+}
+
+export const CRC_INITIAL = 0xffffffff;
+
+export function crcUpdate(register: number, bytes: Uint8Array, table: Uint32Array): number {
   for (const byte of bytes) register = (register >>> 8) ^ table[(register ^ byte) & 0xff];
+  return register;
+}
+
+export function crcFinish(register: number): number {
   return (register ^ 0xffffffff) >>> 0;
 }
 
