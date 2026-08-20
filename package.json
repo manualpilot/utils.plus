@@ -82,7 +82,7 @@
     "@types/react-dom": "^19.2.1",
     "@types/sshpk": "^1.17.5",
     "@vitejs/plugin-react": "^6.0.0",
-    "dprint": "0.55.2",
+    "dprint": "0.56.0",
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^30.0.0",
     "license-report": "^6.8.5",
@@ -95,5 +95,8 @@
     "vite": "^8.0.0",
     "vite-plugin-node-polyfills": "^0.28.0",
     "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "polyscript": "0.20.18"
   }
 }

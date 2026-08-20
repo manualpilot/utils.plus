@@ -18,7 +18,7 @@
     },
     {
       "name": "@codemirror/commands",
-      "version": "6.10.4",
+      "version": "6.11.0",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/codemirror/commands",
@@ -186,7 +186,7 @@
     },
     {
       "name": "@codemirror/view",
-      "version": "6.43.8",
+      "version": "6.43.9",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/codemirror/view",
@@ -466,7 +466,7 @@
     },
     {
       "name": "@mantine/core",
-      "version": "9.5.0",
+      "version": "9.5.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -474,7 +474,7 @@
     },
     {
       "name": "@mantine/dates",
-      "version": "9.5.0",
+      "version": "9.5.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -482,7 +482,7 @@
     },
     {
       "name": "@mantine/hooks",
-      "version": "9.5.0",
+      "version": "9.5.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -490,7 +490,7 @@
     },
     {
       "name": "@mantine/spotlight",
-      "version": "9.5.0",
+      "version": "9.5.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -498,7 +498,7 @@
     },
     {
       "name": "@mantine/store",
-      "version": "9.5.0",
+      "version": "9.5.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -767,7 +767,7 @@
     },
     {
       "name": "dayjs",
-      "version": "1.11.21",
+      "version": "1.11.23",
       "license": "MIT",
       "publisher": "iamkun",
       "url": "https://github.com/iamkun/dayjs",
@@ -783,7 +783,7 @@
     },
     {
       "name": "dompurify",
-      "version": "3.4.13",
+      "version": "3.4.14",
       "license": "(MPL-2.0 OR Apache-2.0)",
       "publisher": "Dr.-Ing. Mario Heiderich, Cure53",
       "url": "https://github.com/cure53/DOMPurify",
@@ -839,7 +839,7 @@
     },
     {
       "name": "jose",
-      "version": "6.2.8",
+      "version": "6.2.9",
       "license": "MIT",
       "publisher": "Filip Skokan",
       "url": "panva/jose",
@@ -951,7 +951,7 @@
     },
     {
       "name": "pyodide",
-      "version": "314.0.3",
+      "version": "314.0.5",
       "license": "MPL-2.0",
       "publisher": "",
       "url": "https://github.com/pyodide/pyodide",
