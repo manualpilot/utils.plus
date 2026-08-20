@@ -328,6 +328,22 @@ export const PAGE_META = {
       "unique id generator",
     ],
   },
+  "/url": {
+    title: "URL Parser & Query String Builder",
+    description:
+      "Take a URL apart into scheme, host, port, path, query and fragment, and edit its query parameters unescaped in a builder that stays in step with the address.",
+    keywords: [
+      "url parser",
+      "query string builder",
+      "url decoder",
+      "url encoder",
+      "percent encoding",
+      "query parameter editor",
+      "url components",
+      "parse url online",
+      "url escape",
+    ],
+  },
   "/attributions": {
     title: "Open Source Attributions",
     description:

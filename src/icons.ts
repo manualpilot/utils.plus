@@ -61,4 +61,5 @@ export { default as IconStrikethrough } from "@tabler/icons-react/dist/esm/icons
 export { default as IconTable } from "@tabler/icons-react/dist/esm/icons/IconTable.mjs";
 export { default as IconTransform } from "@tabler/icons-react/dist/esm/icons/IconTransform.mjs";
 export { default as IconTrash } from "@tabler/icons-react/dist/esm/icons/IconTrash.mjs";
+export { default as IconWorld } from "@tabler/icons-react/dist/esm/icons/IconWorld.mjs";
 export { default as IconX } from "@tabler/icons-react/dist/esm/icons/IconX.mjs";
