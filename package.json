@@ -13,7 +13,9 @@
     "vitest:watch": "vitest",
     "attributions": "node scripts/generate-attributions.mjs",
     "attributions:check": "node scripts/generate-attributions.mjs --check",
-    "test": "npm run fmt:check && npm run typecheck && npm run attributions:check && npm run vitest && npm run build"
+    "outdated": "node scripts/outdated.mjs",
+    "check": "npm run fmt:check && npm run typecheck && npm run attributions:check",
+    "test": "npm run check && npm run vitest && npm run build"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",

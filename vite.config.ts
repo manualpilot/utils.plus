@@ -11,7 +11,7 @@ export default defineConfig({
   root: "src",
   publicDir: false,
   css: { postcss: import.meta.dirname },
-  build: { outDir: "../dist", emptyOutDir: true, rolldownOptions: { output: { chunkFileNames } } },
+  build: { outDir: "../dist", emptyOutDir: true, sourcemap: true, rolldownOptions: { output: { chunkFileNames } } },
   plugins: [
     react(),
     nodePolyfills({ include: ["assert", "buffer", "crypto", "stream", "util"] }),
