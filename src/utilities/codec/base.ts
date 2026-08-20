@@ -50,7 +50,11 @@ export function encodeWithAlphabet(bytes: Uint8Array, alphabet: string, bitsPerC
   return out;
 }
 
-export function decodeWithAlphabet(chars: string, lookup: Map<string, number>, bitsPerChar: number): Uint8Array {
+export function decodeWithAlphabet(
+  chars: string,
+  lookup: Map<string, number>,
+  bitsPerChar: number,
+): Uint8Array<ArrayBuffer> {
   const out: number[] = [];
   let buffer = 0;
   let bits = 0;

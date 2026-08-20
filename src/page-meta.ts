@@ -36,9 +36,9 @@ export const PAGE_META = {
     ],
   },
   "/codec": {
-    title: "Base64, Base32, Hex & Morse Codec",
+    title: "Base64, Base32, Hex, Gzip & Morse Codec",
     description:
-      "Encode and decode text as Base64, Base32, hexadecimal, decimal, binary, NATO phonetic or Morse, with every RFC 4648 variant. Nothing leaves the browser.",
+      "Encode and decode text as Base64, Base32, hexadecimal, decimal, binary, NATO phonetic or Morse, or deflate it to Base64 with zlib or gzip. Nothing leaves the browser.",
     keywords: [
       "base64 encoder",
       "base64 decoder",
@@ -50,6 +50,10 @@ export const PAGE_META = {
       "morse code translator",
       "nato phonetic alphabet",
       "rfc 4648",
+      "deflate base64",
+      "gzip base64",
+      "inflate zlib",
+      "decode samlrequest",
     ],
   },
   "/colour": {

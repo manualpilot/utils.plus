@@ -95,7 +95,7 @@ describe("headHtml", () => {
   });
 
   it("escapes what the browser would otherwise read as markup", () => {
-    expect(headHtml("/codec")).toContain("<title>Base64, Base32, Hex &amp; Morse Codec · utils+</title>");
+    expect(headHtml("/codec")).toContain("<title>Base64, Base32, Hex, Gzip &amp; Morse Codec · utils+</title>");
     for (const path of indexablePaths()) {
       expect(headHtml(path)).not.toMatch(/&(?!amp;|lt;|gt;|quot;)/);
     }

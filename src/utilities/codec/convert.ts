@@ -1,24 +1,30 @@
 import { BASE32_ALPHABETS, BASE32_STANDARD, base32Lookup, BASE64_LOOKUP, BASE64_STANDARD, BASE64_URL, decodeWithAlphabet, encodeWithAlphabet, pad } from "./base";
-import { type Format, type Mode } from "./formats";
+import { deflate, inflate } from "./deflate";
+import { type ByteFormat, type Format, type Mode } from "./formats";
 import { decodeMorse, encodeMorse } from "./morse";
 import { decodeNato, encodeNato } from "./nato";
 import { bytesToText } from "./text";
 
-export function convert(
-  input: string,
-  mode: Mode,
-  format: Format,
-  variant: string,
-): { output: string; error: string; byteLength: number } {
-  if (input === "") return { output: "", error: "", byteLength: 0 };
+export type Conversion = { output: string; error: string; byteLength: number };
+
+export const NOTHING: Conversion = { output: "", error: "", byteLength: 0 };
+
+export async function convert(input: string, mode: Mode, format: Format, variant: string): Promise<Conversion> {
+  if (input === "") return NOTHING;
 
   try {
     if (mode === "encode") {
       const bytes = new TextEncoder().encode(input);
+      if (format === "deflate") {
+        const compressed = await deflate(bytes, variant);
+        return { output: encodeBytes(compressed, "base64", "standard"), error: "", byteLength: compressed.length };
+      }
       return { output: encodeBytes(bytes, format, variant), error: "", byteLength: bytes.length };
     }
 
-    const bytes = decodeToBytes(input, format, variant);
+    const bytes = format === "deflate"
+      ? await inflate(decodeToBytes(input, "base64", "standard"), variant)
+      : decodeToBytes(input, format, variant);
     let text: string;
     try {
       text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -31,7 +37,7 @@ export function convert(
   }
 }
 
-export function encodeBytes(bytes: Uint8Array, format: Format, variant: string): string {
+export function encodeBytes(bytes: Uint8Array, format: ByteFormat, variant: string): string {
   switch (format) {
     case "base64": {
       const alphabet = variant.startsWith("url") ? BASE64_URL : BASE64_STANDARD;
@@ -64,10 +70,11 @@ export function encodeBytes(bytes: Uint8Array, format: Format, variant: string):
   }
 }
 
-export function decodeToBytes(text: string, format: Format, variant: string): Uint8Array {
+export function decodeToBytes(text: string, format: ByteFormat, variant: string): Uint8Array<ArrayBuffer> {
   switch (format) {
     case "base64": {
-      const cleaned = text.replace(/\s+/g, "").replace(/=+$/, "");
+      const unescaped = text.replace(/%([0-9a-f]{2})/gi, (_, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+      const cleaned = unescaped.replace(/\s+/g, "").replace(/=+$/, "");
       return decodeWithAlphabet(cleaned, BASE64_LOOKUP, 6);
     }
     case "base32": {

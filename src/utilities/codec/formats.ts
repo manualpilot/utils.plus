@@ -1,6 +1,8 @@
 export type Mode = "encode" | "decode";
 
-export type Format = "base64" | "base32" | "hex" | "decimal" | "binary" | "nato" | "morse";
+export type Format = "base64" | "base32" | "hex" | "decimal" | "binary" | "deflate" | "nato" | "morse";
+
+export type ByteFormat = Exclude<Format, "deflate">;
 
 export const FORMATS = [
   { value: "base64", label: "Base64" },
@@ -8,6 +10,7 @@ export const FORMATS = [
   { value: "hex", label: "Hexadecimal" },
   { value: "decimal", label: "Decimal" },
   { value: "binary", label: "Binary" },
+  { value: "deflate", label: "Deflate (Base64)" },
   { value: "nato", label: "NATO phonetic" },
   { value: "morse", label: "Morse code" },
 ];
@@ -40,6 +43,11 @@ export const VARIANTS: Record<Format, { value: string; label: string }[]> = {
     { value: "spaced", label: "Space separated bytes" },
     { value: "continuous", label: "Continuous" },
   ],
+  deflate: [
+    { value: "zlib", label: "Zlib wrapper (RFC 1950)" },
+    { value: "raw", label: "Raw deflate (RFC 1951)" },
+    { value: "gzip", label: "Gzip wrapper (RFC 1952)" },
+  ],
   nato: [
     { value: "standard", label: "NATO/ICAO (Alfa, Juliett)" },
     { value: "alternate", label: "Common spellings (Alpha, Juliet)" },
@@ -58,6 +66,7 @@ export const VARIANT_HINTS: Record<Format, string> = {
   hex: "Decoding ignores case and separators",
   decimal: "Decoding ignores separators",
   binary: "Decoding ignores separators",
+  deflate: "Decoding accepts any of the three",
   nato: "Decoding accepts any spelling",
   morse: "Decoding accepts · and − as well",
 };

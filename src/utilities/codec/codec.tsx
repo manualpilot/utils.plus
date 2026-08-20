@@ -1,9 +1,9 @@
 import { ActionIcon, Box, Card, CopyButton, Group, Input, SegmentedControl, Select, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconArrowsUpDown, IconCheck, IconCopy, IconX } from "../../icons";
-import { convert } from "./convert";
+import { type Conversion, convert, NOTHING } from "./convert";
 import { defaultVariant, type Format, FORMATS, isFormat, type Mode, VARIANT_HINTS, VARIANTS } from "./formats";
 
 export default function Codec() {
@@ -30,10 +30,17 @@ export default function Codec() {
 
   useRegisterShareState(() => ({ mode, format, variant, input: input || undefined }));
 
-  const { output, error, byteLength } = useMemo(
-    () => convert(input, mode, format, variant),
-    [input, mode, format, variant],
-  );
+  const [{ output, error, byteLength }, setResult] = useState<Conversion>(NOTHING);
+
+  useEffect(() => {
+    let live = true;
+    void convert(input, mode, format, variant).then((result) => {
+      if (live) setResult(result);
+    });
+    return () => {
+      live = false;
+    };
+  }, [input, mode, format, variant]);
 
   const formatLabel = FORMATS.find((f) => f.value === format)?.label ?? format;
   const inputLabel = mode === "encode" ? "Plain text" : formatLabel;

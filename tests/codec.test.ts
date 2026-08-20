@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { decodeToBytes, encodeBytes } from "../src/utilities/codec/convert";
-import type { Format } from "../src/utilities/codec/formats";
+import { convert, decodeToBytes, encodeBytes } from "../src/utilities/codec/convert";
+import type { ByteFormat } from "../src/utilities/codec/formats";
 
 const bytes = (text: string) => new TextEncoder().encode(text);
 const text = (data: Uint8Array) => new TextDecoder().decode(data);
@@ -29,8 +29,14 @@ describe("base64", () => {
     expect(text(decodeToBytes("SGVsbG8s\nIFdvcmxkIQ==", "base64", "standard"))).toBe("Hello, World!");
   });
 
+  it("decodes a body copied out of a query string, escapes and all", () => {
+    expect(text(decodeToBytes("SGVsbG8sIFdvcmxkIQ%3D%3D", "base64", "standard"))).toBe("Hello, World!");
+    expect(decodeToBytes("%2B%2F%2B%2F", "base64", "standard")).toEqual(new Uint8Array([0xfb, 0xff, 0xbf]));
+  });
+
   it("rejects invalid characters and truncated input", () => {
     expect(() => decodeToBytes("SGVsbG8*", "base64", "standard")).toThrow(/not valid/);
+    expect(() => decodeToBytes("SGVsbG8%zz", "base64", "standard")).toThrow(/not valid/);
     expect(() => decodeToBytes("SGVsbG8sI", "base64", "standard")).toThrow(/truncated/i);
   });
 });
@@ -132,6 +138,74 @@ describe("binary", () => {
   });
 });
 
+describe("deflate", () => {
+  const sample = "Compress me, compress me, compress me, and then compress me once more.";
+
+  it.each(["zlib", "raw", "gzip"])("round trips through %s", async (variant) => {
+    const encoded = await convert(sample, "encode", "deflate", variant);
+    expect(encoded.error).toBe("");
+    expect(await convert(encoded.output, "decode", "deflate", variant)).toEqual({
+      output: sample,
+      error: "",
+      byteLength: sample.length,
+    });
+  });
+
+  it("wraps the compressed bytes in Base64 and counts them rather than the text", async () => {
+    const { output, byteLength } = await convert(sample, "encode", "deflate", "zlib");
+    expect(output).toMatch(/^[A-Za-z0-9+/]+=*$/);
+    expect(byteLength).toBeLessThan(sample.length);
+    expect(decodeToBytes(output, "base64", "standard")).toHaveLength(byteLength);
+  });
+
+  it.each([
+    ["zlib", [0x78]],
+    ["gzip", [0x1f, 0x8b]],
+  ])("writes the %s header", async (variant, header) => {
+    const { output } = await convert(sample, "encode", "deflate", variant);
+    const compressed = decodeToBytes(output, "base64", "standard");
+    expect(Array.from(compressed.slice(0, header.length))).toEqual(header);
+  });
+
+  it("reads a Base64 body written anywhere else, padded or not", async () => {
+    const { output } = await convert(sample, "encode", "deflate", "raw");
+    const urlSafe = output.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    expect((await convert(urlSafe, "decode", "deflate", "raw")).output).toBe(sample);
+  });
+
+  it("reads a body written with a wrapper other than the one selected", async () => {
+    const { output } = await convert(sample, "encode", "deflate", "gzip");
+    expect((await convert(output, "decode", "deflate", "zlib")).output).toBe(sample);
+  });
+
+  it("says so when the bytes are not compressed at all", async () => {
+    expect((await convert("SGVsbG8sIFdvcmxkIQ==", "decode", "deflate", "raw")).error).toBe(
+      "Input is not zlib, gzip or raw deflate data",
+    );
+  });
+
+  it("reads a SAMLRequest out of the query string it was copied from", async () => {
+    const request = "HY1LC4JAFEb%2FiszeZ2pyyUBwIxRBRos2MYw3HHAeea%2Fhz0%2FcnnM%2BvhNJM3loFh7tHb8LEgermSzBLmqxzBac"
+      + "JE1gpUECVtA31wtkUQJ%2BduyUm0TQtbV4V1gNqviUInjiTNrZWmzVJokW7CyxtLyhJM3D5Bim5SM7QJFBXrxE0G7H2kreVyOzhzjWg49"
+      + "wlcZPGCln4r6%2F9Tj%2FtMLIj17E5z8%3D";
+    const { output, error } = await convert(request, "decode", "deflate", "zlib");
+
+    expect(error).toBe("");
+    expect(output).toBe(
+      "<samlp:AuthnRequest xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\" ID=\"_8e8dc5f6\" Version=\"2.0\" "
+        + "IssueInstant=\"2014-07-16T23:52:45Z\" Destination=\"http://idp.example.com/SSOService.php\"/>",
+    );
+  });
+
+  it("reports a body that is not Base64 as the Base64 problem it is", async () => {
+    expect((await convert("not base64!", "decode", "deflate", "zlib")).error).toMatch(/not valid/);
+  });
+
+  it("has nothing to say about an empty box", async () => {
+    expect(await convert("", "encode", "deflate", "gzip")).toEqual({ output: "", error: "", byteLength: 0 });
+  });
+});
+
 describe("nato", () => {
   it("spells out letters and digits, with Break standing in for a space", () => {
     expect(encodeBytes(bytes("Hi 42"), "nato", "standard")).toBe("Hotel India Break Four Two");
@@ -202,7 +276,7 @@ describe("morse", () => {
 });
 
 describe("round trips", () => {
-  const variants: [Format, string][] = [
+  const variants: [ByteFormat, string][] = [
     ["base64", "standard"],
     ["base64", "url-nopad"],
     ["base32", "rfc4648"],
@@ -218,7 +292,7 @@ describe("round trips", () => {
     expect(text(decodeToBytes(encoded, format, variant))).toBe(sample);
   });
 
-  const textVariants: [Format, string][] = [
+  const textVariants: [ByteFormat, string][] = [
     ["nato", "standard"],
     ["nato", "alternate"],
     ["nato", "aviation"],
