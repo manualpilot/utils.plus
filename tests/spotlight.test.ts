@@ -27,7 +27,7 @@ describe("filterUtilities", () => {
   it("survives a typo and a half-typed name", () => {
     expect(matches("colur")[0]).toBe("/colour");
     expect(matches("markdwn")[0]).toBe("/markdown");
-    expect(matches("passph")[0]).toBe("/passphrase");
+    expect(matches("passph")[0]).toBe("/password");
   });
 
   it("prefers the name over another utility's keyword", () => {

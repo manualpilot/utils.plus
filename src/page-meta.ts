@@ -222,24 +222,10 @@ export const PAGE_META = {
       "markdown viewer",
     ],
   },
-  "/passphrase": {
-    title: "Memorable Passphrase Generator",
-    description:
-      "Build a passphrase out of real nouns, verbs and adjectives, with the word count, mix, casing and separator you choose: easier to remember, harder to guess.",
-    keywords: [
-      "passphrase generator",
-      "diceware",
-      "memorable password",
-      "random word password",
-      "xkcd password",
-      "secure passphrase",
-      "word based password",
-    ],
-  },
   "/password": {
-    title: "Random Password Generator",
+    title: "Password & Passphrase Generator",
     description:
-      "Generate a strong random password at the length and mix of lowercase, uppercase, digits and symbols you want, drawn from the browser's own secure randomness.",
+      "Generate a strong random password at the length and mix of lowercase, uppercase, digits and symbols you want, or a memorable passphrase made of real English words.",
     keywords: [
       "password generator",
       "random password",
@@ -247,6 +233,13 @@ export const PAGE_META = {
       "secure password generator",
       "password length",
       "special characters password",
+      "passphrase generator",
+      "diceware",
+      "memorable password",
+      "random word password",
+      "xkcd password",
+      "secure passphrase",
+      "word based password",
     ],
   },
   "/python": {

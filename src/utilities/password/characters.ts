@@ -1,26 +1,26 @@
 import { composition } from "../../common/composition";
 import { randomBelow, shuffle } from "../../common/random";
 
-export type WeightKey = "lowercase" | "uppercase" | "numbers" | "symbols";
-export type Weights = Record<WeightKey, number>;
+export type CharacterKey = "lowercase" | "uppercase" | "numbers" | "symbols";
+export type CharacterWeights = Record<CharacterKey, number>;
 
-export const WEIGHT_KEYS: WeightKey[] = ["lowercase", "uppercase", "numbers", "symbols"];
+export const CHARACTER_KEYS: CharacterKey[] = ["lowercase", "uppercase", "numbers", "symbols"];
 
 export const MAX_LENGTH = 1024;
 export const DEFAULT_LENGTH = 20;
 
-const ALPHABETS: Record<WeightKey, string> = {
+const ALPHABETS: Record<CharacterKey, string> = {
   lowercase: "abcdefghijklmnopqrstuvwxyz",
   uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   numbers: "0123456789",
   symbols: "!#$%&()*+,-./:;<=>?@[]^_{|}~",
 };
 
-export function generatePassword(length: number, weights: Weights): string {
+export function generatePassword(length: number, weights: CharacterWeights): string {
   const counts = composition(length, weights);
   const chars: string[] = [];
 
-  for (const key of WEIGHT_KEYS) {
+  for (const key of CHARACTER_KEYS) {
     const alphabet = ALPHABETS[key];
     for (let i = 0; i < counts[key]; i++) {
       chars.push(alphabet[randomBelow(alphabet.length)]);
@@ -41,9 +41,4 @@ export function parseLength(value: number | string): number | null {
 export function clampLength(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return DEFAULT_LENGTH;
   return Math.min(MAX_LENGTH, Math.max(1, Math.floor(value)));
-}
-
-export function clampWeight(value: unknown, fallback: number): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
-  return Math.min(100, Math.max(0, Math.round(value)));
 }

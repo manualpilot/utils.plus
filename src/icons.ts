@@ -1,4 +1,3 @@
-export { default as IconAbc } from "@tabler/icons-react/dist/esm/icons/IconAbc.mjs";
 export { default as IconAlertTriangle } from "@tabler/icons-react/dist/esm/icons/IconAlertTriangle.mjs";
 export { default as IconArrowsLeftRight } from "@tabler/icons-react/dist/esm/icons/IconArrowsLeftRight.mjs";
 export { default as IconArrowsMaximize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMaximize.mjs";
