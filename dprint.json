@@ -10,7 +10,7 @@
   "excludes": [
     "**/node_modules",
     "**/package-lock.json",
-    "inline/attributions.json",
+    "attribution/attributions.json",
     "dist",
     "playwright-report",
     "test-results"

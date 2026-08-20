@@ -1,9 +1,9 @@
 import { Accordion, Anchor, Badge, Box, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useMemo, useState } from "react";
-import attributions from "../inline/attributions.json";
-import gplText from "../inline/GPL-3.0.txt?raw";
-import postgresText from "../inline/PostgreSQL.txt?raw";
-import pythonText from "../inline/Python-2.0.txt?raw";
+import attributions from "../attribution/attributions.json";
+import gplText from "../attribution/GPL-3.0.txt?raw";
+import postgresText from "../attribution/PostgreSQL.txt?raw";
+import pythonText from "../attribution/Python-2.0.txt?raw";
 import { shuffle } from "./common/random";
 import { IconSearch } from "./icons";
 

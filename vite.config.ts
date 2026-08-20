@@ -9,7 +9,7 @@ import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, r
 
 export default defineConfig({
   root: "src",
-  publicDir: "../public",
+  publicDir: false,
   css: { postcss: import.meta.dirname },
   build: { outDir: "../dist", emptyOutDir: true, rolldownOptions: { output: { chunkFileNames } } },
   plugins: [

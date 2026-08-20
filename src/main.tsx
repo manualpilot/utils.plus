@@ -3,6 +3,8 @@ import { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { Route, Switch, useLocation } from "wouter";
 
+import notFound from "./not-found.png";
+
 import "@fontsource-variable/roboto";
 import "@mantine/core/styles.css";
 import "@mantine/spotlight/styles.css";
@@ -34,7 +36,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/" component={Welcome} />
           {utilities.map(({ path, Component }) => <Route key={path} path={path} component={Component} />)}
           <Route path={ATTRIBUTIONS_PATH} component={Attributions} />
-          <Image radius="md" src="/not_found.png" />
+          <Image radius="md" src={notFound} />
         </Switch>
       </Suspense>
     </Layout>

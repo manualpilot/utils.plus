@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = join(ROOT, "inline/attributions.json");
+const OUT = join(ROOT, "attribution/attributions.json");
 const MODULES = join(ROOT, "node_modules");
 
 const LICENSE_FILE = /^(licen[sc]e|copying|notice)([._-].*)?$/i;
@@ -18,7 +18,7 @@ function main() {
     const { packages, texts } = JSON.parse(written);
     console.log(`attributions: ${packages.length} packages, ${texts.length} distinct licence texts`);
   } else if (written !== previous) {
-    console.error("attributions: inline/attributions.json is stale — run `npm run attributions`");
+    console.error("attributions: attribution/attributions.json is stale — run `npm run attributions`");
     process.exit(1);
   }
 }
@@ -116,7 +116,7 @@ function repository(manifest) {
 
 function fallback(license, manifest) {
   const notice = `Copyright (c) ${publisher(manifest) || manifest.name}`;
-  const vendored = join(ROOT, "inline", `${license}.txt`);
+  const vendored = join(ROOT, "attribution", `${license}.txt`);
 
   if (/^[\w.+-]+$/.test(license) && existsSync(vendored)) {
     const text = readFileSync(vendored, "utf8").trim();

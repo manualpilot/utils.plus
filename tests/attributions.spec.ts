@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import attributions from "../inline/attributions.json" with { type: "json" };
+import attributions from "../attribution/attributions.json" with { type: "json" };
 import { ATTRIBUTIONS_PATH } from "../src/utility-registry";
 
 test("the footer link reaches the page from anywhere", async ({ page }) => {
