@@ -3,41 +3,10 @@ import { type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNo
 
 export function Panes({ panel, children }: { panel: ReactNode; children: ReactNode }) {
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
-  const panes = useRef<HTMLDivElement>(null);
-
-  const resize = useCallback((width: number) => {
-    const box = panes.current?.getBoundingClientRect();
-    if (!box) return;
-    const widest = Math.max(MIN_PANEL_WIDTH, box.width - LEFT_OF_PANEL);
-    setPanelWidth(Math.min(Math.max(width, MIN_PANEL_WIDTH), widest));
-  }, []);
-
-  const handleGripDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }, []);
-
-  const handleGripMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    const box = panes.current?.getBoundingClientRect();
-    if (box) resize(box.right - event.clientX);
-  }, [resize]);
-
-  const handleGripUp = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }, []);
-
-  const handleGripKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const step = event.key === "ArrowLeft" ? KEY_STEP : event.key === "ArrowRight" ? -KEY_STEP : 0;
-    if (step === 0) return;
-    event.preventDefault();
-    resize(panelWidth + step);
-  };
+  const { pane, grip } = useGrip("row", panelWidth, setPanelWidth, { first: LEFT_OF_PANEL, second: MIN_PANEL_WIDTH });
 
   return (
-    <Box ref={panes} className="split-panes" style={{ "--split-panel-width": `${panelWidth}px` } as CSSProperties}>
+    <Box ref={pane} className="split-panes" style={{ "--split-panel-width": `${panelWidth}px` } as CSSProperties}>
       {children}
 
       <div
@@ -46,10 +15,7 @@ export function Panes({ panel, children }: { panel: ReactNode; children: ReactNo
         aria-orientation="vertical"
         aria-label="Resize the variables panel"
         tabIndex={0}
-        onPointerDown={handleGripDown}
-        onPointerMove={handleGripMove}
-        onPointerUp={handleGripUp}
-        onKeyDown={handleGripKey}
+        {...grip}
       />
 
       <Paper
@@ -63,6 +29,91 @@ export function Panes({ panel, children }: { panel: ReactNode; children: ReactNo
       </Paper>
     </Box>
   );
+}
+
+export function Split({ direction, label, initial, floors, first, second }: SplitProps) {
+  const [size, setSize] = useState(initial);
+  const { pane, grip } = useGrip(direction, size, setSize, floors);
+
+  return (
+    <Box
+      ref={pane}
+      className="split-pair"
+      data-direction={direction}
+      style={{ "--split-size": `${size}px` } as CSSProperties}
+    >
+      <div className="split-first">{first}</div>
+
+      <div
+        className="split-grip"
+        data-direction={direction}
+        role="separator"
+        aria-orientation={direction === "row" ? "vertical" : "horizontal"}
+        aria-label={label}
+        tabIndex={0}
+        {...grip}
+      />
+
+      <div className="split-second">{second}</div>
+    </Box>
+  );
+}
+
+interface SplitProps {
+  direction: Direction;
+  label: string;
+  initial: number;
+  floors: Floors;
+  first: ReactNode;
+  second: ReactNode;
+}
+
+type Direction = "row" | "column";
+
+interface Floors {
+  first: number;
+  second: number;
+}
+
+function useGrip(direction: Direction, size: number, setSize: (size: number) => void, floors: Floors) {
+  const pane = useRef<HTMLDivElement>(null);
+  const row = direction === "row";
+
+  const resize = useCallback((next: number) => {
+    const box = pane.current?.getBoundingClientRect();
+    if (!box) return;
+    const whole = row ? box.width : box.height;
+    const most = Math.max(floors.second, whole - floors.first);
+    setSize(Math.min(Math.max(next, floors.second), most));
+  }, [floors.first, floors.second, row, setSize]);
+
+  const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    const box = pane.current?.getBoundingClientRect();
+    if (box) resize(row ? box.right - event.clientX : box.bottom - event.clientY);
+  }, [resize, row]);
+
+  const onPointerUp = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const grow = row ? "ArrowLeft" : "ArrowUp";
+    const shrink = row ? "ArrowRight" : "ArrowDown";
+    const step = event.key === grow ? KEY_STEP : event.key === shrink ? -KEY_STEP : 0;
+    if (step === 0) return;
+    event.preventDefault();
+    resize(size + step);
+  };
+
+  return { pane, grip: { onPointerDown, onPointerMove, onPointerUp, onKeyDown } };
 }
 
 export const PANE_INSET: CSSProperties = {

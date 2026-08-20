@@ -295,6 +295,22 @@ export const PAGE_META = {
       "schema converter",
     ],
   },
+  "/sql": {
+    title: "SQLite & Postgres Playground",
+    description:
+      "Run SQL against a real SQLite or PostgreSQL database running entirely in your browser, with a schema tree, a results grid and a log of everything it did.",
+    keywords: [
+      "sql playground",
+      "online sql editor",
+      "sqlite in the browser",
+      "postgres in the browser",
+      "run sql online",
+      "sql sandbox",
+      "sqlite wasm",
+      "pglite",
+      "sql query tool",
+    ],
+  },
   "/time": {
     title: "Timestamp & Time Zone Converter",
     description:

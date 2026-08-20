@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAbc, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconGitCompare, IconHash, IconId, IconKey, IconMarkdown, IconPalette, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconWorld } from "./icons";
+import { IconAbc, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconGitCompare, IconHash, IconId, IconKey, IconMarkdown, IconPalette, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -107,6 +107,12 @@ const routes: UtilityRoute[] = [
     label: "Schema",
     Icon: IconSchema,
     Component: lazy(() => import("./utilities/schema/schema")),
+  },
+  {
+    path: "/sql",
+    label: "SQL",
+    Icon: IconDatabase,
+    Component: lazy(() => import("./utilities/sql/sql")),
   },
   {
     path: "/time",

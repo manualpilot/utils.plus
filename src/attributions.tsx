@@ -2,6 +2,7 @@ import { Accordion, Anchor, Badge, Box, Card, Group, Stack, Text, TextInput, Tit
 import { useMemo, useState } from "react";
 import attributions from "../inline/attributions.json";
 import gplText from "../inline/GPL-3.0.txt?raw";
+import postgresText from "../inline/PostgreSQL.txt?raw";
 import pythonText from "../inline/Python-2.0.txt?raw";
 import { shuffle } from "./common/random";
 import { IconSearch } from "./icons";
@@ -115,6 +116,36 @@ export default function Attributions() {
           </Box>
 
           <Box>
+            <Title order={4}>PGlite</Title>
+            <Text size="sm" mt={4}>
+              The Postgres mode of <Anchor href="/sql" inherit>SQL</Anchor> runs on{" "}
+              <Anchor href="https://github.com/electric-sql/pglite" target="_blank" rel="noopener noreferrer" inherit>
+                PGlite
+              </Anchor>
+              {pglite && ` ${pglite.version}`}, licensed under the{" "}
+              <strong>Apache License 2.0</strong>. The copy served here is the unmodified npm release, its WebAssembly
+              kept as files of its own rather than merged into the rest of the site, and the source it was built from is
+              behind the link above. What those files carry is PostgreSQL itself, under the{" "}
+              <strong>PostgreSQL Licence</strong>, reproduced at the bottom of this page.
+            </Text>
+          </Box>
+
+          <Box>
+            <Title order={4}>SQLite Wasm</Title>
+            <Text size="sm" mt={4}>
+              The SQLite mode of <Anchor href="/sql" inherit>SQL</Anchor> runs on{" "}
+              <Anchor href="https://github.com/sqlite/sqlite-wasm" target="_blank" rel="noopener noreferrer" inherit>
+                the SQLite project's own Wasm build
+              </Anchor>, wrapped as a module under the{" "}
+              <strong>Apache License 2.0</strong>. The engine inside that wrapper is SQLite, which its authors have{" "}
+              <Anchor href="https://sqlite.org/copyright.html" target="_blank" rel="noopener noreferrer" inherit>
+                dedicated to the public domain
+              </Anchor>
+              : it is under no licence at all and asks for no notice, so it is named here rather than listed above.
+            </Text>
+          </Box>
+
+          <Box>
             <Title order={4}>node-forge</Title>
             <Text size="sm" mt={4}>
               The X.509 certificates on <Anchor href="/keygen" inherit>Keygen</Anchor> are built with{" "}
@@ -177,6 +208,16 @@ export default function Attributions() {
 
       <Card withBorder shadow="sm" radius="md">
         <Stack gap="sm">
+          <Title order={4}>The PostgreSQL Licence</Title>
+          <Text size="sm" c="dimmed">
+            Reproduced because the PostgreSQL server PGlite carries is served from this site, and it arrives inside a
+            package rather than as one. It does not govern utils+ itself.
+          </Text>
+          <LicenceText>{postgresText}</LicenceText>
+        </Stack>
+      </Card>
+      <Card withBorder shadow="sm" radius="md">
+        <Stack gap="sm">
           <Title order={4}>Python Software Foundation License, version 2</Title>
           <Text size="sm" c="dimmed">
             Reproduced because the Python standard library Pyodide carries is served from this site, and it is the one
@@ -228,6 +269,7 @@ shuffle(packages);
 const texts: string[] = attributions.texts;
 const openpgp = packages.find((pkg) => pkg.name === "openpgp");
 const pyodide = packages.find((pkg) => pkg.name === "pyodide");
+const pglite = packages.find((pkg) => pkg.name === "@electric-sql/pglite");
 
 const summary = Object.entries(
   packages.reduce<Record<string, number>>((counts, pkg) => {

@@ -28,6 +28,13 @@ export default defineConfig({
 
   resolve: {
     tsconfigPaths: true,
+    alias: {
+      "stream/promises": "stream-browserify",
+    },
+  },
+
+  optimizeDeps: {
+    exclude: ["@sqlite.org/sqlite-wasm", "@electric-sql/pglite"],
   },
 });
 

@@ -142,7 +142,7 @@
     gap: var(--mantine-spacing-md);
   }
 
-  .split-grip {
+  .split-panes > .split-grip {
     display: none;
   }
 
@@ -152,6 +152,83 @@
 
   .split-panes > .split-panel {
     flex: 0 0 14rem;
+  }
+}
+
+.split-pair {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split-pair[data-direction="row"] {
+  flex-direction: row;
+}
+
+.split-pair[data-direction="column"] {
+  flex-direction: column;
+}
+
+.split-pair > .split-first,
+.split-pair > .split-second {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split-pair > .split-first > *,
+.split-pair > .split-second > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split-pair > .split-first {
+  flex: 1 1 0;
+}
+
+.split-pair > .split-second {
+  flex: 0 1 var(--split-size);
+}
+
+.split-pair[data-direction="row"] > .split-first {
+  min-width: 14rem;
+}
+
+.split-pair[data-direction="row"] > .split-second {
+  min-width: 12rem;
+}
+
+.split-pair[data-direction="column"] > .split-first,
+.split-pair[data-direction="column"] > .split-second {
+  min-height: 8rem;
+}
+
+.split-grip[data-direction="column"] {
+  cursor: row-resize;
+}
+
+.split-grip[data-direction="column"]::before {
+  width: 2rem;
+  height: 2px;
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .split-pair[data-direction="row"] {
+    flex-direction: column;
+  }
+
+  .split-pair[data-direction="row"] > .split-grip {
+    display: none;
+  }
+
+  .split-pair[data-direction="row"] > .split-first {
+    min-height: 26rem;
+  }
+
+  .split-pair[data-direction="row"] > .split-second {
+    flex: 0 0 18rem;
   }
 }
 
