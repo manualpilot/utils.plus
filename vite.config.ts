@@ -11,7 +11,12 @@ export default defineConfig({
   root: "src",
   publicDir: false,
   css: { postcss: import.meta.dirname },
-  build: { outDir: "../dist", emptyOutDir: true, sourcemap: true, rolldownOptions: { output: { chunkFileNames } } },
+  build: {
+    outDir: "../dist",
+    emptyOutDir: true,
+    sourcemap: true,
+    rolldownOptions: { output: { chunkFileNames, assetFileNames } },
+  },
   plugins: [
     react(),
     nodePolyfills({ include: ["assert", "buffer", "crypto", "stream", "util"] }),
@@ -40,11 +45,26 @@ export default defineConfig({
 
 function chunkFileNames(chunk: Rolldown.PreRenderedChunk): string {
   const name = (DIRECTORY_NAMES.has(chunk.name) ? packageOf(chunk) : undefined) ?? chunk.name;
+  return `assets/${scopedName(name)}-[hash].js`;
+}
+
+function scopedName(name: string): string {
   const editor = CODEMIRROR.exec(name);
-  return editor ? `assets/codemirror/${editor[1] ?? "codemirror"}-[hash].js` : `assets/${name}-[hash].js`;
+  if (editor) return `codemirror/${editor[1] ?? "codemirror"}`;
+  const icon = ICON.exec(name);
+  return icon ? `icons/${icon[1]}` : name;
 }
 
 const CODEMIRROR = /^codemirror(?:[-_](.+))?$/;
+
+const ICON = /^Icon(.+)$/;
+
+function assetFileNames(asset: Rolldown.PreRenderedAsset): string {
+  const directory = FONT.test(asset.names[0] ?? "") ? "assets/fonts" : "assets";
+  return `${directory}/[name]-[hash][extname]`;
+}
+
+const FONT = /\.(?:woff2?|ttf|otf|eot)$/;
 
 function packageOf(chunk: Rolldown.PreRenderedChunk): string | undefined {
   const id = chunk.facadeModuleId ?? chunk.moduleIds.at(-1) ?? "";
