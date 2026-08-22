@@ -10,6 +10,26 @@ test("the welcome page's head is in the document it was served", async ({ page }
   expect(html).toContain(PAGE_META["/"].description);
 });
 
+test("the welcome page's document says what each utility is", async ({ page }) => {
+  const html = await (await page.request.get("/")).text();
+  const graph = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1])["@graph"];
+  const list = graph.find((node: { "@type": string }) => node["@type"] === "ItemList");
+  const items: { item: { name: string; url: string } }[] = list.itemListElement;
+
+  expect(items.map((entry) => entry.item.url)).toEqual(utilities.map((utility) => `https://utils.plus${utility.path}`));
+  expect(items.map((entry) => entry.item.name)).toEqual(utilities.map((utility) => PAGE_META[utility.path].title));
+});
+
+test("routing off the welcome page takes its list of utilities with it", async ({ page }) => {
+  const graph = page.locator("head script[type=\"application/ld+json\"]");
+
+  await page.goto("/");
+  await expect(graph).toHaveCount(1);
+
+  await page.locator("nav a[href=\"/codec\"]").click();
+  await expect(graph).toHaveCount(0);
+});
+
 test("the sitemap and robots.txt are served", async ({ page }) => {
   expect(await (await page.request.get("/sitemap.xml")).text()).toBe(sitemapXml());
   expect(await (await page.request.get("/robots.txt")).text()).toBe(robotsTxt());

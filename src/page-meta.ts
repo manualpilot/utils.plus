@@ -465,6 +465,7 @@ export function headMeta(path: string): HeadMeta {
   return {
     title,
     canonical: url,
+    data: structuredData(path),
     metas: [
       { attribute: "name", key: "description", content: meta.description },
       { attribute: "name", key: "keywords", content: meta.keywords.join(", ") },
@@ -485,6 +486,7 @@ export interface HeadMeta {
   title: string;
   canonical: string;
   metas: MetaTag[];
+  data?: StructuredData;
 }
 
 export interface MetaTag {
@@ -493,13 +495,68 @@ export interface MetaTag {
   content: string;
 }
 
+export function utilityPaths(): PagePath[] {
+  return (Object.keys(PAGE_META) as PagePath[]).filter((path) => path !== HOME_PATH && path !== ATTRIBUTIONS_PATH);
+}
+
+export function structuredData(path: string): StructuredData | undefined {
+  if (path !== HOME_PATH) return undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": WEBSITE_ID,
+        name: SITE_NAME,
+        url: canonicalUrl(HOME_PATH),
+        description: pageMeta(HOME_PATH).description,
+      },
+      {
+        "@type": "ItemList",
+        name: `${SITE_NAME} utilities`,
+        numberOfItems: utilityPaths().length,
+        itemListElement: utilityPaths().map((utility, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: utilityData(utility),
+        })),
+      },
+    ],
+  };
+}
+
+function utilityData(path: PagePath): Record<string, unknown> {
+  const meta = pageMeta(path);
+
+  return {
+    "@type": "WebApplication",
+    name: meta.title,
+    description: meta.description,
+    url: canonicalUrl(path),
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript",
+    isPartOf: { "@id": WEBSITE_ID },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  };
+}
+
+const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
+
+export interface StructuredData {
+  "@context": string;
+  "@graph": Record<string, unknown>[];
+}
+
 export function headHtml(path: string): string {
-  const { title, canonical, metas } = headMeta(path);
+  const { title, canonical, metas, data } = headMeta(path);
 
   return [
     `<title>${escapeHtml(title)}</title>`,
     ...metas.map(({ attribute, key, content }) => `<meta ${attribute}="${key}" content="${escapeHtml(content)}" />`),
     `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
+    ...(data ? [`<script type="application/ld+json">${jsonLd(data)}</script>`] : []),
   ].join("\n  ");
 }
 
@@ -549,6 +606,13 @@ export function robotsTxt(): string {
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     "",
   ].join("\n");
+}
+
+function jsonLd(data: StructuredData): string {
+  return JSON.stringify(data, undefined, 2).replace(
+    /[<>&]/g,
+    (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
 }
 
 function escapeHtml(value: string): string {

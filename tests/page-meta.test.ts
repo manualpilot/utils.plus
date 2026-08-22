@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyDocumentHead } from "../src/common/document-head";
-import { canonicalUrl, documentFileName, documentTitle, headHtml, HOME_PATH, indexablePaths, PAGE_META, pageDocuments, pageMeta, type PagePath, robotsTxt, SITE_ORIGIN, sitemapXml, withHead } from "../src/page-meta";
+import { canonicalUrl, documentFileName, documentTitle, headHtml, HOME_PATH, indexablePaths, PAGE_META, pageDocuments, pageMeta, type PagePath, robotsTxt, SITE_ORIGIN, sitemapXml, structuredData, utilityPaths, withHead } from "../src/page-meta";
 import { utilities } from "../src/utility-registry";
 
 const DESCRIPTION_RANGE = { min: 80, max: 170 };
@@ -78,10 +78,54 @@ describe("applyDocumentHead", () => {
     expect(content("meta[name=\"description\"]")).toBe(PAGE_META["/time"].description);
   });
 
+  it("writes the graph on the welcome page and takes it off the next one", () => {
+    applyDocumentHead(HOME_PATH);
+    const script = document.head.querySelector("script[type=\"application/ld+json\"]");
+
+    expect(JSON.parse(script!.textContent!)).toEqual(structuredData(HOME_PATH));
+
+    applyDocumentHead("/keygen");
+    expect(document.head.querySelector("script[type=\"application/ld+json\"]")).toBeNull();
+  });
+
   it("says so when the address has no page", () => {
     applyDocumentHead("/nothing-here");
 
     expect(content("meta[name=\"robots\"]")).toBe("noindex, follow");
+  });
+});
+
+describe("structuredData", () => {
+  const graph = structuredData(HOME_PATH)!["@graph"];
+  const list = graph.find((node) => node["@type"] === "ItemList")!;
+  const items = list.itemListElement as { position: number; item: Record<string, string> }[];
+
+  it("names every utility and nothing that is not one", () => {
+    expect(items).toHaveLength(utilityPaths().length);
+    expect(items.map((entry) => entry.item.url)).toEqual(utilities.map((utility) => canonicalUrl(utility.path)));
+    expect(list.numberOfItems).toBe(utilities.length);
+  });
+
+  it("gives each entry the words of the page it points at", () => {
+    for (const { position, item } of items) {
+      const meta = PAGE_META[utilityPaths()[position - 1]];
+
+      expect(item.name).toBe(meta.title);
+      expect(item.description).toBe(meta.description);
+    }
+  });
+
+  it("ties every entry to the site the welcome page describes", () => {
+    const site = graph.find((node) => node["@type"] === "WebSite")!;
+
+    expect(site["@id"]).toBe(`${SITE_ORIGIN}/#website`);
+    for (const { item } of items) expect(item.isPartOf).toEqual({ "@id": site["@id"] });
+  });
+
+  it("is the welcome page's alone", () => {
+    for (const path of indexablePaths()) {
+      if (path !== HOME_PATH) expect(structuredData(path)).toBeUndefined();
+    }
   });
 });
 
@@ -99,6 +143,14 @@ describe("headHtml", () => {
     for (const path of indexablePaths()) {
       expect(headHtml(path)).not.toMatch(/&(?!amp;|lt;|gt;|quot;)/);
     }
+  });
+
+  it("writes the graph as text a parser reads back and a browser cannot end early", () => {
+    const script = headHtml(HOME_PATH).match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1];
+
+    expect(JSON.parse(script)).toEqual(structuredData(HOME_PATH));
+    expect(script).not.toMatch(/[<>&]/);
+    expect(script).toContain("\\u0026");
   });
 
   it("is what index.html leaves room for", () => {
@@ -143,6 +195,10 @@ describe("pageDocuments", () => {
       expect(html.match(/name="description"/g)).toHaveLength(1);
       expect(html).not.toContain(PAGE_META[HOME_PATH].description);
     }
+  });
+
+  it("leaves the list of utilities on the welcome page it was copied from", () => {
+    for (const html of Object.values(documents)) expect(html).not.toContain("application/ld+json");
   });
 });
 
