@@ -222,6 +222,24 @@ export const PAGE_META = {
       "markdown viewer",
     ],
   },
+  "/otp": {
+    title: "TOTP, HOTP & OCRA One-Time Password Calculator",
+    description:
+      "Work out a TOTP, HOTP or OCRA one-time password from a shared secret, with the algorithm, digits, counter and challenge the token uses. The secret never leaves the tab.",
+    keywords: [
+      "totp generator",
+      "hotp calculator",
+      "ocra calculator",
+      "one-time password",
+      "2fa code generator",
+      "authenticator code",
+      "rfc 6238",
+      "rfc 4226",
+      "rfc 6287",
+      "base32 secret",
+      "otpauth uri",
+    ],
+  },
   "/password": {
     title: "Password & Passphrase Generator",
     description:

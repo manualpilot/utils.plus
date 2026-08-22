@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { TIME_ZONES, zoneClock } from "../src/common/zone-clock";
+import { TIME_ZONES, wallDate, zoneClock } from "../src/common/zone-clock";
 import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, relativeTime, rfc2822 } from "../src/utilities/time/formats";
-import { readTimestamp, wallToIso } from "../src/utilities/time/read";
+import { readTimestamp } from "../src/utilities/time/read";
 
 const BERLIN_SUMMER = new Date("2026-08-10T12:34:56.789Z");
 const BERLIN_WINTER = new Date("2026-01-10T12:34:56.000Z");
@@ -196,26 +196,31 @@ describe("formats", () => {
   );
 });
 
-describe("wallToIso", () => {
+describe("wallDate", () => {
+  const iso = (wall: string, zone: string) => {
+    const date = wallDate(wall, zone);
+    return date && isoExtended(zoneClock(date, zone));
+  };
+
   it.each([
     ["2026-02-10 13:34:56", "Europe/Berlin", "2026-02-10T13:34:56+01:00"],
     ["2026-08-10 14:34:56", "Europe/Berlin", "2026-08-10T14:34:56+02:00"],
     ["2026-02-10 12:34:56", "UTC", "2026-02-10T12:34:56Z"],
     ["2026-02-10 18:04:56", "Asia/Kolkata", "2026-02-10T18:04:56+05:30"],
-  ])("writes %s in %s with the offset that applied", (wall, zone, expected) => {
-    expect(wallToIso(wall, zone)).toBe(expected);
+  ])("reads %s in %s at the offset that applied", (wall, zone, expected) => {
+    expect(iso(wall, zone)).toBe(expected);
   });
 
   it("carries a wall clock a spring-forward took away through to the hour that replaced it", () => {
-    expect(wallToIso("2026-03-29 02:30:00", "Europe/Berlin")).toBe("2026-03-29T03:30:00+02:00");
+    expect(iso("2026-03-29 02:30:00", "Europe/Berlin")).toBe("2026-03-29T03:30:00+02:00");
   });
 
   it("takes the first of an hour handed back", () => {
-    expect(wallToIso("2026-10-25 02:30:00", "Europe/Berlin")).toBe("2026-10-25T02:30:00+02:00");
+    expect(iso("2026-10-25 02:30:00", "Europe/Berlin")).toBe("2026-10-25T02:30:00+02:00");
   });
 
-  it.each(["2026-02-10", "2026-02-10 13:34", "half past four", ""])("has nothing to write for %s", (wall) => {
-    expect(wallToIso(wall, "UTC")).toBeNull();
+  it.each(["2026-02-10", "2026-02-10 13:34", "half past four", ""])("has nothing to read in %s", (wall) => {
+    expect(wallDate(wall, "UTC")).toBeNull();
   });
 });
 

@@ -4,6 +4,7 @@ export { default as IconArrowsMaximize } from "@tabler/icons-react/dist/esm/icon
 export { default as IconArrowsMinimize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMinimize.mjs";
 export { default as IconArrowsShuffle } from "@tabler/icons-react/dist/esm/icons/IconArrowsShuffle.mjs";
 export { default as IconArrowsUpDown } from "@tabler/icons-react/dist/esm/icons/IconArrowsUpDown.mjs";
+export { default as IconAuth2fa } from "@tabler/icons-react/dist/esm/icons/IconAuth2fa.mjs";
 export { default as IconBinary } from "@tabler/icons-react/dist/esm/icons/IconBinary.mjs";
 export { default as IconBlockquote } from "@tabler/icons-react/dist/esm/icons/IconBlockquote.mjs";
 export { default as IconBold } from "@tabler/icons-react/dist/esm/icons/IconBold.mjs";
@@ -46,6 +47,7 @@ export { default as IconPhoto } from "@tabler/icons-react/dist/esm/icons/IconPho
 export { default as IconPlayerPlay } from "@tabler/icons-react/dist/esm/icons/IconPlayerPlay.mjs";
 export { default as IconPlayerStop } from "@tabler/icons-react/dist/esm/icons/IconPlayerStop.mjs";
 export { default as IconPlus } from "@tabler/icons-react/dist/esm/icons/IconPlus.mjs";
+export { default as IconQrcode } from "@tabler/icons-react/dist/esm/icons/IconQrcode.mjs";
 export { default as IconRefresh } from "@tabler/icons-react/dist/esm/icons/IconRefresh.mjs";
 export { default as IconRegex } from "@tabler/icons-react/dist/esm/icons/IconRegex.mjs";
 export { default as IconRestore } from "@tabler/icons-react/dist/esm/icons/IconRestore.mjs";

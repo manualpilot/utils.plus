@@ -1,3 +1,5 @@
+import { encodeBase32 } from "../../common/base32";
+
 export function formatSecret(bytes: Uint8Array, format: string): string {
   switch (format) {
     case "hex-upper":
@@ -7,7 +9,7 @@ export function formatSecret(bytes: Uint8Array, format: string): string {
     case "base64url":
       return toBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     case "base32":
-      return toBase32(bytes);
+      return encodeBase32(bytes, true);
     case "decimal":
       return bytesToBigInt(bytes).toString();
     default:
@@ -33,25 +35,6 @@ export function fromBinary(binary: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return bytes;
-}
-
-const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
-function toBase32(bytes: Uint8Array): string {
-  let out = "";
-  let buffer = 0;
-  let bits = 0;
-  for (const byte of bytes) {
-    buffer = (buffer << 8) | byte;
-    bits += 8;
-    while (bits >= 5) {
-      bits -= 5;
-      out += BASE32_ALPHABET[(buffer >> bits) & 31];
-    }
-  }
-  if (bits > 0) out += BASE32_ALPHABET[(buffer << (5 - bits)) & 31];
-  while (out.length % 8 !== 0) out += "=";
-  return out;
 }
 
 function bytesToBigInt(bytes: Uint8Array): bigint {

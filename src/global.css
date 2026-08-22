@@ -337,6 +337,69 @@
   white-space: nowrap;
 }
 
+.otp-code {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: clamp(2rem, 9cqi, 3rem);
+  line-height: 1.2;
+  letter-spacing: 0.15em;
+  overflow-x: auto;
+}
+
+.otp-code[data-mac] {
+  font-size: var(--mantine-font-size-md);
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+
+.otp-countdown {
+  height: calc(0.5rem * var(--mantine-scale));
+  border-radius: var(--mantine-radius-xl);
+  background-color: var(--mantine-color-default-hover);
+  overflow: hidden;
+}
+
+.otp-countdown > .otp-countdown-bar {
+  height: 100%;
+  background-color: var(--mantine-color-orange-6);
+  transform-origin: left;
+  animation: otp-countdown var(--otp-period) linear infinite;
+  animation-delay: var(--otp-elapsed);
+}
+
+.otp-countdown[data-low] > .otp-countdown-bar {
+  background-color: var(--mantine-color-orange-2);
+}
+
+@keyframes otp-countdown {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-countdown > .otp-countdown-bar {
+    animation: none;
+    transform: scaleX(var(--otp-remaining));
+  }
+}
+
+.otp-qr {
+  width: calc(16rem * var(--mantine-scale));
+  max-width: 100%;
+  background-color: #fff;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.otp-qr > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .absolute-error {
   position: absolute !important;
   top: calc(100% + var(--mantine-spacing-xs) / 2);

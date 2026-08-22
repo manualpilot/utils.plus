@@ -1,5 +1,4 @@
-import { type WallClock, zoneClock, zoneInstant } from "../../common/zone-clock";
-import { isoExtended, MAX_TIME, MAX_YEAR, MIN_TIME, MIN_YEAR } from "./formats";
+import { MAX_TIME, MAX_YEAR, MIN_TIME, MIN_YEAR } from "./formats";
 
 export interface Reading {
   date: Date | null;
@@ -35,22 +34,6 @@ export function readTimestamp(text: string): Reading {
   if (iso) return asReading(Date.parse(trimmed.replace(" ", "T")), isoSource(iso));
 
   return asReading(Date.parse(trimmed), textSource(trimmed));
-}
-
-const WALL_PATTERN = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})$/;
-
-export function wallToIso(text: string, timeZone: string): string | null {
-  const match = WALL_PATTERN.exec(text);
-  if (!match) return null;
-  const wall: WallClock = {
-    year: Number(match[1]),
-    month: Number(match[2]),
-    day: Number(match[3]),
-    hour: Number(match[4]),
-    minute: Number(match[5]),
-    second: Number(match[6]),
-  };
-  return isoExtended(zoneClock(new Date(zoneInstant(wall, timeZone)), timeZone));
 }
 
 function epochMs(match: RegExpExecArray, unit: (typeof EPOCH_UNITS)[number]): number {

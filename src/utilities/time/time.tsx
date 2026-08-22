@@ -2,18 +2,16 @@ import { closestCenter, DndContext, type DragEndEvent, KeyboardSensor, PointerSe
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ActionIcon, Badge, Box, Card, CopyButton, Group, MultiSelect, Popover, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
-import { InlineDateTimePicker } from "@mantine/dates";
+import { ActionIcon, Badge, Box, Card, CopyButton, Group, MultiSelect, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
+import { INSTANT_PICKER_WIDTH, InstantPicker } from "../../common/instant-picker";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
-import { LOCAL_ZONE, TIME_ZONES, type WallClock, type ZoneClock, zoneClock } from "../../common/zone-clock";
-import { IconArrowsMaximize, IconArrowsMinimize, IconCalendarClock, IconCheck, IconClock, IconCopy, IconGripVertical, IconX } from "../../icons";
+import { LOCAL_ZONE, TIME_ZONES, zoneClock } from "../../common/zone-clock";
+import { IconArrowsMaximize, IconArrowsMinimize, IconCheck, IconCopy, IconGripVertical } from "../../icons";
 import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, offsetDigits, readable, relativeTime, rfc2822, zoneName } from "./formats";
-import { readTimestamp, wallToIso } from "./read";
+import { readTimestamp } from "./read";
 import { pickZones } from "./zones";
-
-import "@mantine/dates/styles.css";
 
 export default function Time() {
   const initialState = useInitialHashState<{
@@ -26,8 +24,6 @@ export default function Time() {
   const [zones, setZones] = useState(() => pickZones(initialState?.zones));
   const [now, setNow] = useState(() => Date.now());
   const [collapsed, setCollapsed] = useState(initialState?.collapsed ?? false);
-  const [picking, setPicking] = useState(false);
-  const [openedAt, setOpenedAt] = useState<Date | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -46,15 +42,7 @@ export default function Time() {
   const ticking = new Date(Math.floor(now / 1000) * 1000);
   const instant = live ? ticking : reading.date;
 
-  const pickInstant = (wall: string | null) => {
-    const iso = wall && wallToIso(wall, LOCAL_ZONE);
-    if (iso) setValue(iso);
-  };
-
-  const takePick = () => {
-    if (live && openedAt) setValue(isoExtended(zoneClock(openedAt, LOCAL_ZONE)));
-    setPicking(false);
-  };
+  const pickInstant = (picked: Date) => setValue(isoExtended(zoneClock(picked, LOCAL_ZONE)));
 
   const reorderZones = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -80,62 +68,15 @@ export default function Time() {
             spellCheck={false}
             classNames={{ root: "relative-root", error: "absolute-error" }}
             styles={{ input: { fontFamily: "monospace" } }}
-            rightSectionWidth={64}
+            rightSectionWidth={INSTANT_PICKER_WIDTH}
             rightSection={
-              <Group gap={2} wrap="nowrap">
-                <Popover opened={picking} onChange={setPicking} position="bottom-end" shadow="md" trapFocus>
-                  <Tooltip label="Pick a date and time" withArrow position="left">
-                    <Popover.Target>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        onClick={() => {
-                          setOpenedAt(instant);
-                          setPicking((open) => !open);
-                        }}
-                        aria-label="Pick a date and time"
-                      >
-                        <IconCalendarClock size="1.1rem" />
-                      </ActionIcon>
-                    </Popover.Target>
-                  </Tooltip>
-                  <Popover.Dropdown p="xs">
-                    <InlineDateTimePicker
-                      withSeconds
-                      fullWidth={false}
-                      value={live ? openedAt : reading.date}
-                      onChange={pickInstant}
-                      onSubmit={takePick}
-                      submitButtonProps={{ "aria-label": "Use this time" }}
-                    />
-                  </Popover.Dropdown>
-                </Popover>
-                {live
-                  ? (
-                    <Tooltip label="Pin the current time" withArrow position="left">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        onClick={() => setValue(String(ticking.getTime()))}
-                        aria-label="Pin the current time"
-                      >
-                        <IconClock size="1.1rem" />
-                      </ActionIcon>
-                    </Tooltip>
-                  )
-                  : (
-                    <Tooltip label="Follow the clock" withArrow position="left">
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        onClick={() => setValue("")}
-                        aria-label="Follow the clock"
-                      >
-                        <IconX size="1.1rem" />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-              </Group>
+              <InstantPicker
+                instant={instant}
+                live={live}
+                onPick={pickInstant}
+                onPin={() => setValue(String(ticking.getTime()))}
+                onClear={() => setValue("")}
+              />
             }
           />
           <MultiSelect

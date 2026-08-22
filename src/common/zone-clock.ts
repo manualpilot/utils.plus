@@ -73,6 +73,22 @@ export function zoneInstant(wall: WallClock, timeZone: string): number {
   return early;
 }
 
+const WALL_PATTERN = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})$/;
+
+export function wallDate(text: string, timeZone: string): Date | null {
+  const match = WALL_PATTERN.exec(text);
+  if (!match) return null;
+  const wall: WallClock = {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+    hour: Number(match[4]),
+    minute: Number(match[5]),
+    second: Number(match[6]),
+  };
+  return new Date(zoneInstant(wall, timeZone));
+}
+
 function readsAs(ms: number, wall: WallClock, timeZone: string): boolean {
   return wallKey(zoneClock(new Date(ms), timeZone)) === wallKey(wall);
 }
