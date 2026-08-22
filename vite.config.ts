@@ -46,19 +46,24 @@ export default defineConfig({
 
 function chunkFileNames(chunk: Rolldown.PreRenderedChunk): string {
   const name = (DIRECTORY_NAMES.has(chunk.name) ? packageOf(chunk) : undefined) ?? chunk.name;
-  return `assets/${scopedName(name)}-[hash].js`;
+  return `assets/${scopedName(name, chunk)}-[hash].js`;
 }
 
-function scopedName(name: string): string {
+function scopedName(name: string, chunk: Rolldown.PreRenderedChunk): string {
   const editor = CODEMIRROR.exec(name);
   if (editor) return `codemirror/${editor[1] ?? "codemirror"}`;
   const icon = ICON.exec(name);
-  return icon ? `icons/${icon[1]}` : name;
+  if (icon) return `icons/${icon[1]}`;
+  return isMantine(chunk) ? `mantine/${name}` : name;
 }
 
 const CODEMIRROR = /^codemirror(?:[-_](.+))?$/;
 
 const ICON = /^Icon(.+)$/;
+
+function isMantine(chunk: Rolldown.PreRenderedChunk): boolean {
+  return chunk.moduleIds.length > 0 && chunk.moduleIds.every((id) => id.includes("/node_modules/@mantine/"));
+}
 
 function assetFileNames(asset: Rolldown.PreRenderedAsset): string {
   return `${assetDirectory(asset)}/[name]-[hash][extname]`;
