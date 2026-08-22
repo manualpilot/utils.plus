@@ -25,7 +25,7 @@ jobs:
       - run: npm run outdated
       - run: npm run build
       - run: npm test
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@main
         if: inputs.pages
         with:
           path: dist
