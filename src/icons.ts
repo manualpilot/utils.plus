@@ -45,6 +45,7 @@ export { default as IconMarkdown } from "@tabler/icons-react/dist/esm/icons/Icon
 export { default as IconMinimize } from "@tabler/icons-react/dist/esm/icons/IconMinimize.mjs";
 export { default as IconPalette } from "@tabler/icons-react/dist/esm/icons/IconPalette.mjs";
 export { default as IconPencil } from "@tabler/icons-react/dist/esm/icons/IconPencil.mjs";
+export { default as IconPhone } from "@tabler/icons-react/dist/esm/icons/IconPhone.mjs";
 export { default as IconPhoto } from "@tabler/icons-react/dist/esm/icons/IconPhoto.mjs";
 export { default as IconPlayerPlay } from "@tabler/icons-react/dist/esm/icons/IconPlayerPlay.mjs";
 export { default as IconPlayerStop } from "@tabler/icons-react/dist/esm/icons/IconPlayerStop.mjs";

@@ -1,7 +1,10 @@
 import { spawnSync } from "node:child_process";
+import { RELEASE } from "./generate-phone-geo.mjs";
 
 const TITLES = { dependencies: "Outdated dependencies", devDependencies: "Outdated dev dependencies" };
 const ORDER = Object.keys(TITLES);
+
+const GENERATOR = "scripts/generate-phone-geo.mjs";
 
 const groups = new Map();
 
@@ -13,7 +16,9 @@ for (const [name, reported] of Object.entries(outdated())) {
   }
 }
 
-if (groups.size === 0) {
+const behind = await phoneGeoRelease();
+
+if (groups.size === 0 && !behind) {
   console.log("every dependency is up to date");
   process.exit(0);
 }
@@ -21,6 +26,24 @@ if (groups.size === 0) {
 for (const kind of [...groups.keys()].sort((a, b) => rank(a) - rank(b))) {
   const lines = groups.get(kind).sort();
   warn(`${TITLES[kind] ?? `Outdated ${kind}`} (${lines.length})`, lines);
+}
+
+if (behind) warn("Outdated phone number maps (1)", [behind]);
+
+async function phoneGeoRelease() {
+  const url = "https://api.github.com/repos/google/libphonenumber/releases/latest";
+  const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+  let latest;
+  try {
+    const headers = { Accept: "application/vnd.github+json", ...token ? { Authorization: `Bearer ${token}` } : {} };
+    const response = await fetch(url, { headers });
+    if (!response.ok) fail("Phone number map check failed", `${url} answered ${response.status}`);
+    latest = (await response.json()).tag_name;
+  } catch (cause) {
+    fail("Phone number map check failed", `${url}: ${cause instanceof Error ? cause.message : String(cause)}`);
+  }
+  if (!latest) fail("Phone number map check failed", `${url} named no release`);
+  return latest === RELEASE ? undefined : `google/libphonenumber ${RELEASE} → ${latest} (RELEASE in ${GENERATOR})`;
 }
 
 function outdated() {

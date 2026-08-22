@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { FALLBACK_COUNTRY, localCountryCode } from "../src/common/local-country";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageName, languageRows, nativeNameRows } from "../src/utilities/countries/facts";
 import { borderCountries, COUNTRIES, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "../src/utilities/countries/list";
-import { FALLBACK_COUNTRY, localCountryCode } from "../src/utilities/countries/local";
 
 function country(code: string) {
   const found = findCountry(code);

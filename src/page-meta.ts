@@ -276,6 +276,24 @@ export const PAGE_META = {
       "word based password",
     ],
   },
+  "/phone-number": {
+    title: "Phone Number Validator & Lookup",
+    description:
+      "Parse a phone number against any of 245 dialling regions, see whether it is valid, where its range was issued, who carries it and what time it is there.",
+    keywords: [
+      "phone number validator",
+      "libphonenumber",
+      "e164 format",
+      "phone number location lookup",
+      "phone carrier lookup",
+      "phone number time zone",
+      "short code lookup",
+      "international phone number format",
+      "phone number parser",
+      "rfc 3966 tel uri",
+      "mobile or landline lookup",
+    ],
+  },
   "/python": {
     title: "Run Python in the Browser",
     description:

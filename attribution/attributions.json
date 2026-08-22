@@ -879,12 +879,20 @@
       "text": 51
     },
     {
+      "name": "libphonenumber-js",
+      "version": "1.13.11",
+      "license": "MIT",
+      "publisher": "catamphetamine",
+      "url": "https://gitlab.com/catamphetamine/libphonenumber-js",
+      "text": 52
+    },
+    {
       "name": "lines-and-columns",
       "version": "1.2.4",
       "license": "MIT",
       "publisher": "Brian Donovan",
       "url": "https://github.com/eventualbuddha/lines-and-columns",
-      "text": 52
+      "text": 53
     },
     {
       "name": "mantine-datatable",
@@ -892,7 +900,7 @@
       "license": "MIT",
       "publisher": "Ionut-Cristian Florescu",
       "url": "https://github.com/icflorescu/mantine-datatable",
-      "text": 53
+      "text": 54
     },
     {
       "name": "marked",
@@ -900,7 +908,7 @@
       "license": "MIT",
       "publisher": "Christopher Jeffrey",
       "url": "https://github.com/markedjs/marked",
-      "text": 54
+      "text": 55
     },
     {
       "name": "mitt",
@@ -908,7 +916,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "developit/mitt",
-      "text": 55
+      "text": 56
     },
     {
       "name": "mz",
@@ -916,7 +924,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "normalize/mz",
-      "text": 56
+      "text": 57
     },
     {
       "name": "next-resolver",
@@ -932,7 +940,7 @@
       "license": "(BSD-3-Clause OR GPL-2.0)",
       "publisher": "Digital Bazaar, Inc.",
       "url": "https://github.com/digitalbazaar/forge",
-      "text": 57
+      "text": 58
     },
     {
       "name": "object-assign",
@@ -940,7 +948,7 @@
       "license": "MIT",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/object-assign",
-      "text": 58
+      "text": 59
     },
     {
       "name": "openpgp",
@@ -948,7 +956,7 @@
       "license": "LGPL-3.0+",
       "publisher": "",
       "url": "https://github.com/openpgpjs/openpgpjs",
-      "text": 59
+      "text": 60
     },
     {
       "name": "picomatch",
@@ -956,7 +964,7 @@
       "license": "MIT",
       "publisher": "Jon Schlinkert",
       "url": "micromatch/picomatch",
-      "text": 60
+      "text": 61
     },
     {
       "name": "pirates",
@@ -964,7 +972,7 @@
       "license": "MIT",
       "publisher": "Ari Porad",
       "url": "https://github.com/danez/pirates",
-      "text": 61
+      "text": 62
     },
     {
       "name": "plain-tag",
@@ -972,7 +980,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/plain-tag",
-      "text": 62
+      "text": 63
     },
     {
       "name": "polyscript",
@@ -980,7 +988,7 @@
       "license": "APACHE-2.0",
       "publisher": "Anaconda Inc.",
       "url": "",
-      "text": 63
+      "text": 64
     },
     {
       "name": "pyodide",
@@ -988,7 +996,7 @@
       "license": "MPL-2.0",
       "publisher": "",
       "url": "https://github.com/pyodide/pyodide",
-      "text": 64,
+      "text": 65,
       "reconstructed": true
     },
     {
@@ -997,7 +1005,7 @@
       "license": "MIT",
       "publisher": "Kazuhiko Arase",
       "url": "https://github.com/kazuhikoarase/qrcode-generator",
-      "text": 65,
+      "text": 66,
       "reconstructed": true
     },
     {
@@ -1014,7 +1022,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
-      "text": 66
+      "text": 67
     },
     {
       "name": "react-dom",
@@ -1022,7 +1030,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
-      "text": 66
+      "text": 67
     },
     {
       "name": "react-number-format",
@@ -1030,7 +1038,7 @@
       "license": "MIT",
       "publisher": "Sudhanshu Yadav",
       "url": "https://github.com/s-yadav/react-number-format",
-      "text": 67
+      "text": 68
     },
     {
       "name": "react-remove-scroll",
@@ -1038,7 +1046,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-remove-scroll",
-      "text": 68
+      "text": 69
     },
     {
       "name": "react-remove-scroll-bar",
@@ -1046,7 +1054,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-remove-scroll-bar",
-      "text": 69,
+      "text": 70,
       "reconstructed": true
     },
     {
@@ -1055,7 +1063,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-style-singleton",
-      "text": 68
+      "text": 69
     },
     {
       "name": "reflected-ffi",
@@ -1071,7 +1079,7 @@
       "license": "MIT",
       "publisher": "Luke Edwards",
       "url": "lukeed/regexparam",
-      "text": 70
+      "text": 71
     },
     {
       "name": "safer-buffer",
@@ -1079,7 +1087,7 @@
       "license": "MIT",
       "publisher": "Nikita Skovoroda",
       "url": "https://github.com/ChALkeR/safer-buffer",
-      "text": 71
+      "text": 72
     },
     {
       "name": "scheduler",
@@ -1087,7 +1095,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/facebook/react",
-      "text": 66
+      "text": 67
     },
     {
       "name": "sshpk",
@@ -1111,7 +1119,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/marijnh/style-mod",
-      "text": 72
+      "text": 73
     },
     {
       "name": "sucrase",
@@ -1119,7 +1127,7 @@
       "license": "MIT",
       "publisher": "Alan Pierce",
       "url": "https://github.com/alangpierce/sucrase",
-      "text": 73
+      "text": 74
     },
     {
       "name": "tabbable",
@@ -1127,7 +1135,7 @@
       "license": "MIT",
       "publisher": "David Clark",
       "url": "https://github.com/focus-trap/tabbable",
-      "text": 74
+      "text": 75
     },
     {
       "name": "tagged-tag",
@@ -1135,7 +1143,7 @@
       "license": "MIT",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/tagged-tag",
-      "text": 75
+      "text": 76
     },
     {
       "name": "thenify",
@@ -1143,7 +1151,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "thenables/thenify",
-      "text": 76
+      "text": 77
     },
     {
       "name": "thenify-all",
@@ -1151,7 +1159,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "thenables/thenify-all",
-      "text": 77
+      "text": 78
     },
     {
       "name": "tinyglobby",
@@ -1159,7 +1167,7 @@
       "license": "MIT",
       "publisher": "Superchupu",
       "url": "https://github.com/SuperchupuDev/tinyglobby",
-      "text": 78
+      "text": 79
     },
     {
       "name": "to-json-callback",
@@ -1176,7 +1184,7 @@
       "license": "Apache-2.0",
       "publisher": "Dmitry S, Grist Labs",
       "url": "https://github.com/gristlabs/ts-interface-checker",
-      "text": 79
+      "text": 80
     },
     {
       "name": "tslib",
@@ -1184,7 +1192,7 @@
       "license": "0BSD",
       "publisher": "Microsoft Corp.",
       "url": "https://github.com/Microsoft/tslib",
-      "text": 80
+      "text": 81
     },
     {
       "name": "tweetnacl",
@@ -1192,7 +1200,7 @@
       "license": "Unlicense",
       "publisher": "TweetNaCl-js contributors",
       "url": "https://github.com/dchest/tweetnacl-js",
-      "text": 81
+      "text": 82
     },
     {
       "name": "type-checked-collections",
@@ -1208,7 +1216,7 @@
       "license": "(MIT OR CC0-1.0)",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/type-fest",
-      "text": 82
+      "text": 83
     },
     {
       "name": "use-callback-ref",
@@ -1216,7 +1224,7 @@
       "license": "MIT",
       "publisher": "theKashey",
       "url": "https://github.com/theKashey/use-callback-ref/",
-      "text": 68
+      "text": 69
     },
     {
       "name": "use-sidecar",
@@ -1224,7 +1232,7 @@
       "license": "MIT",
       "publisher": "theKashey",
       "url": "https://github.com/theKashey/use-sidecar",
-      "text": 68
+      "text": 69
     },
     {
       "name": "use-sync-external-store",
@@ -1232,7 +1240,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/facebook/react",
-      "text": 66
+      "text": 67
     },
     {
       "name": "w3c-keyname",
@@ -1240,7 +1248,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/marijnh/w3c-keyname",
-      "text": 83
+      "text": 84
     },
     {
       "name": "weak-id",
@@ -1256,7 +1264,7 @@
       "license": "ODbL-1.0",
       "publisher": "Mohammed Le Doze",
       "url": "https://github.com/mledoze/countries",
-      "text": 84
+      "text": 85
     },
     {
       "name": "wouter",
@@ -1264,7 +1272,7 @@
       "license": "Unlicense",
       "publisher": "Alexey Taktarov",
       "url": "https://github.com/molefrog/wouter",
-      "text": 85,
+      "text": 86,
       "reconstructed": true
     },
     {
@@ -1273,7 +1281,7 @@
       "license": "MIT",
       "publisher": "Einar Otto Stangvik",
       "url": "https://github.com/websockets/ws",
-      "text": 86
+      "text": 87
     }
   ],
   "texts": [
@@ -1329,6 +1337,7 @@
     "Copyright (C) 2017-present by Andrea Giammarchi - @WebReflection\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "The MIT License (MIT)\n\nCopyright (c) 2018 Filip Skokan\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
     "Licensing\n---------\n\nThis software is covered under the following copyright:\n\n/*\n * Copyright (c) 2003-2005  Tom Wu\n * All Rights Reserved.\n *\n * Permission is hereby granted, free of charge, to any person obtaining\n * a copy of this software and associated documentation files (the\n * \"Software\"), to deal in the Software without restriction, including\n * without limitation the rights to use, copy, modify, merge, publish,\n * distribute, sublicense, and/or sell copies of the Software, and to\n * permit persons to whom the Software is furnished to do so, subject to\n * the following conditions:\n *\n * The above copyright notice and this permission notice shall be\n * included in all copies or substantial portions of the Software.\n *\n * THE SOFTWARE IS PROVIDED \"AS-IS\" AND WITHOUT WARRANTY OF ANY KIND, \n * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY \n * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  \n *\n * IN NO EVENT SHALL TOM WU BE LIABLE FOR ANY SPECIAL, INCIDENTAL,\n * INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER\n * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT ADVISED OF\n * THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY, ARISING OUT\n * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n *\n * In addition, the following condition applies:\n *\n * All redistributions must retain an intact copy of this copyright notice\n * and disclaimer.\n */\n\nAddress all questions regarding this license to:\n\n  Tom Wu\n  tjw@cs.Stanford.EDU",
+    "(The MIT License)\n\nCopyright (c) 2016 @catamphetamine <purecatamphetamine@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
     "The MIT License (MIT)\n\nCopyright (c) 2015 Brian Donovan\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "MIT License\n\nCopyright (c) 2022 – 2026 Ionuț-Cristian Florescu\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
     "# License information\n\n## Contribution License Agreement\n\nIf you contribute code to this project, you are implicitly allowing your code\nto be distributed under the MIT license. You are also implicitly verifying that\nall code is your original work. `</legalese>`\n\n## Marked\n\nCopyright (c) 2018+, MarkedJS (https://github.com/markedjs/)\nCopyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n## Markdown\n\nCopyright © 2004, John Gruber\nhttp://daringfireball.net/\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n* Neither the name “Markdown” nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nThis software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.",

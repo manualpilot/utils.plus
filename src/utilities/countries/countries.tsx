@@ -1,8 +1,8 @@
-import { ActionIcon, Badge, Box, Button, Card, CheckIcon, Code, type ComboboxLikeRenderOptionInput, CopyButton, Group, Select, Stack, Table, Text, Title, Tooltip } from "@mantine/core";
+import { Badge, Box, Button, Card, CheckIcon, Code, type ComboboxLikeRenderOptionInput, Group, Select, Stack, Table, Text, Title } from "@mantine/core";
 import { type ReactNode, useState } from "react";
+import { FactTable } from "../../common/fact-table";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
-import { IconCheck, IconCopy } from "../../icons";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageRows, nativeNameRows } from "./facts";
 import { borderCountries, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "./list";
 
@@ -60,7 +60,7 @@ export default function Countries() {
         </Stack>
       </Card>
 
-      <Box className="country-columns">
+      <Box className="card-columns">
         <Card withBorder shadow="sm" radius="md">
           <Stack gap="sm">
             <Title order={4}>Codes</Title>
@@ -195,42 +195,6 @@ interface SectionProps {
   title: string;
   empty?: string | false;
   children: ReactNode;
-}
-
-function FactTable({ rows }: { rows: { label: string; value: string }[] }) {
-  return (
-    <Table verticalSpacing={6} horizontalSpacing="xs" withRowBorders={false}>
-      <Table.Tbody>
-        {rows.filter((row) => row.value !== "").map((row) => (
-          <Table.Tr key={row.label} data-fact={row.label}>
-            <Table.Td w="1%" style={{ whiteSpace: "nowrap" }}>
-              <Text size="sm" c="dimmed">{row.label}</Text>
-            </Table.Td>
-            <Table.Td w="1%">
-              <CopyButton value={row.value} timeout={2000}>
-                {({ copied, copy }) => (
-                  <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="left">
-                    <ActionIcon
-                      color={copied ? "teal" : "gray"}
-                      variant="subtle"
-                      size="sm"
-                      onClick={copy}
-                      aria-label={`Copy ${row.label}`}
-                    >
-                      {copied ? <IconCheck size="1rem" /> : <IconCopy size="1rem" />}
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-              </CopyButton>
-            </Table.Td>
-            <Table.Td>
-              <Text size="sm" ff="monospace" style={{ overflowWrap: "anywhere" }}>{row.value}</Text>
-            </Table.Td>
-          </Table.Tr>
-        ))}
-      </Table.Tbody>
-    </Table>
-  );
 }
 
 function ColumnTable({ head, rows }: { head: string[]; rows: string[][] }) {

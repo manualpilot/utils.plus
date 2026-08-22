@@ -1,6 +1,6 @@
 import type { ComboboxParsedItem, OptionsFilter } from "@mantine/core";
 import countries, { type Country } from "world-countries";
-import { FALLBACK_COUNTRY, localCountryCode } from "./local";
+import { FALLBACK_COUNTRY, localCountryCode } from "../../common/local-country";
 
 export type { Country };
 
