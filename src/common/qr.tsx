@@ -1,12 +1,31 @@
 import qrcode from "qrcode-generator";
 
+export function QrCode({ modules, label }: QrCodeProps) {
+  const span = modules.length + QR_QUIET_ZONE * 2;
+
+  return (
+    <div className="qr-code">
+      <svg viewBox={`0 0 ${span} ${span}`} role="img" aria-label={label} shapeRendering="crispEdges">
+        <path d={qrPath(modules)} fill="#000" />
+      </svg>
+    </div>
+  );
+}
+
+interface QrCodeProps {
+  modules: boolean[][];
+  label: string;
+}
+
+export type QrCorrection = "L" | "M" | "Q" | "H";
+
 qrcode.stringToBytes = (text: string) => Array.from(new TextEncoder().encode(text));
 
 export const QR_QUIET_ZONE = 4;
 
-export function qrModules(text: string): boolean[][] | null {
+export function qrModules(text: string, correction: QrCorrection = "M"): boolean[][] | null {
   try {
-    const code = qrcode(0, "M");
+    const code = qrcode(0, correction);
     code.addData(text);
     code.make();
     const size = code.getModuleCount();

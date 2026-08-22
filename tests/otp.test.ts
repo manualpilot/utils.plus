@@ -1,13 +1,13 @@
 // @vitest-environment node
-import jsQR from "jsqr";
 import { describe, expect, it } from "vitest";
 import { decodeBase32, encodeBase32 } from "../src/common/base32";
+import { qrModules, qrPath } from "../src/common/qr";
 import { computeCode } from "../src/utilities/otp/compute";
 import { type Algorithm, hotp, timeStep } from "../src/utilities/otp/hotp";
 import { ocra, type OcraInputs, parseSuite, questionProblem, sessionProblem } from "../src/utilities/otp/ocra";
-import { QR_QUIET_ZONE, qrModules, qrPath } from "../src/utilities/otp/qr";
 import { generateSecret, readSecret, secretProblem } from "../src/utilities/otp/secret";
 import { readUri, type UriFields, uriKeyless, writeUri } from "../src/utilities/otp/uri";
+import { scanQr } from "./scan-qr";
 
 const ascii = (text: string) => new TextEncoder().encode(text);
 
@@ -471,23 +471,6 @@ describe("the otpauth URI", () => {
 });
 
 describe("the QR code", () => {
-  const scan = (modules: boolean[][], scale = 6) => {
-    const span = (modules.length + QR_QUIET_ZONE * 2) * scale;
-    const pixels = new Uint8ClampedArray(span * span * 4).fill(255);
-    for (const [row, cells] of modules.entries()) {
-      for (const [col, dark] of cells.entries()) {
-        if (!dark) continue;
-        for (let y = 0; y < scale; y++) {
-          for (let x = 0; x < scale; x++) {
-            const at = (((row + QR_QUIET_ZONE) * scale + y) * span + (col + QR_QUIET_ZONE) * scale + x) * 4;
-            pixels[at] = pixels[at + 1] = pixels[at + 2] = 0;
-          }
-        }
-      }
-    }
-    return jsQR(pixels, span, span)?.data ?? null;
-  };
-
   it.each([
     ["a TOTP enrolment", "otpauth://totp/utils.plus:local?secret=JBSWY3DPEHPK3PXP&issuer=utils.plus&digits=6"],
     [
@@ -497,7 +480,7 @@ describe("the QR code", () => {
     ["the longest a page can spell", `otpauth://totp/${"a".repeat(120)}:${"b".repeat(120)}?secret=JBSWY3DPEHPK3PXP`],
     ["a character outside Latin-1", "otpauth://totp/caf\u00e9 \u2615?secret=JBSWY3DPEHPK3PXP"],
   ])("reads back as %s", (_, uri) => {
-    expect(scan(qrModules(uri)!)).toBe(uri);
+    expect(scanQr(qrModules(uri)!)).toBe(uri);
   });
 
   it("has nothing to draw for text no version has room for", () => {

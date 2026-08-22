@@ -123,8 +123,6 @@ export const FORMAT_OPTIONS = [
 export const MAX_SECRET_BYTES = 512;
 export const DEFAULT_SECRET_BYTES = 32;
 
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 export const HOST_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
 
 export const MAX_DAYS = 3650;

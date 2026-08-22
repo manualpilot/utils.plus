@@ -1,13 +1,13 @@
 import { ActionIcon, Box, Button, Card, CopyButton, Group, Modal, NumberInput, SegmentedControl, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { type CSSProperties, useEffect, useState } from "react";
 import { INSTANT_PICKER_WIDTH, InstantPicker } from "../../common/instant-picker";
+import { QrCode, qrModules } from "../../common/qr";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconQrcode, IconRefresh } from "../../icons";
 import { computeCode } from "./compute";
 import type { Algorithm } from "./hotp";
 import { DEFAULT_SUITE, parseSuite, questionNoun, questionProblem, sessionProblem, type Suite } from "./ocra";
-import { QR_QUIET_ZONE, qrModules, qrPath } from "./qr";
 import { generateSecret, pickSecretFormat, SECRET_FORMATS, type SecretFormat, secretProblem } from "./secret";
 import { ALGORITHM_OPTIONS, clampWhole, COUNTER_RANGE, DIGIT_RANGE, hashLabel, MAX_COUNTER, MAX_TIME, type Mode, MODE_OPTIONS, MODES, parseWhole, PERIOD_RANGE, pickAlgorithm, pickMode, pickText, pickTextOr, SECRET_SIZES, TIME_RANGE } from "./settings";
 import { DEFAULT_ISSUER, DEFAULT_LABEL, readUri, type UriFields, uriKeyless, writeUri } from "./uri";
@@ -489,7 +489,6 @@ export default function Otp() {
 
 function QrPanel({ uri }: QrPanelProps) {
   const modules = qrModules(uri);
-  const span = modules === null ? 0 : modules.length + QR_QUIET_ZONE * 2;
 
   return (
     <Stack gap="md" align="center">
@@ -499,18 +498,7 @@ function QrPanel({ uri }: QrPanelProps) {
             This URI is longer than any QR code has room for, so there is nothing here a camera could read.
           </Text>
         )
-        : (
-          <Box className="otp-qr">
-            <svg
-              viewBox={`0 0 ${span} ${span}`}
-              role="img"
-              aria-label="QR code for the URI"
-              shapeRendering="crispEdges"
-            >
-              <path d={qrPath(modules)} fill="#000" />
-            </svg>
-          </Box>
-        )}
+        : <QrCode modules={modules} label="QR code for the URI" />}
 
       <Text size="xs" c="dimmed" ff="monospace" style={{ wordBreak: "break-all" }}>{uri}</Text>
 

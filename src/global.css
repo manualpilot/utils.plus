@@ -387,14 +387,14 @@
   }
 }
 
-.otp-qr {
-  width: calc(16rem * var(--mantine-scale));
+.qr-code {
+  width: var(--qr-code-width, calc(16rem * var(--mantine-scale)));
   max-width: 100%;
   background-color: #fff;
   border-radius: var(--mantine-radius-sm);
 }
 
-.otp-qr > svg {
+.qr-code > svg {
   display: block;
   width: 100%;
   height: auto;

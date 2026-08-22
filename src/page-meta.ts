@@ -275,6 +275,22 @@ export const PAGE_META = {
       "webassembly python",
     ],
   },
+  "/qr-code": {
+    title: "WiFi, vCard & URL QR Code Generator",
+    description:
+      "Make a QR code for a link, a WiFi network, a contact card, an email, a phone number or an SMS, drawn as you type and saved as an SVG or a PNG. Nothing is fetched.",
+    keywords: [
+      "qr code generator",
+      "wifi qr code",
+      "vcard qr code",
+      "url to qr code",
+      "mailto qr code",
+      "sms qr code",
+      "contact card qr",
+      "offline qr generator",
+      "qr code svg",
+    ],
+  },
   "/regex": {
     title: "Regex Tester & Explainer",
     description:

@@ -1,10 +1,11 @@
 import { ActionIcon, Box, Button, Card, CopyButton, Group, NumberInput, PasswordInput, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { randomBytes } from "@noble/hashes/utils.js";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { EMAIL_PATTERN } from "../../common/email";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconRefresh } from "../../icons";
-import { algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_DAYS, DEFAULT_SECRET_BYTES, EMAIL_PATTERN, FORMAT_OPTIONS, KEY_ID_OPTIONS, KIND_LABELS, KIND_OPTIONS, MAX_DAYS, MAX_JWK_KEYS, MAX_SECRET_BYTES, pickAlgorithm, pickFormat, pickKeyIdSource, pickKind, pickText, pickVariant } from "./algorithms";
+import { algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_DAYS, DEFAULT_SECRET_BYTES, FORMAT_OPTIONS, KEY_ID_OPTIONS, KIND_LABELS, KIND_OPTIONS, MAX_DAYS, MAX_JWK_KEYS, MAX_SECRET_BYTES, pickAlgorithm, pickFormat, pickKeyIdSource, pickKind, pickText, pickVariant } from "./algorithms";
 import { generateCertificate, splitAltNames } from "./certificate";
 import { formatSecret } from "./encoding";
 import { generateJwkSet } from "./jwk";

@@ -291,7 +291,7 @@ test("the QR code is the URI a camera can be shown", async ({ page }) => {
 
   const dialog = page.getByRole("dialog", { name: "Scan to enrol" });
   await expect(dialog.getByRole("img", { name: "QR code for the URI" })).toBeVisible();
-  await expect(dialog.locator(".otp-qr")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(dialog.locator(".qr-code")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(dialog.getByText(`otpauth://totp/utils.plus:local?secret=${SEED_BASE32}`, { exact: false }))
     .toBeVisible();
 
