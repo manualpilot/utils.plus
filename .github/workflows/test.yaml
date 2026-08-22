@@ -1,9 +1,19 @@
 name: test
 on:
   push:
+    branches-ignore:
+      - main
+  workflow_call:
+    inputs:
+      pages:
+        description: Hand dist to the calling workflow as the Pages artifact.
+        type: boolean
+        default: false
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@main
       - uses: actions/setup-node@main
@@ -15,3 +25,7 @@ jobs:
       - run: npm run outdated
       - run: npm run build
       - run: npm test
+      - uses: actions/upload-pages-artifact@v3
+        if: inputs.pages
+        with:
+          path: dist
