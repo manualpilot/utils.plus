@@ -1,0 +1,192 @@
+import { expect, Page, test } from "@playwright/test";
+
+const BASE = process.env.PW_BASE_URL ?? "";
+
+const showing = (page: Page) => page.locator("[data-country]");
+
+const fact = (page: Page, label: string) => page.locator(`[data-fact="${label}"]`);
+
+test.describe("a browser whose clock is somewhere in particular", () => {
+  test.use({ timezoneId: "Europe/Berlin", locale: "en-US" });
+
+  test("opens on the country the clock is set in", async ({ page }) => {
+    await open(page);
+
+    await expect(showing(page)).toHaveAttribute("data-country", "DE");
+    await expect(page.getByRole("heading", { name: "Germany", exact: true })).toBeVisible();
+    await expect(fact(page, "Calling code")).toContainText("+49");
+
+    await page.waitForTimeout(SETTLE_MS);
+    expect(new URL(page.url()).hash).toBe("");
+  });
+});
+
+test.describe("a browser that will not say where it is", () => {
+  test.use({ timezoneId: "UTC", locale: "en" });
+
+  test("opens on Australia", async ({ page }) => {
+    await open(page);
+
+    await expect(showing(page)).toHaveAttribute("data-country", "AU");
+    await expect(page.getByRole("heading", { name: "Australia", exact: true })).toBeVisible();
+  });
+});
+
+test.describe("the page", () => {
+  test.use({ timezoneId: "Australia/Sydney", locale: "en-AU" });
+
+  test("reads a country's data back off the library", async ({ page }) => {
+    await open(page);
+
+    await expect(page.getByText("Commonwealth of Australia").first()).toBeVisible();
+    await expect(fact(page, "ISO 3166-1 alpha-2")).toContainText("AU");
+    await expect(fact(page, "ISO 3166-1 alpha-3")).toContainText("AUS");
+    await expect(fact(page, "ISO 3166-1 numeric")).toContainText("036");
+    await expect(fact(page, "Internet domain")).toContainText(".au");
+    await expect(fact(page, "Capital")).toContainText("Canberra");
+    await expect(fact(page, "Area")).toContainText("7,692,024\u00a0km²");
+    await expect(fact(page, "Coordinates")).toContainText("27°00′00″S 133°00′00″E");
+    await expect(page.getByText("Australian dollar")).toBeVisible();
+    await expect(page.getByText("Landlocked")).toHaveCount(0);
+  });
+
+  test("is searched by what a country is called anywhere, not only by its label", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "cote d'ivoire", "Ivory Coast");
+    await expect(showing(page)).toHaveAttribute("data-country", "CI");
+
+    await pick(page, "deutschland", "Germany");
+    await expect(showing(page)).toHaveAttribute("data-country", "DE");
+
+    await pick(page, "NPL", "Nepal");
+    await expect(showing(page)).toHaveAttribute("data-country", "NP");
+    await expect(page.getByText("Landlocked")).toBeVisible();
+  });
+
+  test("stays searchable once a country has been picked", async ({ page }) => {
+    await open(page);
+
+    const combobox = page.getByRole("combobox", { name: "Country" });
+    await expect(combobox).toHaveValue("Australia");
+
+    await combobox.click();
+    await expect(page.getByRole("option", { name: "Australia", exact: false })).toBeVisible();
+
+    await pick(page, "Japan", "Japan");
+    await expect(combobox).toHaveValue("Japan");
+
+    await pick(page, "Peru", "Peru");
+    await expect(showing(page)).toHaveAttribute("data-country", "PE");
+  });
+
+  test("puts the best match at the top of the list and highlights it", async ({ page }) => {
+    await open(page);
+
+    const combobox = page.getByRole("combobox", { name: "Country" });
+    await combobox.click();
+    await combobox.fill("uni");
+
+    const options = page.getByRole("option");
+    await expect(options.first()).toContainText("United Arab Emirates");
+    await expect(options.nth(1)).toContainText("United Kingdom");
+    await expect(options.nth(2)).toContainText("United States");
+
+    await expect(options.first()).toBeInViewport();
+    await combobox.press("Enter");
+    await expect(showing(page)).toHaveAttribute("data-country", "AE");
+  });
+
+  test("a land border is the way to the country it names", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Portugal", "Portugal");
+    await expect(showing(page)).toHaveAttribute("data-country", "PT");
+
+    await page.getByRole("button", { name: /Spain/ }).click();
+    await expect(showing(page)).toHaveAttribute("data-country", "ES");
+    await expect(fact(page, "Capital")).toContainText("Madrid");
+    await expect(page.getByRole("combobox", { name: "Country" })).toHaveValue(/Spain/);
+  });
+
+  test("shows the whole of a dialling plan without putting it in a row", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "United States", "United States");
+
+    await expect(fact(page, "Calling code")).toContainText("+1");
+    await expect(page.getByText("380 dialling prefixes")).toBeVisible();
+    await expect(page.getByText("+1907", { exact: true })).toBeVisible();
+    await expect(page.getByText("+1808", { exact: true })).toBeVisible();
+  });
+
+  test("says what the data does not carry rather than leaving a blank", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Antarctica", "Antarctica");
+
+    await expect(fact(page, "Capital")).toHaveCount(0);
+    await expect(fact(page, "Calling code")).toHaveCount(0);
+    await expect(page.getByText("None of its own")).toBeVisible();
+    await expect(page.getByText("None recorded")).toBeVisible();
+    await expect(fact(page, "ISO 3166-1 alpha-3")).toContainText("ATA");
+  });
+
+  test("draws the flags from a font of this site's own rather than from whatever the system has", async ({ page }) => {
+    const offsite: string[] = [];
+    await page.route("**/*", (route) => {
+      const url = new URL(route.request().url());
+      if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1") offsite.push(url.href);
+      return route.continue();
+    });
+
+    await open(page);
+
+    const covered = await page.evaluate(async () => {
+      await document.fonts.load("16px \"Twemoji Country Flags\"", "\u{1F1E6}\u{1F1FA}");
+      return document.fonts.check("16px \"Twemoji Country Flags\"", "\u{1F1E6}\u{1F1FA}");
+    });
+
+    expect(covered).toBe(true);
+    expect(offsite).toEqual([]);
+  });
+
+  test("the link carries the country and nothing else", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Japan", "Japan");
+    await expect.poll(() => hashState(page)).toEqual({ country: "JP" });
+
+    const shared = page.url();
+    const other = await page.context().newPage();
+    await other.goto(shared);
+
+    await expect(showing(other)).toHaveAttribute("data-country", "JP");
+    await expect(other.getByText("日本").first()).toBeVisible();
+  });
+});
+
+const SETTLE_MS = 600;
+
+async function open(page: Page) {
+  await page.goto(`${BASE}/countries`);
+  await expect(showing(page)).toBeVisible();
+}
+
+async function pick(page: Page, search: string, option: string) {
+  const combobox = page.getByRole("combobox", { name: "Country" });
+  await combobox.click();
+  await combobox.fill(search);
+  await page.getByRole("option", { name: option }).first().click();
+}
+
+function hashState(page: Page): Record<string, string> {
+  let b64 = new URL(page.url()).hash.slice(1).replace(/-/g, "+").replace(/_/g, "/");
+  if (!b64) return {};
+  while (b64.length % 4) b64 += "=";
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  } catch {
+    return {};
+  }
+}

@@ -26,7 +26,8 @@ const grey: MantineColorsTuple = [
   "#1E1E1E",
 ];
 
-const ROBOTO = "'Roboto Variable', Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif";
+const ROBOTO = "'Twemoji Country Flags', 'Roboto Variable', Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, "
+  + "Helvetica, Arial, sans-serif";
 
 export const theme = createTheme({
   colors: { orange, grey },

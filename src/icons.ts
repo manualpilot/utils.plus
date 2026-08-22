@@ -26,6 +26,7 @@ export { default as IconDatabase } from "@tabler/icons-react/dist/esm/icons/Icon
 export { default as IconDatabaseImport } from "@tabler/icons-react/dist/esm/icons/IconDatabaseImport.mjs";
 export { default as IconDownload } from "@tabler/icons-react/dist/esm/icons/IconDownload.mjs";
 export { default as IconEye } from "@tabler/icons-react/dist/esm/icons/IconEye.mjs";
+export { default as IconFlag } from "@tabler/icons-react/dist/esm/icons/IconFlag.mjs";
 export { default as IconGitCompare } from "@tabler/icons-react/dist/esm/icons/IconGitCompare.mjs";
 export { default as IconGripVertical } from "@tabler/icons-react/dist/esm/icons/IconGripVertical.mjs";
 export { default as IconH1 } from "@tabler/icons-react/dist/esm/icons/IconH1.mjs";

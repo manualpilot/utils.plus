@@ -57,6 +57,7 @@
     "acorn": "^8.18.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "country-flag-emoji-polyfill": "^0.1.10",
     "dayjs": "^1.11.21",
     "dompurify": "^3.4.13",
     "fuse.js": "^7.5.0",
@@ -72,6 +73,7 @@
     "react-dom": "^19.2.0",
     "sshpk": "^1.18.0",
     "sucrase": "^3.35.1",
+    "world-countries": "^5.1.0",
     "wouter": "^3.10.0"
   },
   "devDependencies": {

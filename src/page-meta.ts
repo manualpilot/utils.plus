@@ -89,6 +89,22 @@ export const PAGE_META = {
       "pressure converter",
     ],
   },
+  "/countries": {
+    title: "ISO 3166 Country Code & Data Lookup",
+    description:
+      "Pick any of 250 countries and read back its ISO 3166 codes, calling code, capital, currencies, languages, land borders, area and name in two dozen languages.",
+    keywords: [
+      "country codes",
+      "iso 3166",
+      "alpha-2 country code",
+      "alpha-3 country code",
+      "country calling codes",
+      "country currency codes",
+      "country capital lookup",
+      "country tld",
+      "demonyms",
+    ],
+  },
   "/cron": {
     title: "Cron Expression Builder & Parser",
     description:

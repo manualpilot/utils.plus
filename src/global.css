@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Twemoji Country Flags";
+  unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067, U+E006C, U+E006E, U+E0073-E0074, U+E0077,
+    U+E007F;
+  src: url("country-flag-emoji-polyfill/dist/TwemojiCountryFlags.woff2") format("woff2");
+  font-display: swap;
+}
+
 .skip-link {
   position: absolute;
   top: -3rem;
@@ -335,6 +343,37 @@
   min-width: 0;
   overflow-x: auto;
   white-space: nowrap;
+}
+
+.country-columns {
+  display: flex;
+  flex-direction: row;
+  gap: var(--mantine-spacing-md);
+}
+
+.country-columns > * {
+  flex: 1;
+  min-width: 0;
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .country-columns {
+    flex-direction: column;
+  }
+}
+
+.country-picker {
+  max-width: calc(23rem * var(--mantine-scale));
+}
+
+.country-prefixes {
+  max-height: calc(7rem * var(--mantine-scale));
+  overflow-y: auto;
+}
+
+.country-flag {
+  font-size: calc(2.5rem * var(--mantine-scale));
+  line-height: 1;
 }
 
 .otp-code {
