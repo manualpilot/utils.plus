@@ -668,3 +668,105 @@ svg.country-map {
   flex-shrink: 0;
   font-size: var(--mantine-font-size-xs);
 }
+
+.image-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 60vh;
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+  background-color: var(--mantine-color-dark-8);
+  background-image: linear-gradient(45deg, var(--mantine-color-dark-6) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--mantine-color-dark-6) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--mantine-color-dark-6) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--mantine-color-dark-6) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+
+.image-frame {
+  flex: none;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+}
+
+.image-turn {
+  grid-area: 1 / 1;
+  position: relative;
+}
+
+.image-turn > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.image-crop-layer {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.image-crop {
+  position: absolute;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.55);
+  outline: 1px solid var(--mantine-color-orange-4);
+}
+
+.image-crop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, transparent 33.33%, rgba(255, 255, 255, 0.35) 33.33%,
+      rgba(255, 255, 255, 0.35) calc(33.33% + 1px), transparent calc(33.33% + 1px), transparent 66.66%,
+      rgba(255, 255, 255, 0.35) 66.66%, rgba(255, 255, 255, 0.35) calc(66.66% + 1px), transparent calc(66.66% + 1px)),
+    linear-gradient(to bottom, transparent 33.33%, rgba(255, 255, 255, 0.35) 33.33%,
+      rgba(255, 255, 255, 0.35) calc(33.33% + 1px), transparent calc(33.33% + 1px), transparent 66.66%,
+      rgba(255, 255, 255, 0.35) 66.66%, rgba(255, 255, 255, 0.35) calc(66.66% + 1px), transparent calc(66.66% + 1px));
+  pointer-events: none;
+}
+
+.image-crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: var(--mantine-color-orange-4);
+  border-radius: 2px;
+}
+
+.image-dropzone {
+  border: 2px dashed var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 100ms ease, background-color 100ms ease;
+}
+
+.image-dropzone:hover,
+.image-dropzone:focus-visible {
+  border-color: var(--mantine-color-orange-6);
+}
+
+.image-dropzone[data-dragging] {
+  border-color: var(--mantine-color-orange-4);
+  background-color: var(--mantine-color-dark-6);
+}
+
+.image-data-uri textarea {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+}
+
+.panel-chevron {
+  transition: transform 150ms ease;
+}
+
+.panel-chevron[data-open] {
+  transform: rotate(90deg);
+}

@@ -197,6 +197,27 @@ export const PAGE_META = {
       "pbkdf2",
     ],
   },
+  "/image": {
+    title: "Image Converter, Resizer & EXIF Editor",
+    description:
+      "Open a picture, read and edit its EXIF and metadata, crop, resize, turn and colour it, then save it as PNG, JPEG, WebP or AVIF, or as a data URI. Nothing is uploaded.",
+    keywords: [
+      "image converter",
+      "exif viewer",
+      "exif editor",
+      "remove exif data",
+      "strip image metadata",
+      "image resizer",
+      "crop image online",
+      "png to jpg",
+      "jpg to webp",
+      "image to data uri",
+      "base64 image encoder",
+      "photo metadata viewer",
+      "gps location from photo",
+      "compress image",
+    ],
+  },
   "/javascript": {
     title: "Run JavaScript & TypeScript in the Browser",
     description:

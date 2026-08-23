@@ -26,15 +26,6 @@ export function qrPng(modules: boolean[][]): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 }
 
-export function download(name: string, blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url));
-}
-
 const SVG_SCALE = 8;
 
 const PNG_TARGET = 640;

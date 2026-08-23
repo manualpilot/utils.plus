@@ -1,10 +1,11 @@
 import { ActionIcon, Box, Button, Card, Checkbox, CopyButton, Group, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { type CSSProperties, type ReactNode, useState } from "react";
+import { download } from "../../common/download";
 import { QrCode, qrModules } from "../../common/qr";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconDownload } from "../../icons";
-import { download, qrPng, qrSvg } from "./image";
+import { qrPng, qrSvg } from "./image";
 import { addressProblem, linkProblem, type MailFields, numberProblem } from "./links";
 import { CORRECTION_OPTIONS, type Kind, KIND_OPTIONS, KINDS, pickCorrection, pickKind, pickText, writePayload } from "./payload";
 import type { VCardFields } from "./vcard";
