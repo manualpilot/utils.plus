@@ -24,7 +24,7 @@ npm run preview    # serve the production build
 ```sh
 npm test           # format check, typecheck, unit tests, build
 npm run vitest     # unit tests only
-npx playwright test  # end-to-end tests, requires `npm run dev` running
+npm run playwright # end-to-end tests, requires `npm run dev` running
 ```
 
 `npm test` does not run the Playwright specs — run those separately.
@@ -40,6 +40,8 @@ npx playwright test  # end-to-end tests, requires `npm run dev` running
 - [src/common/](src/common/) — shared hooks and helpers
 - [src/global.css](src/global.css) — layout classes shared across utilities
 - [tests/](tests/) — `*.test.ts` are Vitest, `*.spec.ts` are Playwright
+- [conf/](conf/) — the tool configuration the npm scripts point at: dprint, Playwright, PostCSS and the
+  Vitest setup file
 
 ## License
 

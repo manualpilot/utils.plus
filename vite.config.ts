@@ -10,7 +10,7 @@ import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, r
 export default defineConfig({
   root: "src",
   publicDir: false,
-  css: { postcss: import.meta.dirname },
+  css: { postcss: join(import.meta.dirname, "conf") },
   build: {
     outDir: "../dist",
     emptyOutDir: true,
@@ -28,7 +28,7 @@ export default defineConfig({
     root: import.meta.dirname,
     globals: true,
     environment: "jsdom",
-    setupFiles: "./vitest.setup.ts",
+    setupFiles: "./conf/vitest.setup.ts",
     include: ["tests/**/*.test.{ts,tsx}"],
   },
 
