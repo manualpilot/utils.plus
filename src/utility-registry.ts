@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconMarkdown, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
+import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -71,6 +71,12 @@ const routes: UtilityRoute[] = [
     label: "Image",
     Icon: IconPhoto,
     Component: lazy(() => import("./utilities/image/image")),
+  },
+  {
+    path: "/ip-address",
+    label: "IP Address",
+    Icon: IconNetwork,
+    Component: lazy(() => import("./utilities/ip-address/ip-address")),
   },
   {
     path: "/javascript",

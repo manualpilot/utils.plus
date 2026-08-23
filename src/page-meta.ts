@@ -218,6 +218,25 @@ export const PAGE_META = {
       "compress image",
     ],
   },
+  "/ip-address": {
+    title: "IPv4, IPv6 & CIDR Subnet Calculator",
+    description:
+      "Work out subnet ranges, masks and host counts from any CIDR block, split it into smaller ones, convert an address to an integer, and expand or compress IPv6.",
+    keywords: [
+      "subnet calculator",
+      "cidr calculator",
+      "ip address calculator",
+      "ipv4 subnet mask",
+      "ipv6 expander",
+      "ipv6 compression",
+      "cidr to ip range",
+      "ip to integer",
+      "wildcard mask",
+      "private ip ranges",
+      "cidr split",
+      "reverse dns arpa",
+    ],
+  },
   "/javascript": {
     title: "Run JavaScript & TypeScript in the Browser",
     description:

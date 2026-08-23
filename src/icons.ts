@@ -53,6 +53,7 @@ export { default as IconListNumbers } from "@tabler/icons-react/dist/esm/icons/I
 export { default as IconMapPin } from "@tabler/icons-react/dist/esm/icons/IconMapPin.mjs";
 export { default as IconMarkdown } from "@tabler/icons-react/dist/esm/icons/IconMarkdown.mjs";
 export { default as IconMinimize } from "@tabler/icons-react/dist/esm/icons/IconMinimize.mjs";
+export { default as IconNetwork } from "@tabler/icons-react/dist/esm/icons/IconNetwork.mjs";
 export { default as IconPalette } from "@tabler/icons-react/dist/esm/icons/IconPalette.mjs";
 export { default as IconPencil } from "@tabler/icons-react/dist/esm/icons/IconPencil.mjs";
 export { default as IconPhone } from "@tabler/icons-react/dist/esm/icons/IconPhone.mjs";
