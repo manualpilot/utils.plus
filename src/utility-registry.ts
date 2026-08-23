@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconMarkdown, IconPalette, IconPhone, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
+import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconMarkdown, IconPalette, IconPhone, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -143,6 +143,12 @@ const routes: UtilityRoute[] = [
     label: "SQL",
     Icon: IconDatabase,
     Component: lazy(() => import("./utilities/sql/sql")),
+  },
+  {
+    path: "/string",
+    label: "String",
+    Icon: IconLetterCase,
+    Component: lazy(() => import("./utilities/string/string")),
   },
   {
     path: "/time",

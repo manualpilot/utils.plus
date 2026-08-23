@@ -413,6 +413,27 @@ export const PAGE_META = {
       "sql query tool",
     ],
   },
+  "/string": {
+    title: "Case Converter, Line Sorter & Text Escaper",
+    description:
+      "Convert camel, snake, kebab, Pascal, title and sentence case, sort, dedupe, wrap and shuffle lines, slugify, count words, and escape for HTML, JS, C, shell and SQL.",
+    keywords: [
+      "case converter",
+      "camel case converter",
+      "snake case converter",
+      "kebab case",
+      "title case converter",
+      "sort lines",
+      "remove duplicate lines",
+      "word count",
+      "character count",
+      "slugify text",
+      "html entity encoder",
+      "escape string",
+      "text word wrap",
+      "shuffle lines",
+    ],
+  },
   "/time": {
     title: "Timestamp & Time Zone Converter",
     description:
