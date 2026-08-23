@@ -141,6 +141,26 @@ export const PAGE_META = {
       "csv editor",
     ],
   },
+  "/curl": {
+    title: "curl Command Builder, Parser & Runner",
+    description:
+      "Build a curl command argument by argument, or paste one in and have it taken apart into fields you can edit — then Send it as a fetch and read what came back.",
+    keywords: [
+      "curl command builder",
+      "curl command generator",
+      "curl parser",
+      "curl post json",
+      "curl header",
+      "curl options",
+      "build curl request",
+      "edit curl command",
+      "run curl in browser",
+      "curl to fetch",
+      "online http client",
+      "send http request",
+      "rest client",
+    ],
+  },
   "/diff": {
     title: "Text & Code Diff Checker",
     description:

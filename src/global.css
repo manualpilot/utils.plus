@@ -606,6 +606,10 @@ svg.country-map {
   display: none;
 }
 
+.curl-command {
+  overflow: hidden;
+}
+
 .regex-pattern {
   display: flex;
   align-items: center;
