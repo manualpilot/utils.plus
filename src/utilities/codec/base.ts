@@ -81,3 +81,18 @@ export function pad(encoded: string, blockSize: number): string {
   const remainder = encoded.length % blockSize;
   return remainder === 0 ? encoded : encoded + "=".repeat(blockSize - remainder);
 }
+
+export function hexToBytes(text: string, subject: string): Uint8Array<ArrayBuffer> {
+  const cleaned = text.replace(/0x/gi, "").replace(/[\s,:_-]+/g, "");
+  if (!/^[0-9a-f]*$/i.test(cleaned)) {
+    throw new Error(`${subject} contains characters that are not hexadecimal digits`);
+  }
+  if (cleaned.length % 2 !== 0) {
+    throw new Error(`${subject} must have an even number of hexadecimal digits`);
+  }
+  const bytes = new Uint8Array(cleaned.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(cleaned.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}

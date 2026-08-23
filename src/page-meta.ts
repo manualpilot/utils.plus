@@ -36,9 +36,9 @@ export const PAGE_META = {
     ],
   },
   "/codec": {
-    title: "Base64, Base32, Hex, Gzip & Morse Codec",
+    title: "Base64, Base32, Hex, Gzip, Morse & ROT13 Codec",
     description:
-      "Encode and decode text as Base64, Base32, hexadecimal, decimal, binary, NATO phonetic or Morse, or deflate it to Base64 with zlib or gzip. Nothing leaves the browser.",
+      "Encode and decode Base64, Base32, hex, decimal, binary, NATO, Morse and gzip, or run text through ROT13, Caesar, Vigenère and XOR. Nothing leaves the browser.",
     keywords: [
       "base64 encoder",
       "base64 decoder",
@@ -54,6 +54,12 @@ export const PAGE_META = {
       "gzip base64",
       "inflate zlib",
       "decode samlrequest",
+      "rot13 decoder",
+      "rot47",
+      "caesar cipher solver",
+      "vigenere cipher",
+      "xor cipher",
+      "single byte xor",
     ],
   },
   "/colour": {

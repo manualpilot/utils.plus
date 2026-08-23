@@ -1,6 +1,18 @@
 export type Mode = "encode" | "decode";
 
-export type Format = "base64" | "base32" | "hex" | "decimal" | "binary" | "deflate" | "nato" | "morse";
+export type Format =
+  | "base64"
+  | "base32"
+  | "hex"
+  | "decimal"
+  | "binary"
+  | "deflate"
+  | "nato"
+  | "morse"
+  | "rot13"
+  | "caesar"
+  | "vigenere"
+  | "xor";
 
 export type ByteFormat = Exclude<Format, "deflate">;
 
@@ -13,6 +25,10 @@ export const FORMATS = [
   { value: "deflate", label: "Deflate (Base64)" },
   { value: "nato", label: "NATO phonetic" },
   { value: "morse", label: "Morse code" },
+  { value: "rot13", label: "ROT13" },
+  { value: "caesar", label: "Caesar cipher" },
+  { value: "vigenere", label: "Vigenère cipher" },
+  { value: "xor", label: "XOR" },
 ];
 
 export const VARIANTS: Record<Format, { value: string; label: string }[]> = {
@@ -58,6 +74,27 @@ export const VARIANTS: Record<Format, { value: string; label: string }[]> = {
     { value: "spaces", label: "Three spaces between words" },
     { value: "symbols", label: "Interpunct and minus (·−)" },
   ],
+  rot13: [
+    { value: "rot13", label: "ROT13 (letters)" },
+    { value: "rot18", label: "ROT18 (letters and digits)" },
+    { value: "rot47", label: "ROT47 (printable ASCII)" },
+  ],
+  caesar: [
+    { value: "letters", label: "Letters, the rest unchanged" },
+    { value: "alphanumeric", label: "Letters and digits" },
+    { value: "ascii", label: "Printable ASCII (! to ~)" },
+  ],
+  vigenere: [
+    { value: "standard", label: "Standard (repeating key)" },
+    { value: "autokey", label: "Autokey (key extended by the text)" },
+    { value: "beaufort", label: "Beaufort (key minus text)" },
+  ],
+  xor: [
+    { value: "text-hex", label: "Text key, hex output" },
+    { value: "text-base64", label: "Text key, Base64 output" },
+    { value: "hex-hex", label: "Hex key, hex output" },
+    { value: "hex-base64", label: "Hex key, Base64 output" },
+  ],
 };
 
 export const VARIANT_HINTS: Record<Format, string> = {
@@ -69,10 +106,35 @@ export const VARIANT_HINTS: Record<Format, string> = {
   deflate: "Decoding accepts any of the three",
   nato: "Decoding accepts any spelling",
   morse: "Decoding accepts · and − as well",
+  rot13: "Each ROT is its own inverse",
+  caesar: "Which characters the shift turns",
+  vigenere: "Beaufort is its own inverse",
+  xor: "How the key and the output are written",
 };
 
 export function defaultVariant(format: Format): string {
   return VARIANTS[format][0].value;
+}
+
+export type KeyField = { label: string; description: string; placeholder: string; numeric: boolean };
+
+export function keyField(format: Format, variant: string): KeyField | undefined {
+  switch (format) {
+    case "caesar":
+      return { label: "Shift", description: "Positions along the alphabet", placeholder: "3", numeric: true };
+    case "vigenere":
+      return { label: "Key", description: "Letters only; the rest is ignored", placeholder: "LEMON", numeric: false };
+    case "xor":
+      return variant.startsWith("hex")
+        ? { label: "Key", description: "Hexadecimal bytes", placeholder: "2f", numeric: false }
+        : { label: "Key", description: "Read as UTF-8 text", placeholder: "secret", numeric: false };
+    default:
+      return undefined;
+  }
+}
+
+export function defaultKey(format: Format): string {
+  return format === "caesar" ? "3" : "";
 }
 
 export function isFormat(value: string | undefined | null): value is Format {

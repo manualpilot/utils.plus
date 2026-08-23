@@ -1,15 +1,24 @@
-import { BASE32_ALPHABETS, BASE32_STANDARD, base32Lookup, BASE64_LOOKUP, BASE64_STANDARD, BASE64_URL, decodeWithAlphabet, encodeWithAlphabet, pad } from "./base";
+import { BASE32_ALPHABETS, BASE32_STANDARD, base32Lookup, BASE64_LOOKUP, BASE64_STANDARD, BASE64_URL, decodeWithAlphabet, encodeWithAlphabet, hexToBytes, pad } from "./base";
 import { deflate, inflate } from "./deflate";
 import { type ByteFormat, type Format, type Mode } from "./formats";
 import { decodeMorse, encodeMorse } from "./morse";
 import { decodeNato, encodeNato } from "./nato";
+import { caesar, parseShift, rot13 } from "./rotate";
 import { bytesToText } from "./text";
+import { vigenere } from "./vigenere";
+import { xorBytes, xorKeyBytes } from "./xor";
 
 export type Conversion = { output: string; error: string; byteLength: number };
 
 export const NOTHING: Conversion = { output: "", error: "", byteLength: 0 };
 
-export async function convert(input: string, mode: Mode, format: Format, variant: string): Promise<Conversion> {
+export async function convert(
+  input: string,
+  mode: Mode,
+  format: Format,
+  variant: string,
+  key = "",
+): Promise<Conversion> {
   if (input === "") return NOTHING;
 
   try {
@@ -19,12 +28,12 @@ export async function convert(input: string, mode: Mode, format: Format, variant
         const compressed = await deflate(bytes, variant);
         return { output: encodeBytes(compressed, "base64", "standard"), error: "", byteLength: compressed.length };
       }
-      return { output: encodeBytes(bytes, format, variant), error: "", byteLength: bytes.length };
+      return { output: encodeBytes(bytes, format, variant, key), error: "", byteLength: bytes.length };
     }
 
     const bytes = format === "deflate"
       ? await inflate(decodeToBytes(input, "base64", "standard"), variant)
-      : decodeToBytes(input, format, variant);
+      : decodeToBytes(input, format, variant, key);
     let text: string;
     try {
       text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -37,7 +46,7 @@ export async function convert(input: string, mode: Mode, format: Format, variant
   }
 }
 
-export function encodeBytes(bytes: Uint8Array, format: ByteFormat, variant: string): string {
+export function encodeBytes(bytes: Uint8Array, format: ByteFormat, variant: string, key = ""): string {
   switch (format) {
     case "base64": {
       const alphabet = variant.startsWith("url") ? BASE64_URL : BASE64_STANDARD;
@@ -67,10 +76,27 @@ export function encodeBytes(bytes: Uint8Array, format: ByteFormat, variant: stri
       return encodeNato(bytesToText(bytes), variant);
     case "morse":
       return encodeMorse(bytesToText(bytes), variant);
+    case "rot13":
+      return rot13(bytesToText(bytes), variant);
+    case "caesar":
+      return caesar(bytesToText(bytes), variant, parseShift(key));
+    case "vigenere":
+      return vigenere(bytesToText(bytes), variant, key, "encode");
+    case "xor": {
+      const ciphertext = xorBytes(bytes, xorKeyBytes(key, variant));
+      return variant.endsWith("base64")
+        ? encodeBytes(ciphertext, "base64", "standard")
+        : encodeBytes(ciphertext, "hex", "lower");
+    }
   }
 }
 
-export function decodeToBytes(text: string, format: ByteFormat, variant: string): Uint8Array<ArrayBuffer> {
+export function decodeToBytes(
+  text: string,
+  format: ByteFormat,
+  variant: string,
+  key = "",
+): Uint8Array<ArrayBuffer> {
   switch (format) {
     case "base64": {
       const unescaped = text.replace(/%([0-9a-f]{2})/gi, (_, hex: string) => String.fromCharCode(parseInt(hex, 16)));
@@ -82,20 +108,8 @@ export function decodeToBytes(text: string, format: ByteFormat, variant: string)
       if (variant === "crockford") cleaned = cleaned.replace(/-/g, "");
       return decodeWithAlphabet(cleaned, base32Lookup(variant), 5);
     }
-    case "hex": {
-      const cleaned = text.replace(/0x/gi, "").replace(/[\s,:_-]+/g, "");
-      if (!/^[0-9a-f]*$/i.test(cleaned)) {
-        throw new Error("Input contains characters that are not hexadecimal digits");
-      }
-      if (cleaned.length % 2 !== 0) {
-        throw new Error("Hexadecimal input must have an even number of digits");
-      }
-      const bytes = new Uint8Array(cleaned.length / 2);
-      for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(cleaned.slice(i * 2, i * 2 + 2), 16);
-      }
-      return bytes;
-    }
+    case "hex":
+      return hexToBytes(text, "Input");
     case "decimal": {
       const parts = text.split(/[\s,;]+/).filter((part) => part !== "");
       const bytes = new Uint8Array(parts.length);
@@ -129,5 +143,17 @@ export function decodeToBytes(text: string, format: ByteFormat, variant: string)
       return new TextEncoder().encode(decodeNato(text));
     case "morse":
       return new TextEncoder().encode(decodeMorse(text));
+    case "rot13":
+      return new TextEncoder().encode(rot13(text, variant));
+    case "caesar":
+      return new TextEncoder().encode(caesar(text, variant, -parseShift(key)));
+    case "vigenere":
+      return new TextEncoder().encode(vigenere(text, variant, key, "decode"));
+    case "xor": {
+      const ciphertext = variant.endsWith("base64")
+        ? decodeToBytes(text, "base64", "standard")
+        : decodeToBytes(text, "hex", "lower");
+      return xorBytes(ciphertext, xorKeyBytes(key, variant));
+    }
   }
 }

@@ -275,6 +275,118 @@ describe("morse", () => {
   });
 });
 
+describe("rot13", () => {
+  it("rotates letters and leaves everything else alone", () => {
+    expect(encodeBytes(bytes("Hello, World!"), "rot13", "rot13")).toBe("Uryyb, Jbeyq!");
+    expect(encodeBytes(bytes("abc123"), "rot13", "rot13")).toBe("nop123");
+  });
+
+  it("rotates digits by five as well for ROT18, which is where the name comes from", () => {
+    expect(encodeBytes(bytes("abc123"), "rot13", "rot18")).toBe("nop678");
+  });
+
+  it("rotates the printable graphics for ROT47", () => {
+    expect(encodeBytes(bytes("Hello"), "rot13", "rot47")).toBe("w6==@");
+    expect(encodeBytes(bytes("a b"), "rot13", "rot47")).toBe("2 3");
+  });
+
+  it.each(["rot13", "rot18", "rot47"])("is its own inverse for %s", (variant) => {
+    const sample = "Pack my box, 12 jugs!";
+    expect(text(decodeToBytes(encodeBytes(bytes(sample), "rot13", variant), "rot13", variant))).toBe(sample);
+  });
+});
+
+describe("caesar", () => {
+  it("shifts by three, which is the shift the cipher is named for", () => {
+    expect(encodeBytes(bytes("Hello, World!"), "caesar", "letters", "3")).toBe("Khoor, Zruog!");
+    expect(text(decodeToBytes("Khoor, Zruog!", "caesar", "letters", "3"))).toBe("Hello, World!");
+  });
+
+  it("wraps a shift that is negative or longer than the alphabet", () => {
+    expect(encodeBytes(bytes("abc"), "caesar", "letters", "-1")).toBe("zab");
+    expect(encodeBytes(bytes("abc"), "caesar", "letters", "29")).toBe("def");
+  });
+
+  it("turns digits and the printable graphics when the variant says to", () => {
+    expect(encodeBytes(bytes("abc 789"), "caesar", "alphanumeric", "3")).toBe("def 012");
+    expect(encodeBytes(bytes("abc 789"), "caesar", "letters", "3")).toBe("def 789");
+    expect(encodeBytes(bytes("~"), "caesar", "ascii", "1")).toBe("!");
+  });
+
+  it("says so when the shift is missing or is not a whole number", () => {
+    expect(() => encodeBytes(bytes("abc"), "caesar", "letters", "")).toThrow(/needs a shift/);
+    expect(() => encodeBytes(bytes("abc"), "caesar", "letters", "two")).toThrow(/whole number/);
+  });
+});
+
+describe("vigenere", () => {
+  it("encodes ATTACKATDAWN under LEMON", () => {
+    expect(encodeBytes(bytes("ATTACKATDAWN"), "vigenere", "standard", "LEMON")).toBe("LXFOPVEFRNHR");
+    expect(text(decodeToBytes("LXFOPVEFRNHR", "vigenere", "standard", "LEMON"))).toBe("ATTACKATDAWN");
+  });
+
+  it("extends the key with the text itself for autokey", () => {
+    expect(encodeBytes(bytes("ATTACKATDAWN"), "vigenere", "autokey", "QUEENLY")).toBe("QNXEPVYTWTWP");
+    expect(text(decodeToBytes("QNXEPVYTWTWP", "vigenere", "autokey", "QUEENLY"))).toBe("ATTACKATDAWN");
+  });
+
+  it("is its own inverse for beaufort", () => {
+    expect(encodeBytes(bytes("ATTACKATDAWN"), "vigenere", "beaufort", "LEMON")).toBe("LLTOLBETLNPR");
+    expect(text(decodeToBytes("LLTOLBETLNPR", "vigenere", "beaufort", "LEMON"))).toBe("ATTACKATDAWN");
+  });
+
+  it("keeps case and passes non-letters through without spending the key on them", () => {
+    expect(encodeBytes(bytes("Attack at dawn!"), "vigenere", "standard", "lemon")).toBe("Lxfopv ef rnhr!");
+  });
+
+  it("reads a key for its letters alone, and says so when it holds none", () => {
+    expect(encodeBytes(bytes("ATTACK"), "vigenere", "standard", "le-mon 1")).toBe("LXFOPV");
+    expect(() => encodeBytes(bytes("ATTACK"), "vigenere", "standard", "42")).toThrow(/at least one letter/);
+  });
+});
+
+describe("xor", () => {
+  it("spells the result the way the variant asks", () => {
+    expect(encodeBytes(bytes("Hi"), "xor", "hex-hex", "2f")).toBe("6746");
+    expect(encodeBytes(bytes("Hi"), "xor", "hex-base64", "2f")).toBe("Z0Y=");
+  });
+
+  it("repeats the key under the text and undoes itself", () => {
+    const sample = "Attack at dawn";
+    const encoded = encodeBytes(bytes(sample), "xor", "text-hex", "key");
+    expect(text(decodeToBytes(encoded, "xor", "text-hex", "key"))).toBe(sample);
+  });
+
+  it("reads a hex key with the separators any other hex takes", () => {
+    expect(encodeBytes(bytes("Hi"), "xor", "hex-hex", "0x2f")).toBe("6746");
+  });
+
+  it("rejects a key that is empty or is not the spelling the variant named", () => {
+    expect(() => encodeBytes(bytes("Hi"), "xor", "text-hex", "")).toThrow(/must not be empty/);
+    expect(() => encodeBytes(bytes("Hi"), "xor", "hex-hex", "secret")).toThrow(/The XOR key contains/);
+  });
+});
+
+describe("cipher keys reach the page", () => {
+  it.each(
+    [
+      ["caesar", "letters", "3"],
+      ["vigenere", "standard", "LEMON"],
+      ["xor", "text-base64", "secret"],
+    ] as const,
+  )("round trips %s through convert", async (format, variant, key) => {
+    const sample = "Grüße, 世界! 🎉";
+    const encoded = await convert(sample, "encode", format, variant, key);
+    expect(encoded.error).toBe("");
+    expect((await convert(encoded.output, "decode", format, variant, key)).output).toBe(sample);
+  });
+
+  it("reports the key that is missing rather than falling quiet", async () => {
+    expect((await convert("hi", "encode", "vigenere", "standard", "")).error).toMatch(/at least one letter/);
+    expect((await convert("hi", "encode", "caesar", "letters", "")).error).toMatch(/needs a shift/);
+  });
+});
+
 describe("round trips", () => {
   const variants: [ByteFormat, string][] = [
     ["base64", "standard"],

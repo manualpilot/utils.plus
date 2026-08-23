@@ -1,16 +1,17 @@
-import { ActionIcon, Box, Card, CopyButton, Group, Input, SegmentedControl, Select, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Card, CopyButton, Group, Input, NumberInput, SegmentedControl, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconArrowsUpDown, IconCheck, IconCopy, IconX } from "../../icons";
 import { type Conversion, convert, NOTHING } from "./convert";
-import { defaultVariant, type Format, FORMATS, isFormat, type Mode, VARIANT_HINTS, VARIANTS } from "./formats";
+import { defaultKey, defaultVariant, type Format, FORMATS, isFormat, keyField, type Mode, VARIANT_HINTS, VARIANTS } from "./formats";
 
 export default function Codec() {
   const initialState = useInitialHashState<{
     mode?: string;
     format?: string;
     variant?: string;
+    key?: string;
     input?: string;
   }>();
 
@@ -26,21 +27,30 @@ export default function Codec() {
       ? sharedVariant
       : defaultVariant(initialFormat),
   );
+  const [key, setKey] = useState(initialState?.key ?? defaultKey(initialFormat));
   const [input, setInput] = useState(initialState?.input ?? "");
 
-  useRegisterShareState(() => ({ mode, format, variant, input: input || undefined }));
+  const keyControl = keyField(format, variant);
+
+  useRegisterShareState(() => ({
+    mode,
+    format,
+    variant,
+    key: keyControl ? key : undefined,
+    input: input || undefined,
+  }));
 
   const [{ output, error, byteLength }, setResult] = useState<Conversion>(NOTHING);
 
   useEffect(() => {
     let live = true;
-    void convert(input, mode, format, variant).then((result) => {
+    void convert(input, mode, format, variant, key).then((result) => {
       if (live) setResult(result);
     });
     return () => {
       live = false;
     };
-  }, [input, mode, format, variant]);
+  }, [input, mode, format, variant, key]);
 
   const formatLabel = FORMATS.find((f) => f.value === format)?.label ?? format;
   const inputLabel = mode === "encode" ? "Plain text" : formatLabel;
@@ -51,6 +61,7 @@ export default function Codec() {
     if (!isFormat(value)) return;
     setFormat(value);
     setVariant(defaultVariant(value));
+    setKey(defaultKey(value));
   };
 
   const handleSwap = () => {
@@ -91,6 +102,27 @@ export default function Codec() {
             onChange={(value) => value && setVariant(value)}
             allowDeselect={false}
           />
+          {keyControl
+            && (keyControl.numeric
+              ? (
+                <NumberInput
+                  label={keyControl.label}
+                  description={keyControl.description}
+                  placeholder={keyControl.placeholder}
+                  value={key}
+                  onChange={(value) => setKey(String(value))}
+                  allowDecimal={false}
+                />
+              )
+              : (
+                <TextInput
+                  label={keyControl.label}
+                  description={keyControl.description}
+                  placeholder={keyControl.placeholder}
+                  value={key}
+                  onChange={(event) => setKey(event.currentTarget.value)}
+                />
+              ))}
         </Box>
       </Card>
 
