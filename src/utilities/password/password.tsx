@@ -100,15 +100,19 @@ export default function Password() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center" wrap="nowrap">
-        <UtilityTitle directory="password">{MODES[mode].title}</UtilityTitle>
-        <SegmentedControl
-          value={mode}
-          onChange={(value) => setMode(pickKey(MODES, value, "password"))}
-          aria-label="What to generate"
-          data={MODE_OPTIONS}
-        />
-      </Group>
+      <UtilityTitle
+        directory="password"
+        control={
+          <SegmentedControl
+            value={mode}
+            onChange={(value) => setMode(pickKey(MODES, value, "password"))}
+            aria-label="What to generate"
+            data={MODE_OPTIONS}
+          />
+        }
+      >
+        {MODES[mode].title}
+      </UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Stack>

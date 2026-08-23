@@ -147,14 +147,18 @@ export default function Jwt() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center" wrap="nowrap">
-        <UtilityTitle directory="jwt">JWT</UtilityTitle>
-        <SegmentedControl
-          value={mode}
-          onChange={(value) => handleMode(value as Mode)}
-          data={[{ value: "decode", label: "Decode" }, { value: "encode", label: "Encode" }]}
-        />
-      </Group>
+      <UtilityTitle
+        directory="jwt"
+        control={
+          <SegmentedControl
+            value={mode}
+            onChange={(value) => handleMode(value as Mode)}
+            data={[{ value: "decode", label: "Decode" }, { value: "encode", label: "Encode" }]}
+          />
+        }
+      >
+        JWT
+      </UtilityTitle>
 
       {mode === "decode" && (
         <Card withBorder shadow="sm" radius="md">

@@ -193,14 +193,18 @@ export default function Python() {
 
   return (
     <Stack flex={1} mih={0} gap="md">
-      <Group justify="space-between" align="center" wrap="nowrap">
-        <UtilityTitle directory="python">Python</UtilityTitle>
-        <SegmentedControl
-          value={mode}
-          onChange={(value) => setMode(value as Mode)}
-          data={[{ value: "script", label: "Script" }, { value: "repl", label: "REPL" }]}
-        />
-      </Group>
+      <UtilityTitle
+        directory="python"
+        control={
+          <SegmentedControl
+            value={mode}
+            onChange={(value) => setMode(value as Mode)}
+            data={[{ value: "script", label: "Script" }, { value: "repl", label: "REPL" }]}
+          />
+        }
+      >
+        Python
+      </UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Group align="flex-end" gap="xl" justify="space-between" wrap="nowrap">

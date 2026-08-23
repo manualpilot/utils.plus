@@ -1,8 +1,9 @@
 import { ActionIcon, Anchor, AppShell, Box, Burger, Button, Group, Modal, NavLink, Stack, Text, Title, Tooltip, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Fragment, ReactNode, useCallback, useState } from "react";
+import { Fragment, ReactNode, useCallback, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useDocumentHead } from "./common/document-head";
+import { PageWidthContext } from "./common/page-width";
 import { ShareStateProvider, useShareStateContext } from "./common/share-state";
 import { IconBrandGithub, IconCheck, IconLink, IconRestore, IconServerCog } from "./icons";
 import { UtilitySpotlight } from "./spotlight";
@@ -125,6 +126,8 @@ export function Layout({ children }: LayoutProps) {
   const [opened, { toggle, close }] = useDisclosure();
   const [location, setLocation] = useLocation();
   const [stateKey, setStateKey] = useState(0);
+  const [wide, setWide] = useState(false);
+  const pageWidth = useMemo(() => ({ wide, toggle: () => setWide((current) => !current) }), [wide]);
 
   const isUtilityPage = utilities.some((utility) => utility.path === location);
 
@@ -134,66 +137,68 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <ShareStateProvider>
-      <AppShell
-        header={{ height: 60 }}
-        navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
-        padding="md"
-      >
-        <UtilitySpotlight />
+      <PageWidthContext.Provider value={pageWidth}>
+        <AppShell
+          header={{ height: 60 }}
+          navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
+          padding="md"
+        >
+          <UtilitySpotlight />
 
-        <UnstyledButton className="skip-link" onClick={() => document.getElementById(MAIN_CONTENT_ID)?.focus()}>
-          Skip to the utility
-        </UnstyledButton>
+          <UnstyledButton className="skip-link" onClick={() => document.getElementById(MAIN_CONTENT_ID)?.focus()}>
+            Skip to the utility
+          </UnstyledButton>
 
-        <AppShell.Header>
-          <Group h="100%" px="md" justify="space-between">
-            <Group gap={0}>
-              <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" mr="sm" />
-              <Group
-                gap="sm"
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  setLocation("/");
-                  close();
-                }}
-              >
-                <IconServerCog size={28} />
-                <Title order={3}>
-                  utils+
-                </Title>
+          <AppShell.Header>
+            <Group h="100%" px="md" justify="space-between">
+              <Group gap={0}>
+                <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" mr="sm" />
+                <Group
+                  gap="sm"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setLocation("/");
+                    close();
+                  }}
+                >
+                  <IconServerCog size={28} />
+                  <Title order={3}>
+                    utils+
+                  </Title>
+                </Group>
               </Group>
+              {isUtilityPage && (
+                <Group gap="xs">
+                  <ResetStateButton onReset={handleReset} />
+                  <CopyStateButton />
+                </Group>
+              )}
             </Group>
-            {isUtilityPage && (
-              <Group gap="xs">
-                <ResetStateButton onReset={handleReset} />
-                <CopyStateButton />
-              </Group>
-            )}
-          </Group>
-        </AppShell.Header>
+          </AppShell.Header>
 
-        <AppShell.Navbar p="md">
-          <Box className="navbar-links">
-            {utilities.map(({ path, label, Icon }) => (
-              <Link key={path} href={path} onClick={close} asChild>
-                <NavLink
-                  label={label}
-                  leftSection={<Icon size="1rem" stroke={1.5} />}
-                  active={location === path}
-                  style={{ borderRadius: "var(--mantine-radius-md)" }}
-                />
-              </Link>
-            ))}
-          </Box>
-        </AppShell.Navbar>
+          <AppShell.Navbar p="md">
+            <Box className="navbar-links">
+              {utilities.map(({ path, label, Icon }) => (
+                <Link key={path} href={path} onClick={close} asChild>
+                  <NavLink
+                    label={label}
+                    leftSection={<Icon size="1rem" stroke={1.5} />}
+                    active={location === path}
+                    style={{ borderRadius: "var(--mantine-radius-md)" }}
+                  />
+                </Link>
+              ))}
+            </Box>
+          </AppShell.Navbar>
 
-        <AppShell.Main className="main-region">
-          <Box className="main-container" id={MAIN_CONTENT_ID} tabIndex={-1}>
-            <Fragment key={stateKey}>{children}</Fragment>
-            <SiteFooter />
-          </Box>
-        </AppShell.Main>
-      </AppShell>
+          <AppShell.Main className="main-region">
+            <Box className="main-container" id={MAIN_CONTENT_ID} tabIndex={-1} data-wide={wide || undefined}>
+              <Fragment key={stateKey}>{children}</Fragment>
+              <SiteFooter />
+            </Box>
+          </AppShell.Main>
+        </AppShell>
+      </PageWidthContext.Provider>
     </ShareStateProvider>
   );
 }

@@ -166,15 +166,19 @@ export default function Otp() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center" wrap="nowrap">
-        <UtilityTitle directory="otp">{MODES[mode].title}</UtilityTitle>
-        <SegmentedControl
-          value={mode}
-          onChange={changeMode}
-          aria-label="Which one-time password"
-          data={MODE_OPTIONS}
-        />
-      </Group>
+      <UtilityTitle
+        directory="otp"
+        control={
+          <SegmentedControl
+            value={mode}
+            onChange={changeMode}
+            aria-label="Which one-time password"
+            data={MODE_OPTIONS}
+          />
+        }
+      >
+        {MODES[mode].title}
+      </UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Stack>

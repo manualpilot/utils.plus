@@ -62,14 +62,18 @@ export default function Calculator() {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center">
-        <UtilityTitle directory="calculator">Calculator</UtilityTitle>
-        <SegmentedControl
-          value={machine.mode}
-          onChange={(value) => setMachine((current) => setMode(current, value as Mode))}
-          data={[{ value: "programmer", label: "Programmer" }, { value: "scientific", label: "Scientific" }]}
-        />
-      </Group>
+      <UtilityTitle
+        directory="calculator"
+        control={
+          <SegmentedControl
+            value={machine.mode}
+            onChange={(value) => setMachine((current) => setMode(current, value as Mode))}
+            data={[{ value: "programmer", label: "Programmer" }, { value: "scientific", label: "Scientific" }]}
+          />
+        }
+      >
+        Calculator
+      </UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Stack gap={4}>

@@ -202,16 +202,20 @@ export default function Sql() {
 
   return (
     <Stack flex={1} mih={0} gap="md">
-      <Group justify="space-between" align="center" wrap="nowrap">
-        <UtilityTitle directory="sql">SQL</UtilityTitle>
-        <SegmentedControl
-          value={mode}
-          onChange={(value) => handleMode(value as ModeId)}
-          aria-label="Database"
-          disabled={running}
-          data={MODES.map((entry) => ({ value: entry.value, label: entry.label }))}
-        />
-      </Group>
+      <UtilityTitle
+        directory="sql"
+        control={
+          <SegmentedControl
+            value={mode}
+            onChange={(value) => handleMode(value as ModeId)}
+            aria-label="Database"
+            disabled={running}
+            data={MODES.map((entry) => ({ value: entry.value, label: entry.label }))}
+          />
+        }
+      >
+        SQL
+      </UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Group align="center" gap="lg" justify="space-between" wrap="nowrap">

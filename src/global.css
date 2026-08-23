@@ -41,6 +41,8 @@
 .main-region {
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
+  container-name: region;
 }
 
 .main-container {
@@ -52,6 +54,20 @@
   flex: 1;
   container-type: inline-size;
   container-name: main;
+}
+
+.main-container[data-wide] {
+  max-width: none;
+}
+
+.page-width-toggle {
+  display: none;
+}
+
+@container region (min-width: 72rem) {
+  .page-width-toggle {
+    display: flex;
+  }
 }
 
 .site-footer {

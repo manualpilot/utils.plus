@@ -68,5 +68,7 @@ export { default as IconTable } from "@tabler/icons-react/dist/esm/icons/IconTab
 export { default as IconTerminal2 } from "@tabler/icons-react/dist/esm/icons/IconTerminal2.mjs";
 export { default as IconTransform } from "@tabler/icons-react/dist/esm/icons/IconTransform.mjs";
 export { default as IconTrash } from "@tabler/icons-react/dist/esm/icons/IconTrash.mjs";
+export { default as IconViewportNarrow } from "@tabler/icons-react/dist/esm/icons/IconViewportNarrow.mjs";
+export { default as IconViewportWide } from "@tabler/icons-react/dist/esm/icons/IconViewportWide.mjs";
 export { default as IconWorld } from "@tabler/icons-react/dist/esm/icons/IconWorld.mjs";
 export { default as IconX } from "@tabler/icons-react/dist/esm/icons/IconX.mjs";
