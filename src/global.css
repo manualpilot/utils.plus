@@ -579,6 +579,33 @@ svg.country-map {
   }
 }
 
+.csv-panes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  flex: 1;
+  min-height: 0;
+}
+
+.csv-panes > * {
+  position: relative;
+  overflow: hidden;
+  min-height: 8rem;
+}
+
+.csv-panes > .csv-text-pane {
+  flex: 2;
+}
+
+.csv-panes > .csv-table-pane {
+  flex: 3;
+}
+
+.csv-panes[data-view="text"] > .csv-table-pane,
+.csv-panes[data-view="table"] > .csv-text-pane {
+  display: none;
+}
+
 .regex-pattern {
   display: flex;
   align-items: center;

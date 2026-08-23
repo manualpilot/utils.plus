@@ -120,6 +120,21 @@ export const PAGE_META = {
       "crontab editor",
     ],
   },
+  "/csv": {
+    title: "CSV Viewer, Parser & Data Table",
+    description:
+      "Paste or drop a CSV, TSV or any delimited file and read it as a sortable table beside its own text, with the delimiter worked out for you. Nothing is uploaded.",
+    keywords: [
+      "csv viewer",
+      "csv to table",
+      "tsv viewer",
+      "delimited file viewer",
+      "csv parser",
+      "open csv in browser",
+      "sort csv columns",
+      "csv editor",
+    ],
+  },
   "/diff": {
     title: "Text & Code Diff Checker",
     description:

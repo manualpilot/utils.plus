@@ -26,6 +26,7 @@ export { default as IconDatabase } from "@tabler/icons-react/dist/esm/icons/Icon
 export { default as IconDatabaseImport } from "@tabler/icons-react/dist/esm/icons/IconDatabaseImport.mjs";
 export { default as IconDownload } from "@tabler/icons-react/dist/esm/icons/IconDownload.mjs";
 export { default as IconEye } from "@tabler/icons-react/dist/esm/icons/IconEye.mjs";
+export { default as IconFileTypeCsv } from "@tabler/icons-react/dist/esm/icons/IconFileTypeCsv.mjs";
 export { default as IconFlag } from "@tabler/icons-react/dist/esm/icons/IconFlag.mjs";
 export { default as IconGitCompare } from "@tabler/icons-react/dist/esm/icons/IconGitCompare.mjs";
 export { default as IconGripVertical } from "@tabler/icons-react/dist/esm/icons/IconGripVertical.mjs";
@@ -37,6 +38,7 @@ export { default as IconId } from "@tabler/icons-react/dist/esm/icons/IconId.mjs
 export { default as IconIndentDecrease } from "@tabler/icons-react/dist/esm/icons/IconIndentDecrease.mjs";
 export { default as IconItalic } from "@tabler/icons-react/dist/esm/icons/IconItalic.mjs";
 export { default as IconKey } from "@tabler/icons-react/dist/esm/icons/IconKey.mjs";
+export { default as IconLayoutRows } from "@tabler/icons-react/dist/esm/icons/IconLayoutRows.mjs";
 export { default as IconLink } from "@tabler/icons-react/dist/esm/icons/IconLink.mjs";
 export { default as IconList } from "@tabler/icons-react/dist/esm/icons/IconList.mjs";
 export { default as IconListCheck } from "@tabler/icons-react/dist/esm/icons/IconListCheck.mjs";

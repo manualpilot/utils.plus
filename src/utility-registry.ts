@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconMarkdown, IconPalette, IconPhone, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconWorld } from "./icons";
+import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconMarkdown, IconPalette, IconPhone, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -41,6 +41,12 @@ const routes: UtilityRoute[] = [
     label: "Cron",
     Icon: IconCalendarRepeat,
     Component: lazy(() => import("./utilities/cron/cron")),
+  },
+  {
+    path: "/csv",
+    label: "CSV",
+    Icon: IconFileTypeCsv,
+    Component: lazy(() => import("./utilities/csv/csv")),
   },
   {
     path: "/diff",
