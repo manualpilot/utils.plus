@@ -15,7 +15,7 @@ export default defineConfig({
     outDir: "../dist",
     emptyOutDir: true,
     sourcemap: true,
-    assetsInlineLimit: (file) => PHONE_GEO.test(file) ? false : undefined,
+    assetsInlineLimit: (file) => PHONE_GEO.test(file) || COUNTRY_VIEW.test(file) ? false : undefined,
     rolldownOptions: { output: { chunkFileNames, assetFileNames } },
   },
   plugins: [
@@ -71,12 +71,16 @@ function assetFileNames(asset: Rolldown.PreRenderedAsset): string {
 
 function assetDirectory(asset: Rolldown.PreRenderedAsset): string {
   if (FONT.test(asset.names[0] ?? "")) return "assets/fonts";
-  return PHONE_GEO.test(asset.originalFileNames[0] ?? "") ? "assets/phone-geo" : "assets";
+  const original = asset.originalFileNames[0] ?? "";
+  if (PHONE_GEO.test(original)) return "assets/phone-geo";
+  return COUNTRY_VIEW.test(original) ? "assets/country-views" : "assets";
 }
 
 const FONT = /\.(?:woff2?|ttf|otf|eot)$/;
 
 const PHONE_GEO = /\/phone-number\/maps\/[^/]+\.json$/;
+
+const COUNTRY_VIEW = /\/countries\/views\/[^/]+\.json$/;
 
 function packageOf(chunk: Rolldown.PreRenderedChunk): string | undefined {
   const id = chunk.facadeModuleId ?? chunk.moduleIds.at(-1) ?? "";

@@ -1,10 +1,24 @@
 import { spawnSync } from "node:child_process";
-import { RELEASE } from "./generate-phone-geo.mjs";
+import { RELEASE as SHAPES_RELEASE } from "./generate-country-shapes.mjs";
+import { RELEASE as PHONE_RELEASE } from "./generate-phone-geo.mjs";
 
 const TITLES = { dependencies: "Outdated dependencies", devDependencies: "Outdated dev dependencies" };
 const ORDER = Object.keys(TITLES);
 
-const GENERATOR = "scripts/generate-phone-geo.mjs";
+const PINNED = [
+  {
+    title: "phone number maps",
+    repository: "google/libphonenumber",
+    pinned: PHONE_RELEASE,
+    generator: "scripts/generate-phone-geo.mjs",
+  },
+  {
+    title: "country boundaries",
+    repository: "nvkelso/natural-earth-vector",
+    pinned: SHAPES_RELEASE,
+    generator: "scripts/generate-country-shapes.mjs",
+  },
+];
 
 const groups = new Map();
 
@@ -16,9 +30,9 @@ for (const [name, reported] of Object.entries(outdated())) {
   }
 }
 
-const behind = await phoneGeoRelease();
+const behind = (await Promise.all(PINNED.map(pinnedRelease))).filter(Boolean);
 
-if (groups.size === 0 && !behind) {
+if (groups.size === 0 && behind.length === 0) {
   console.log("every dependency is up to date");
   process.exit(0);
 }
@@ -28,22 +42,23 @@ for (const kind of [...groups.keys()].sort((a, b) => rank(a) - rank(b))) {
   warn(`${TITLES[kind] ?? `Outdated ${kind}`} (${lines.length})`, lines);
 }
 
-if (behind) warn("Outdated phone number maps (1)", [behind]);
+if (behind.length > 0) warn(`Outdated pinned releases (${behind.length})`, behind);
 
-async function phoneGeoRelease() {
-  const url = "https://api.github.com/repos/google/libphonenumber/releases/latest";
+async function pinnedRelease({ title, repository, pinned, generator }) {
+  const url = `https://api.github.com/repos/${repository}/releases/latest`;
   const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+  const failed = `${title[0].toUpperCase()}${title.slice(1)} check failed`;
   let latest;
   try {
     const headers = { Accept: "application/vnd.github+json", ...token ? { Authorization: `Bearer ${token}` } : {} };
     const response = await fetch(url, { headers });
-    if (!response.ok) fail("Phone number map check failed", `${url} answered ${response.status}`);
+    if (!response.ok) fail(failed, `${url} answered ${response.status}`);
     latest = (await response.json()).tag_name;
   } catch (cause) {
-    fail("Phone number map check failed", `${url}: ${cause instanceof Error ? cause.message : String(cause)}`);
+    fail(failed, `${url}: ${cause instanceof Error ? cause.message : String(cause)}`);
   }
-  if (!latest) fail("Phone number map check failed", `${url} named no release`);
-  return latest === RELEASE ? undefined : `google/libphonenumber ${RELEASE} → ${latest} (RELEASE in ${GENERATOR})`;
+  if (!latest) fail(failed, `${url} named no release`);
+  return latest === pinned ? undefined : `${repository} ${pinned} → ${latest} (RELEASE in ${generator})`;
 }
 
 function outdated() {

@@ -5,5 +5,7 @@ dist
 node_modules
 playwright-report
 test-results
+src/utilities/countries/views
+src/utilities/countries/world.json
 src/utilities/phone-number/maps
 src/utilities/phone-number/short-numbers.json

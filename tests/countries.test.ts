@@ -1,7 +1,11 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { FALLBACK_COUNTRY, localCountryCode } from "../src/common/local-country";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageName, languageRows, nativeNameRows } from "../src/utilities/countries/facts";
 import { borderCountries, COUNTRIES, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "../src/utilities/countries/list";
+import { mapOf, prepare } from "../src/utilities/countries/map";
+import { boundariesOf, type View } from "../src/utilities/countries/shapes";
 
 function country(code: string) {
   const found = findCountry(code);
@@ -178,5 +182,95 @@ describe("the facts", () => {
       masculine: "Australien",
       feminine: "Australienne",
     });
+  });
+});
+
+const SHAPES = join(import.meta.dirname, "../src/utilities/countries");
+
+function boundaryFile(name: string): View {
+  const file = join(SHAPES, name);
+  if (!existsSync(file)) throw new Error(`no boundaries at ${file} — run \`npm run country-shapes\``);
+  return JSON.parse(readFileSync(file, "utf8")) as View;
+}
+
+const BASE = boundaryFile("world.json");
+const DEFAULT_VIEW = boundariesOf(BASE, undefined, undefined);
+const CHINA_VIEW = boundariesOf(BASE, boundaryFile("views/CN.json"), "CN");
+
+function drawn(code: string, boundaries = DEFAULT_VIEW) {
+  const found = country(code);
+  const [latitude, longitude] = found.latlng;
+  return mapOf(
+    prepare(boundaries.shapes),
+    prepare(boundaries.world),
+    code,
+    borderCountries(found).map((border) => border.cca2),
+    { longitude, latitude, across: found.area > 0 ? 2 * Math.sqrt(found.area) / 111 : 6 },
+  );
+}
+
+function ringsIn(path: string | undefined): number {
+  return (path?.match(/M/g) ?? []).length;
+}
+
+function acrossIn(path: string): [number, number] {
+  const across = [...path.matchAll(/[ML](-?[\d.]+) /g)].map((point) => Number(point[1]));
+  return [Math.min(...across), Math.max(...across)];
+}
+
+describe("the boundaries", () => {
+  it("has one for every country the picker offers, or says which country holds the land instead", () => {
+    for (const entry of COUNTRIES) {
+      const shape = DEFAULT_VIEW.world[entry.cca2];
+      const absent = DEFAULT_VIEW.absent[entry.cca2];
+      expect(shape !== undefined || absent !== undefined, `${entry.cca2} is in neither`).toBe(true);
+      expect(shape !== undefined && absent !== undefined, `${entry.cca2} is in both`).toBe(false);
+    }
+    expect(Object.keys(DEFAULT_VIEW.absent).sort()).toEqual(
+      ["BQ", "BV", "CC", "CX", "GF", "GP", "MQ", "RE", "SJ", "TK", "YT"],
+    );
+    expect(DEFAULT_VIEW.absent.RE).toBe("FR");
+  });
+});
+
+describe("the map", () => {
+  it("frames a country on what is near enough to it to be one place", () => {
+    expect(ringsIn(drawn("AU")?.own)).toBe(2);
+    expect(DEFAULT_VIEW.world.FR.length).toBe(7);
+    expect(ringsIn(drawn("FR")?.own)).toBe(2);
+    expect(drawn("FR")?.rest.map((land) => land.code)).not.toContain("BR");
+    expect(drawn("FR")?.borders.map((land) => land.code).sort()).toEqual(
+      ["AD", "BE", "CH", "DE", "ES", "IT", "LU", "MC"],
+    );
+  });
+
+  it("draws a country either side of the antimeridian as one place", () => {
+    const fiji = drawn("FJ")?.own;
+    expect(ringsIn(fiji)).toBeGreaterThan(20);
+    const [west, east] = acrossIn(String(fiji));
+    expect(west).toBeGreaterThan(0);
+    expect(east).toBeLessThan(1000);
+  });
+
+  it("draws the smallest country at a size somebody can see", () => {
+    const [west, east] = acrossIn(String(drawn("VA")?.own));
+    expect(east - west).toBeGreaterThan(100);
+    expect(drawn("VA")?.borders.map((land) => land.code)).toEqual(["IT"]);
+  });
+
+  it("frames a country with no boundary on where the list says it is", () => {
+    const reunion = drawn("RE");
+    expect(reunion?.own).toBeUndefined();
+    expect(reunion?.rest.map((land) => land.code)).toEqual(["FR"]);
+  });
+
+  it("draws a point of view as that view has it", () => {
+    expect(CHINA_VIEW.absent).toMatchObject({ TW: "CN", XK: "RS" });
+    expect(CHINA_VIEW.shapes.TW).toBeUndefined();
+    expect(CHINA_VIEW.viewer).toBe("CN");
+    const taiwan = drawn("TW", CHINA_VIEW);
+    expect(taiwan?.own).toBeUndefined();
+    expect(taiwan?.rest.map((land) => land.code)).toContain("CN");
+    expect(CHINA_VIEW.shapes.AU).toBe(DEFAULT_VIEW.world.AU);
   });
 });

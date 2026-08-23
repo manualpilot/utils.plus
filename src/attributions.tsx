@@ -228,6 +228,31 @@ export default function Attributions() {
             </Text>
           </Box>
           <Box>
+            <Title order={4}>Natural Earth</Title>
+            <Text size="sm" mt={4}>
+              The map on <Anchor href="/countries" inherit>Countries</Anchor> is drawn from{" "}
+              <Anchor href="https://www.naturalearthdata.com/" target="_blank" rel="noopener noreferrer" inherit>
+                Natural Earth
+              </Anchor>, whose authors have placed every version of its map data in the{" "}
+              <strong>public domain</strong>: no permission is asked for and no notice is required, and this one is here
+              because a boundary is somebody's work whether or not they ask to be named for it. The boundaries are taken
+              at build time from a pinned release of{" "}
+              <Anchor
+                href="https://github.com/nvkelso/natural-earth-vector"
+                target="_blank"
+                rel="noopener noreferrer"
+                inherit
+              >
+                natural-earth-vector
+              </Anchor>{" "}
+              and simplified for drawing, so what is served here is derived from that data rather than a copy of it —
+              which is also why no package above names it. The points of view are Natural Earth's own: it publishes a
+              default set of boundaries drawn from who holds the ground, and a separate set for each of thirty-one
+              countries drawn as that country's own law and conventions have them. Which one a reader is shown follows
+              the country their browser reports, and the map says underneath it which one that was.
+            </Text>
+          </Box>
+          <Box>
             <Title order={4}>libphonenumber</Title>
             <Text size="sm" mt={4}>
               Everything <Anchor href="/phone-number" inherit>Phone Number</Anchor> reads comes out of Google's{" "}

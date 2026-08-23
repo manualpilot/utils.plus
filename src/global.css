@@ -371,6 +371,40 @@
   overflow-y: auto;
 }
 
+.country-map {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+}
+
+svg.country-map {
+  background: var(--mantine-color-body);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.country-map path {
+  stroke: var(--mantine-color-body);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.country-map-land {
+  fill: var(--mantine-color-grey-7);
+}
+
+.country-map-neighbour {
+  fill: var(--mantine-color-grey-5);
+  cursor: pointer;
+}
+
+.country-map-neighbour:hover {
+  fill: var(--mantine-color-grey-4);
+}
+
+.country-map-own {
+  fill: var(--mantine-color-orange-6);
+}
+
 .country-flag {
   font-size: calc(2.5rem * var(--mantine-scale));
   line-height: 1;

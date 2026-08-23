@@ -109,6 +109,43 @@ test.describe("the page", () => {
     await expect(page.getByRole("combobox", { name: "Country" })).toHaveValue(/Spain/);
   });
 
+  test("draws the country, and makes every neighbour on the map the way to that country", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Portugal", "Portugal");
+    const map = page.getByRole("img", { name: /^A map of Portugal, bordering Spain/ });
+    await expect(map).toBeVisible();
+    await expect(map.locator(".country-map-own")).toHaveCount(1);
+
+    await map.locator(".country-map-neighbour").click();
+    await expect(showing(page)).toHaveAttribute("data-country", "ES");
+    await expect(fact(page, "Capital")).toContainText("Madrid");
+  });
+
+  test("names whatever the pointer is over on the map, with its flag", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Portugal", "Portugal");
+    const map = page.locator("svg.country-map");
+    const naming = page.locator(".mantine-TooltipFloating-tooltip");
+
+    await expect(naming).toBeHidden();
+
+    await map.locator(".country-map-neighbour").hover();
+    await expect(naming).toContainText("Spain");
+    await expect(naming).toContainText("\u{1F1EA}\u{1F1F8}");
+
+    await map.locator(".country-map-own").hover();
+    await expect(naming).toContainText("Portugal");
+    await expect(naming).toContainText("\u{1F1F5}\u{1F1F9}");
+  });
+
+  test("says whose boundaries it is drawing", async ({ page }) => {
+    await open(page);
+
+    await expect(page.getByText("Boundaries as Natural Earth draws them by default")).toBeVisible();
+  });
+
   test("shows the whole of a dialling plan without putting it in a row", async ({ page }) => {
     await open(page);
 
@@ -190,3 +227,17 @@ function hashState(page: Page): Record<string, string> {
     return {};
   }
 }
+
+test.describe("a browser in a country Natural Earth publishes a point of view for", () => {
+  test.use({ timezoneId: "Asia/Shanghai", locale: "zh-CN" });
+
+  test("is drawn the boundaries that view has, and told which view it is", async ({ page }) => {
+    await open(page);
+
+    await expect(page.getByText("for the China point of view")).toBeVisible();
+
+    await pick(page, "Taiwan", "Taiwan");
+    await expect(page.locator(".country-map-own")).toHaveCount(0);
+    await expect(page.getByText("this land is inside the shape filed under China")).toBeVisible();
+  });
+});

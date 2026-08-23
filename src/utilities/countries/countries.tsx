@@ -1,10 +1,12 @@
-import { Badge, Box, Button, Card, CheckIcon, Code, type ComboboxLikeRenderOptionInput, Group, Select, Stack, Table, Text, Title } from "@mantine/core";
-import { type ReactNode, useState } from "react";
+import { Badge, Box, Button, Card, CheckIcon, Code, type ComboboxLikeRenderOptionInput, Group, Select, Skeleton, Stack, Table, Text, Title, Tooltip } from "@mantine/core";
+import { type ReactNode, useMemo, useState } from "react";
 import { FactTable } from "../../common/fact-table";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageRows, nativeNameRows } from "./facts";
-import { borderCountries, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "./list";
+import { borderCountries, type Country, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "./list";
+import { mapOf, type Place, prepare, VIEW_BOX } from "./map";
+import { type Boundaries, useBoundaries } from "./shapes";
 
 export default function Countries() {
   const initialState = useInitialHashState<{ country?: string }>();
@@ -123,6 +125,13 @@ export default function Countries() {
       </Box>
 
       <Card withBorder shadow="sm" radius="md">
+        <Stack gap="sm">
+          <Title order={4}>Map</Title>
+          <CountryMap country={country} onSelect={setCountry} />
+        </Stack>
+      </Card>
+
+      <Card withBorder shadow="sm" radius="md">
         <Stack gap="lg">
           <Section title="Currencies" empty={currencies.length === 0 && "None of its own"}>
             <ColumnTable
@@ -160,6 +169,112 @@ export default function Countries() {
       </Card>
     </Stack>
   );
+}
+
+function CountryMap({ country, onSelect }: CountryMapProps) {
+  const boundaries = useBoundaries();
+  const [hovered, setHovered] = useState<string>();
+
+  const prepared = useMemo(() => {
+    if (!boundaries) return undefined;
+    const world = prepare(boundaries.world);
+    return { world, shapes: boundaries.shapes === boundaries.world ? world : prepare(boundaries.shapes) };
+  }, [boundaries]);
+  const drawn = useMemo(
+    () =>
+      prepared
+      && mapOf(
+        prepared.shapes,
+        prepared.world,
+        country.cca2,
+        borderCountries(country).map((each) => each.cca2),
+        placeOf(country),
+      ),
+    [prepared, country],
+  );
+
+  if (boundaries === undefined) return <Skeleton className="country-map" radius="sm" />;
+  if (boundaries === null) return <Text size="sm" c="dimmed">The boundaries could not be read.</Text>;
+
+  const under = hovered === undefined ? undefined : findCountry(hovered);
+  const naming = (code: string) => ({
+    onMouseEnter: () => setHovered(code),
+    onMouseLeave: () => setHovered(undefined),
+  });
+
+  return (
+    <Stack gap={6}>
+      {drawn && (
+        <Tooltip.Floating label={under && <CountryName country={under} />} disabled={!under} position="top">
+          <svg className="country-map" viewBox={VIEW_BOX} role="img" aria-label={mapLabel(country)}>
+            {drawn.rest.map((land) => (
+              <path key={land.code} className="country-map-land" fillRule="evenodd" d={land.path} />
+            ))}
+            {drawn.borders.map((land) => (
+              <path
+                key={land.code}
+                className="country-map-neighbour"
+                fillRule="evenodd"
+                d={land.path}
+                onClick={() => onSelect(pickCountry(land.code))}
+                {...naming(land.code)}
+              />
+            ))}
+            {drawn.own && (
+              <path className="country-map-own" fillRule="evenodd" d={drawn.own} {...naming(country.cca2)} />
+            )}
+          </svg>
+        </Tooltip.Floating>
+      )}
+      <Text size="xs" c="dimmed">{viewText(boundaries)}</Text>
+      {country.cca2 in boundaries.absent && <Text size="xs" c="dimmed">{absentText(country, boundaries)}</Text>}
+    </Stack>
+  );
+}
+
+interface CountryMapProps {
+  country: Country;
+  onSelect: (country: Country) => void;
+}
+
+function CountryName({ country }: { country: Country }) {
+  return (
+    <Group gap={6} wrap="nowrap">
+      <Text span>{country.flag}</Text>
+      <Text span size="sm">{country.name.common}</Text>
+    </Group>
+  );
+}
+
+function viewText({ viewer }: Boundaries): string {
+  const view = viewer && findCountry(viewer)?.name.common;
+  return view
+    ? `Boundaries as Natural Earth draws them for the ${view} point of view.`
+    : "Boundaries as Natural Earth draws them by default, from the territory each country holds.";
+}
+
+function absentText(country: Country, { absent }: Boundaries): string {
+  const holder = findCountry(absent[country.cca2])?.name.common;
+  return holder
+    ? `No boundary of its own in that view: this land is inside the shape filed under ${holder}.`
+    : "No boundary of its own in that view.";
+}
+
+function placeOf(country: Country): Place {
+  const [latitude, longitude] = country.latlng;
+  const across = country.area > 0 ? 2 * Math.sqrt(country.area) / KILOMETRES_TO_A_DEGREE : UNMEASURED;
+  return { longitude, latitude, across };
+}
+
+const KILOMETRES_TO_A_DEGREE = 111;
+
+const UNMEASURED = 6;
+
+function mapLabel(country: Country): string {
+  const borders = borderCountries(country).map((border) => border.name.common);
+  return borders.length === 0
+    ? `A map of ${country.name.common}, which has no land borders.`
+    : `A map of ${country.name.common}, bordering ${borders.join(", ")}.`;
 }
 
 const INLINE_PREFIXES = 4;
