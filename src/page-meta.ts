@@ -197,6 +197,25 @@ export const PAGE_META = {
       "pbkdf2",
     ],
   },
+  "/hex": {
+    title: "Hex Editor & Binary File Viewer",
+    description:
+      "Open any file and read every byte of it, in hex and as text, patch the bytes in place, search for a signature, then save the file back out. Nothing is uploaded.",
+    keywords: [
+      "hex editor",
+      "hex viewer",
+      "online hex editor",
+      "binary file editor",
+      "hex dump",
+      "edit binary file",
+      "file signature viewer",
+      "magic number lookup",
+      "byte editor",
+      "data inspector",
+      "hex to text",
+      "patch a binary",
+    ],
+  },
   "/image": {
     title: "Image Converter, Resizer & EXIF Editor",
     description:

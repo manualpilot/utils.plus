@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { byteSize } from "../src/common/byte-size";
 import { bcryptBase64Decode, bcryptBase64Encode } from "../src/utilities/hasher/bcrypt";
 import { formatDigest, hashBytes, HASHES, hashStream, streams } from "../src/utilities/hasher/digest";
-import { byteSize, hashBlob } from "../src/utilities/hasher/file";
+import { hashBlob } from "../src/utilities/hasher/file";
 import { deriveKdf } from "../src/utilities/hasher/kdf";
 
 const bytes = (text: string) => new TextEncoder().encode(text);

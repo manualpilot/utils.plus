@@ -532,7 +532,7 @@ export default function ImageTool() {
           {!loaded && (
             <Box
               component="label"
-              className="image-dropzone"
+              className="file-dropzone"
               data-dragging={dragging || undefined}
               onDragOver={(event: DragEvent<HTMLLabelElement>) => {
                 event.preventDefault();

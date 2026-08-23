@@ -747,7 +747,7 @@ svg.country-map {
   border-radius: 2px;
 }
 
-.image-dropzone {
+.file-dropzone {
   border: 2px dashed var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
   padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
@@ -756,12 +756,12 @@ svg.country-map {
   transition: border-color 100ms ease, background-color 100ms ease;
 }
 
-.image-dropzone:hover,
-.image-dropzone:focus-visible {
+.file-dropzone:hover,
+.file-dropzone:focus-visible {
   border-color: var(--mantine-color-orange-6);
 }
 
-.image-dropzone[data-dragging] {
+.file-dropzone[data-dragging] {
   border-color: var(--mantine-color-orange-4);
   background-color: var(--mantine-color-dark-6);
 }
@@ -777,4 +777,22 @@ svg.country-map {
 
 .panel-chevron[data-open] {
   transform: rotate(90deg);
+}
+
+.hex-editor {
+  overflow: hidden;
+}
+
+.hex-editor .cm-editor {
+  font-variant-ligatures: none;
+}
+
+.hex-editor .cm-lineNumbers .cm-gutterElement {
+  padding: 0 var(--mantine-spacing-xs) 0 var(--mantine-spacing-sm);
+  color: var(--mantine-color-dimmed);
+}
+
+.hex-editor .cm-hex-text {
+  display: inline-block;
+  white-space: pre;
 }

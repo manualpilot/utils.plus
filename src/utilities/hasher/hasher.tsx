@@ -1,11 +1,12 @@
 import { ActionIcon, Box, Button, Card, CopyButton, FileInput, Group, NumberInput, Progress, SegmentedControl, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { byteSize } from "../../common/byte-size";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconRefresh, IconX } from "../../icons";
 import { ALGORITHM_OPTIONS, ALGORITHMS, ARGON2_ITERATIONS, ARGON2_MEMORY, BCRYPT_COST, BCRYPT_MAX_BYTES, type Derived, EMPTY_OUTPUT, FORMAT_OPTIONS, type KdfSettings, MAX_SEED, PARALLELISM, type Params, PBKDF2_ITERATIONS, SCRYPT_BLOCK, SCRYPT_COST, sharedParams } from "./algorithms";
 import { formatDigest, hashBytes, streams } from "./digest";
-import { byteSize, hashBlob, type Source, SOURCE_OPTIONS } from "./file";
+import { hashBlob, type Source, SOURCE_OPTIONS } from "./file";
 import { deriveKdf } from "./kdf";
 import { defaultParams, initialParams, memoryProblem, message, parseInteger, pickAlgorithm, pickFormat, pickVariant, randomSalt, range, saltProblem, scryptMemoryProblem } from "./settings";
 

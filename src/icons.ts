@@ -1,5 +1,6 @@
 export { default as IconAdjustments } from "@tabler/icons-react/dist/esm/icons/IconAdjustments.mjs";
 export { default as IconAlertTriangle } from "@tabler/icons-react/dist/esm/icons/IconAlertTriangle.mjs";
+export { default as IconArrowDown } from "@tabler/icons-react/dist/esm/icons/IconArrowDown.mjs";
 export { default as IconArrowsLeftRight } from "@tabler/icons-react/dist/esm/icons/IconArrowsLeftRight.mjs";
 export { default as IconArrowsMaximize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMaximize.mjs";
 export { default as IconArrowsMinimize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMinimize.mjs";
@@ -29,7 +30,9 @@ export { default as IconCrop } from "@tabler/icons-react/dist/esm/icons/IconCrop
 export { default as IconDatabase } from "@tabler/icons-react/dist/esm/icons/IconDatabase.mjs";
 export { default as IconDatabaseImport } from "@tabler/icons-react/dist/esm/icons/IconDatabaseImport.mjs";
 export { default as IconDownload } from "@tabler/icons-react/dist/esm/icons/IconDownload.mjs";
+export { default as IconEraser } from "@tabler/icons-react/dist/esm/icons/IconEraser.mjs";
 export { default as IconEye } from "@tabler/icons-react/dist/esm/icons/IconEye.mjs";
+export { default as IconFileDigit } from "@tabler/icons-react/dist/esm/icons/IconFileDigit.mjs";
 export { default as IconFileTypeCsv } from "@tabler/icons-react/dist/esm/icons/IconFileTypeCsv.mjs";
 export { default as IconFlag } from "@tabler/icons-react/dist/esm/icons/IconFlag.mjs";
 export { default as IconFlipHorizontal } from "@tabler/icons-react/dist/esm/icons/IconFlipHorizontal.mjs";
