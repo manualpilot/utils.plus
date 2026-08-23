@@ -1,8 +1,8 @@
-import adjectiveList from "../../../inline/top_english_adjs_lower_10000.json";
-import nounList from "../../../inline/top_english_nouns_lower_10000.json";
-import verbList from "../../../inline/top_english_verbs_lower_10000.json";
 import { composition } from "../../common/composition";
 import { randomBelow, shuffle } from "../../common/random";
+import adjectiveList from "./top-english-adjs-lower-10000.json";
+import nounList from "./top-english-nouns-lower-10000.json";
+import verbList from "./top-english-verbs-lower-10000.json";
 import { type Casing, CASINGS, type Separator, SEPARATORS, WORD_KEYS, type WordKey, type WordWeights } from "./words";
 
 export const LISTS: Record<WordKey, string[]> = {

@@ -3,7 +3,7 @@ import { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { Route, Switch, useLocation } from "wouter";
 
-import notFound from "./not-found.png";
+import notFound from "./images/not-found.png";
 
 import "@fontsource-variable/roboto";
 import "@mantine/core/styles.css";
