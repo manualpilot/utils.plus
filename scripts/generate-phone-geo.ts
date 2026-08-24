@@ -1,3 +1,4 @@
+import type { SyntaxNode } from "@lezer/common";
 import { parser as xmlParser } from "@lezer/xml";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -11,7 +12,19 @@ export const RELEASE = "v9.0.37";
 
 const LOCALE = "en";
 
-const KINDS = ["shortCode", "emergency", "tollFree", "standardRate", "premiumRate", "carrierSpecific", "smsServices"];
+const KINDS = [
+  "shortCode",
+  "emergency",
+  "tollFree",
+  "standardRate",
+  "premiumRate",
+  "carrierSpecific",
+  "smsServices",
+] as const;
+
+type Kind = (typeof KINDS)[number];
+
+type ShortNumbers = Partial<Record<Kind, string>>;
 
 const SHAPE = 3;
 
@@ -28,7 +41,7 @@ if (import.meta.filename === process.argv[1]) {
   else await writeMaps();
 }
 
-async function writeMaps() {
+async function writeMaps(): Promise<void> {
   await release();
 
   await rm(out, { recursive: true, force: true });
@@ -53,7 +66,7 @@ async function writeMaps() {
   );
 }
 
-async function release() {
+async function release(): Promise<void> {
   if (!existsSync(archive)) {
     await mkdir(cache, { recursive: true });
     const url = `https://codeload.github.com/google/libphonenumber/tar.gz/refs/tags/${RELEASE}`;
@@ -80,40 +93,40 @@ async function release() {
   ]);
 }
 
-async function callingCodes(kind) {
+async function callingCodes(kind: string): Promise<string[]> {
   const names = await readdir(join(source, "resources", kind, LOCALE));
   return names.filter((name) => name.endsWith(".txt")).map((name) => name.slice(0, -".txt".length));
 }
 
-async function prefixes(kind, code) {
+async function prefixes(kind: string, code: string): Promise<Record<string, string>> {
   const file = join(source, "resources", kind, LOCALE, `${code}.txt`);
   return existsSync(file) ? prefixMap(await readFile(file, "utf8")) : {};
 }
 
-async function zones() {
+async function zones(): Promise<Record<string, string[]>> {
   const map = prefixMap(await readFile(join(source, "resources", "timezones", "map_data.txt"), "utf8"));
   return Object.fromEntries(Object.entries(map).map(([prefix, joined]) => [prefix, joined.split("&")]));
 }
 
-async function shortNumbers() {
+async function shortNumbers(): Promise<Record<string, ShortNumbers>> {
   const xml = await readFile(join(source, "resources", "ShortNumberMetadata.xml"), "utf8");
-  const found = {};
+  const found: Record<string, ShortNumbers> = {};
 
   for (const territory of elements(xmlParser.parse(xml).topNode, xml)) {
     if (tagName(territory, xml) !== "territory") continue;
     const region = attribute(territory, "id", xml);
-    const patterns = {};
+    const patterns: ShortNumbers = {};
     for (const kind of KINDS) {
       const pattern = childOf(childOf(territory, kind, xml), "nationalNumberPattern", xml);
       if (pattern) patterns[kind] = text(pattern, xml).replace(/\s+/g, "");
     }
-    if (patterns.shortCode) found[region] = patterns;
+    if (region && patterns.shortCode) found[region] = patterns;
   }
   return found;
 }
 
-function elements(node, xml) {
-  const found = [];
+function elements(node: SyntaxNode, xml: string): SyntaxNode[] {
+  const found: SyntaxNode[] = [];
   for (let child = node.firstChild; child; child = child.nextSibling) {
     if (child.name === "Element") found.push(child);
     else if (child.name === "Document") found.push(...elements(child, xml));
@@ -121,12 +134,12 @@ function elements(node, xml) {
   return found.flatMap((element) => [element, ...elements(element, xml)]);
 }
 
-function tagName(element, xml) {
+function tagName(element: SyntaxNode, xml: string): string {
   const name = element.getChild("OpenTag")?.getChild("TagName");
   return name ? xml.slice(name.from, name.to) : "";
 }
 
-function childOf(element, name, xml) {
+function childOf(element: SyntaxNode | undefined, name: string, xml: string): SyntaxNode | undefined {
   if (!element) return undefined;
   for (let child = element.firstChild; child; child = child.nextSibling) {
     if (child.name === "Element" && tagName(child, xml) === name) return child;
@@ -134,7 +147,7 @@ function childOf(element, name, xml) {
   return undefined;
 }
 
-function attribute(element, name, xml) {
+function attribute(element: SyntaxNode, name: string, xml: string): string | undefined {
   for (const found of element.getChild("OpenTag")?.getChildren("Attribute") ?? []) {
     const key = found.getChild("AttributeName");
     const value = found.getChild("AttributeValue");
@@ -143,7 +156,7 @@ function attribute(element, name, xml) {
   return undefined;
 }
 
-function text(element, xml) {
+function text(element: SyntaxNode, xml: string): string {
   let found = "";
   for (let child = element.firstChild; child; child = child.nextSibling) {
     if (child.name === "Text") found += xml.slice(child.from, child.to);
@@ -151,8 +164,8 @@ function text(element, xml) {
   return found;
 }
 
-function prefixMap(text) {
-  const map = {};
+function prefixMap(text: string): Record<string, string> {
+  const map: Record<string, string> = {};
   for (const line of text.split("\n")) {
     const trimmed = line.trim();
     const at = trimmed.indexOf("|");
@@ -162,11 +175,11 @@ function prefixMap(text) {
   return map;
 }
 
-async function readIfPresent(file) {
+async function readIfPresent(file: string): Promise<string | undefined> {
   return existsSync(file) ? await readFile(file, "utf8") : undefined;
 }
 
-async function size() {
+async function size(): Promise<string> {
   const names = await readdir(out);
   const bytes = await Promise.all(names.map(async (name) => (await readFile(join(out, name))).length));
   return (bytes.reduce((total, length) => total + length, 0) / 1e6).toFixed(1);
