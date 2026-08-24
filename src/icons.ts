@@ -1,6 +1,7 @@
 export { default as IconAdjustments } from "@tabler/icons-react/dist/esm/icons/IconAdjustments.mjs";
 export { default as IconAlertTriangle } from "@tabler/icons-react/dist/esm/icons/IconAlertTriangle.mjs";
 export { default as IconArrowDown } from "@tabler/icons-react/dist/esm/icons/IconArrowDown.mjs";
+export { default as IconArrowsExchange } from "@tabler/icons-react/dist/esm/icons/IconArrowsExchange.mjs";
 export { default as IconArrowsLeftRight } from "@tabler/icons-react/dist/esm/icons/IconArrowsLeftRight.mjs";
 export { default as IconArrowsMaximize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMaximize.mjs";
 export { default as IconArrowsMinimize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMinimize.mjs";

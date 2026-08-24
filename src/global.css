@@ -796,3 +796,21 @@ svg.country-map {
   display: inline-block;
   white-space: pre;
 }
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .har-meta {
+    display: none;
+  }
+}
+
+.har-body {
+  max-height: calc(24rem * var(--mantine-scale));
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.har-image {
+  max-width: 100%;
+  width: fit-content;
+}

@@ -176,6 +176,23 @@ export const PAGE_META = {
       "myers diff",
     ],
   },
+  "/har": {
+    title: "HAR Viewer & HTTP Archive Analyser",
+    description:
+      "Open a HAR recording from Chrome, Firefox or Safari and read every request — headers, cookies, bodies and timings — filtered by any field. Nothing is uploaded.",
+    keywords: [
+      "har viewer",
+      "har file analyzer",
+      "http archive viewer",
+      "har analyser",
+      "network log viewer",
+      "devtools har",
+      "read har file",
+      "har request filter",
+      "http request timings",
+      "waterfall timings",
+    ],
+  },
   "/hasher": {
     title: "Hash & Key Derivation Calculator",
     description:

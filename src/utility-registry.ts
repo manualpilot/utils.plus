@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileDigit, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
+import { IconArrowsExchange, IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileDigit, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -59,6 +59,12 @@ const routes: UtilityRoute[] = [
     label: "Diff",
     Icon: IconGitCompare,
     Component: lazy(() => import("./utilities/diff/diff")),
+  },
+  {
+    path: "/har",
+    label: "HAR",
+    Icon: IconArrowsExchange,
+    Component: lazy(() => import("./utilities/har/har")),
   },
   {
     path: "/hasher",
