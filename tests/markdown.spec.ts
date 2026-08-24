@@ -127,6 +127,61 @@ test("a script in the document is not run", async ({ page }) => {
   expect(dialogs).toEqual([]);
 });
 
+const GROUP_MS = 600;
+
+test("a chosen file becomes the document, and the editor can take it back", async ({ page }) => {
+  await openMarkdown(page);
+  await replaceDocument(page, "# Being written");
+  await page.waitForTimeout(GROUP_MS);
+
+  await page.locator("input[type=\"file\"]").setInputFiles({
+    name: "notes.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from("\ufeff# From a file\n\nSome **bold** words."),
+  });
+
+  await expect.poll(async () => page.evaluate(readEditor)).toBe("# From a file\n\nSome **bold** words.");
+  await expect(page.locator(".markdown-preview h1")).toHaveText("From a file");
+  await expect.poll(async () => decodeHash(page.url()).value).toBe("# From a file\n\nSome **bold** words.");
+
+  await page.locator(".cm-content").click();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect.poll(async () => page.evaluate(readEditor)).toBe("# Being written");
+});
+
+test("a dropped file replaces the document instead of landing at the caret", async ({ page }) => {
+  await openMarkdown(page);
+  await replaceDocument(page, "# Being written");
+
+  const dropped = await page.evaluateHandle(() => {
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(["# Dropped\n"], "notes.md", { type: "text/markdown" }));
+    return transfer;
+  });
+
+  const content = page.locator(".cm-content");
+  await content.dispatchEvent("dragover", { dataTransfer: dropped });
+  await expect(page.locator(".markdown-editor-pane")).toHaveAttribute("data-dragging", "true");
+
+  await content.dispatchEvent("drop", { dataTransfer: dropped });
+  await expect.poll(async () => page.evaluate(readEditor)).toBe("# Dropped\n");
+  await expect(page.locator(".markdown-editor-pane")).not.toHaveAttribute("data-dragging", "true");
+});
+
+test("a file that is not text is refused and the document is left alone", async ({ page }) => {
+  await openMarkdown(page);
+  await replaceDocument(page, "# Being written");
+
+  await page.locator("input[type=\"file\"]").setInputFiles({
+    name: "picture.png",
+    mimeType: "image/png",
+    buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0xfe]),
+  });
+
+  await expect(page.getByText("That file did not open")).toBeVisible();
+  expect(await page.evaluate(readEditor)).toBe("# Being written");
+});
+
 test("the address bar tracks the document, the flavour and the view", async ({ page }) => {
   await openMarkdown(page);
   await replaceDocument(page, "# Shared");
