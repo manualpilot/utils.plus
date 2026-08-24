@@ -1,32 +1,43 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "attribution/attributions.json");
+const LICENSES = join(ROOT, "attribution/license");
+const CANONICAL = join(ROOT, "attribution/canonical");
 const MODULES = join(ROOT, "node_modules");
 
 const LICENSE_FILE = /^(licen[sc]e|copying|notice)([._-].*)?$/i;
 
 function main() {
-  const written = build();
+  const { json, files } = build();
   const previous = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
+  const departed = existing().filter((name) => !files.has(name));
 
-  if (!process.argv.includes("--check")) {
-    writeFileSync(OUT, written);
-    const { packages, texts } = JSON.parse(written);
-    console.log(`attributions: ${packages.length} packages, ${texts.length} distinct licence texts`);
-  } else if (written !== previous) {
-    console.error("attributions: attribution/attributions.json is stale — run `npm run attributions`");
-    process.exit(1);
+  if (process.argv.includes("--check")) {
+    const stale = json !== previous || departed.length > 0
+      || [...files].some(([name, text]) => stored(name) !== text);
+
+    if (stale) {
+      console.error("attributions: attribution/ is stale — run `npm run attributions`");
+      process.exit(1);
+    }
+    return;
   }
+
+  mkdirSync(LICENSES, { recursive: true });
+  writeFileSync(OUT, json);
+  for (const [name, text] of files) writeFileSync(join(LICENSES, `${name}.txt`), text);
+  for (const name of departed) rmSync(join(LICENSES, `${name}.txt`));
+
+  console.log(`attributions: ${files.size} packages, ${departed.length} licences no longer served`);
 }
 
 function build() {
   const locations = locate(MODULES, null, {});
-  const texts = [];
-  const index = new Map();
+  const files = new Map();
   const packages = [];
 
   for (const name of [...shipped()].sort()) {
@@ -37,11 +48,10 @@ function build() {
     const file = readdirSync(dir).find((entry) => LICENSE_FILE.test(entry));
     const license = spdx(manifest);
     const text = file ? readFileSync(join(dir, file), "utf8").trim() : fallback(license, manifest);
+    const own = fileName(name);
 
-    if (!index.has(text)) {
-      index.set(text, texts.length);
-      texts.push(text);
-    }
+    if (files.has(own)) throw new Error(`attributions: two packages want attribution/license/${own}.txt`);
+    files.set(own, `${text}\n`);
 
     packages.push({
       name,
@@ -49,12 +59,26 @@ function build() {
       license,
       publisher: publisher(manifest),
       url: repository(manifest),
-      text: index.get(text),
+      file: own,
       ...(file ? {} : { reconstructed: true }),
     });
   }
 
-  return JSON.stringify({ packages, texts }, null, 2) + "\n";
+  return { json: JSON.stringify({ packages }, null, 2) + "\n", files };
+}
+
+function fileName(name) {
+  return name.replace(/^@/, "").replace(/\//g, "-");
+}
+
+function existing() {
+  if (!existsSync(LICENSES)) return [];
+  return readdirSync(LICENSES).filter((entry) => entry.endsWith(".txt")).map((entry) => entry.slice(0, -".txt".length));
+}
+
+function stored(name) {
+  const path = join(LICENSES, `${name}.txt`);
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
 }
 
 function shipped() {
@@ -116,10 +140,10 @@ function repository(manifest) {
 
 function fallback(license, manifest) {
   const notice = `Copyright (c) ${publisher(manifest) || manifest.name}`;
-  const vendored = join(ROOT, "attribution", `${license}.txt`);
+  const path = join(CANONICAL, `${license}.txt`);
 
-  if (/^[\w.+-]+$/.test(license) && existsSync(vendored)) {
-    const text = readFileSync(vendored, "utf8").trim();
+  if (/^[\w.+-]+$/.test(license) && existsSync(path)) {
+    const text = readFileSync(path, "utf8").trim();
     return NOTICED.has(license) ? `${notice}\n\n${text}` : text;
   }
 

@@ -1,9 +1,9 @@
-import { Accordion, Anchor, Badge, Box, Card, Group, Stack, Text, TextInput, Title } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { Accordion, Anchor, Badge, Box, Card, Group, Loader, Stack, Text, TextInput, Title } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
 import attributions from "../attribution/attributions.json";
-import gplText from "../attribution/GPL-3.0.txt?raw";
-import postgresText from "../attribution/PostgreSQL.txt?raw";
-import pythonText from "../attribution/Python-2.0.txt?raw";
+import gplUrl from "../attribution/canonical/GPL-3.0.txt?url";
+import postgresUrl from "../attribution/canonical/PostgreSQL.txt?url";
+import pythonUrl from "../attribution/canonical/Python-2.0.txt?url";
 import { shuffle } from "./common/random";
 import { IconSearch } from "./icons";
 
@@ -88,7 +88,7 @@ export default function Attributions() {
                           This package ships no licence file; below is the canonical {pkg.license} text.
                         </Text>
                       )}
-                      <LicenceText>{texts[pkg.text]}</LicenceText>
+                      <Licence url={LICENCES[pkg.file]} />
                     </Stack>
                   )}
                 </Accordion.Panel>
@@ -303,7 +303,7 @@ export default function Attributions() {
             Reproduced because the PostgreSQL server PGlite carries is served from this site, and it arrives inside a
             package rather than as one. It does not govern utils+ itself.
           </Text>
-          <LicenceText>{postgresText}</LicenceText>
+          <Licence url={postgresUrl} />
         </Stack>
       </Card>
       <Card withBorder shadow="sm" radius="md">
@@ -313,7 +313,7 @@ export default function Attributions() {
             Reproduced because the Python standard library Pyodide carries is served from this site, and it is the one
             licence here that arrives inside a package rather than as one. It does not govern utils+ itself.
           </Text>
-          <LicenceText>{pythonText}</LicenceText>
+          <Licence url={pythonUrl} />
         </Stack>
       </Card>
       <Card withBorder shadow="sm" radius="md">
@@ -324,11 +324,38 @@ export default function Attributions() {
             permissions on top of this licence and calls for both texts to be conveyed together. It does not govern
             utils+ itself.
           </Text>
-          <LicenceText>{gplText}</LicenceText>
+          <Licence url={gplUrl} />
         </Stack>
       </Card>
     </Stack>
   );
+}
+
+function Licence({ url }: { url: string | undefined }) {
+  const [text, setText] = useState<string | null | undefined>(() => LOADED.get(url ?? ""));
+
+  useEffect(() => {
+    if (text !== undefined) return;
+    let reading = true;
+    read(url).then((loaded) => reading && setText(loaded));
+    return () => {
+      reading = false;
+    };
+  }, [url, text]);
+
+  if (text === undefined) {
+    return (
+      <Group gap="xs">
+        <Loader size="xs" />
+        <Text size="sm" c="dimmed">Reading the licence…</Text>
+      </Group>
+    );
+  }
+
+  if (text === null) {
+    return <Text size="sm" c="dimmed">This licence could not be read; the source is linked above.</Text>;
+  }
+  return <LicenceText>{text}</LicenceText>;
 }
 
 function LicenceText({ children }: { children: string }) {
@@ -344,19 +371,47 @@ function LicenceText({ children }: { children: string }) {
   );
 }
 
+function read(url: string | undefined): Promise<string | null> {
+  if (!url) return Promise.resolve(null);
+
+  const reading = READING.get(url) ?? fetch(url)
+    .then((response) => response.ok ? response.text() : null)
+    .catch(() => null)
+    .then((body) => {
+      const text = body === null ? null : body.trim();
+      if (text === null) READING.delete(url);
+      else LOADED.set(url, text);
+      return text;
+    });
+
+  READING.set(url, reading);
+  return reading;
+}
+
+const READING = new Map<string, Promise<string | null>>();
+const LOADED = new Map<string, string>();
+
 interface Attribution {
   name: string;
   version: string;
   license: string;
   publisher: string;
   url: string;
-  text: number;
+  file: string;
   reconstructed?: boolean;
 }
 
 const packages = [...(attributions.packages as Attribution[])];
 shuffle(packages);
-const texts: string[] = attributions.texts;
+
+const LICENCES: Record<string, string> = Object.fromEntries(
+  Object.entries(
+    import.meta.glob("../attribution/license/*.txt", { query: "?url", import: "default", eager: true }) as Record<
+      string,
+      string
+    >,
+  ).map(([path, url]) => [path.slice(path.lastIndexOf("/") + 1, -".txt".length), url]),
+);
 const openpgp = packages.find((pkg) => pkg.name === "openpgp");
 const pyodide = packages.find((pkg) => pkg.name === "pyodide");
 const pglite = packages.find((pkg) => pkg.name === "@electric-sql/pglite");

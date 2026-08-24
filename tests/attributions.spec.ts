@@ -44,6 +44,39 @@ test("the LGPL notice names OpenPGP.js and carries both licence texts", async ({
   await expect(page.getByText(/GNU LESSER GENERAL PUBLIC LICENSE\s+Version 3, 29 June 2007/)).toBeVisible();
 });
 
+test("a licence is read when its row is opened and not before", async ({ page }) => {
+  const read: string[] = [];
+  page.on("request", (request) => {
+    const url = request.url();
+    if (url.endsWith(".txt")) read.push(url);
+  });
+
+  await page.goto(ATTRIBUTIONS_PATH);
+  await expect(page.getByRole("heading", { name: "Attributions", level: 2 })).toBeVisible();
+  expect(read.filter((url) => url.includes("openpgp"))).toEqual([]);
+
+  await page.getByPlaceholder("Filter by name or licence").fill("openpgp");
+  await page.getByRole("button", { name: /openpgp/ }).click();
+
+  await expect(page.getByText(/GNU LESSER GENERAL PUBLIC LICENSE\s+Version 3, 29 June 2007/)).toBeVisible();
+  expect(read.filter((url) => url.includes("openpgp"))).toHaveLength(1);
+});
+
+test("the row says it is reading while the licence is on its way", async ({ page }) => {
+  await page.route(/license\/openpgp[^/]*\.txt$/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await route.continue();
+  });
+
+  await page.goto(ATTRIBUTIONS_PATH);
+  await page.getByPlaceholder("Filter by name or licence").fill("openpgp");
+  await page.getByRole("button", { name: /openpgp/ }).click();
+
+  await expect(page.getByText("Reading the licence…")).toBeVisible();
+  await expect(page.getByText(/GNU LESSER GENERAL PUBLIC LICENSE/)).toBeVisible();
+  await expect(page.getByText("Reading the licence…")).toHaveCount(0);
+});
+
 test("the packages come up in a different order each visit", async ({ page }) => {
   const order = async () => {
     await page.goto(ATTRIBUTIONS_PATH);
