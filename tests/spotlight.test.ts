@@ -24,6 +24,12 @@ describe("filterUtilities", () => {
     expect(matches("ssh")[0]).toBe("/keygen");
   });
 
+  it("puts a word somebody spelled out above a name that only shares its letters", () => {
+    expect(matches("bcrypt")[0]).toBe("/hasher");
+    expect(matches("bcrypt")).toContain("/cryptography");
+    expect(matches("aes")[0]).toBe("/cryptography");
+  });
+
   it("survives a typo and a half-typed name", () => {
     expect(matches("colur")[0]).toBe("/colour");
     expect(matches("markdwn")[0]).toBe("/markdown");

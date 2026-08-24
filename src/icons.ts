@@ -54,6 +54,7 @@ export { default as IconLink } from "@tabler/icons-react/dist/esm/icons/IconLink
 export { default as IconList } from "@tabler/icons-react/dist/esm/icons/IconList.mjs";
 export { default as IconListCheck } from "@tabler/icons-react/dist/esm/icons/IconListCheck.mjs";
 export { default as IconListNumbers } from "@tabler/icons-react/dist/esm/icons/IconListNumbers.mjs";
+export { default as IconLock } from "@tabler/icons-react/dist/esm/icons/IconLock.mjs";
 export { default as IconMapPin } from "@tabler/icons-react/dist/esm/icons/IconMapPin.mjs";
 export { default as IconMarkdown } from "@tabler/icons-react/dist/esm/icons/IconMarkdown.mjs";
 export { default as IconMinimize } from "@tabler/icons-react/dist/esm/icons/IconMinimize.mjs";

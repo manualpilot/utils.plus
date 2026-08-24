@@ -51,6 +51,7 @@
     "@mantine/dates": "^9.5.0",
     "@mantine/hooks": "^9.5.0",
     "@mantine/spotlight": "^9.5.0",
+    "@noble/ciphers": "^2.3.0",
     "@noble/curves": "^2.3.0",
     "@noble/hashes": "^2.3.0",
     "@pyscript/core": "^0.7.31",

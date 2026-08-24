@@ -521,12 +521,20 @@
       "text": 17
     },
     {
+      "name": "@noble/ciphers",
+      "version": "2.3.0",
+      "license": "MIT",
+      "publisher": "Paul Miller",
+      "url": "https://github.com/paulmillr/noble-ciphers",
+      "text": 18
+    },
+    {
       "name": "@noble/curves",
       "version": "2.3.0",
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-curves",
-      "text": 18
+      "text": 19
     },
     {
       "name": "@noble/hashes",
@@ -534,7 +542,7 @@
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-hashes",
-      "text": 18
+      "text": 19
     },
     {
       "name": "@pyscript/core",
@@ -542,7 +550,7 @@
       "license": "APACHE-2.0",
       "publisher": "Anaconda Inc.",
       "url": "https://github.com/pyscript/pyscript",
-      "text": 19
+      "text": 20
     },
     {
       "name": "@sqlite.org/sqlite-wasm",
@@ -550,7 +558,7 @@
       "license": "Apache-2.0",
       "publisher": "Thomas Steiner",
       "url": "https://github.com/sqlite/sqlite-wasm",
-      "text": 20,
+      "text": 21,
       "reconstructed": true
     },
     {
@@ -559,7 +567,7 @@
       "license": "MIT",
       "publisher": "codecalm",
       "url": "https://github.com/tabler/tabler-icons",
-      "text": 21
+      "text": 22
     },
     {
       "name": "@tabler/icons-react",
@@ -567,7 +575,7 @@
       "license": "MIT",
       "publisher": "codecalm",
       "url": "https://github.com/tabler/tabler-icons",
-      "text": 21
+      "text": 22
     },
     {
       "name": "@types/emscripten",
@@ -575,7 +583,7 @@
       "license": "MIT",
       "publisher": "Kensuke Matsuzaki",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "text": 22
+      "text": 23
     },
     {
       "name": "@types/react",
@@ -583,7 +591,7 @@
       "license": "MIT",
       "publisher": "Asana",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "text": 22
+      "text": 23
     },
     {
       "name": "@types/trusted-types",
@@ -591,7 +599,7 @@
       "license": "MIT",
       "publisher": "Jakub Vrana",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-      "text": 22
+      "text": 23
     },
     {
       "name": "@uiw/codemirror-extensions-basic-setup",
@@ -599,7 +607,7 @@
       "license": "MIT",
       "publisher": "kenny wong",
       "url": "https://github.com/uiwjs/react-codemirror",
-      "text": 23,
+      "text": 24,
       "reconstructed": true
     },
     {
@@ -608,7 +616,7 @@
       "license": "MIT",
       "publisher": "kenny wong",
       "url": "https://github.com/uiwjs/react-codemirror",
-      "text": 23,
+      "text": 24,
       "reconstructed": true
     },
     {
@@ -617,7 +625,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/ungap/with-resolvers",
-      "text": 24,
+      "text": 25,
       "reconstructed": true
     },
     {
@@ -626,7 +634,7 @@
       "license": "MIT",
       "publisher": "Vincent Voyer",
       "url": "https://github.com/vvo/tzdb",
-      "text": 25
+      "text": 26
     },
     {
       "name": "@webreflection/fetch",
@@ -634,7 +642,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/fetch",
-      "text": 26
+      "text": 27
     },
     {
       "name": "@webreflection/idb-map",
@@ -642,7 +650,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/idb-map",
-      "text": 27
+      "text": 28
     },
     {
       "name": "@webreflection/utils",
@@ -650,7 +658,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/utils",
-      "text": 28
+      "text": 29
     },
     {
       "name": "acorn",
@@ -658,7 +666,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/acornjs/acorn",
-      "text": 29
+      "text": 30
     },
     {
       "name": "add-promise-listener",
@@ -666,7 +674,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/add-promise-listener",
-      "text": 27
+      "text": 28
     },
     {
       "name": "any-promise",
@@ -674,7 +682,7 @@
       "license": "MIT",
       "publisher": "Kevin Beaty",
       "url": "https://github.com/kevinbeaty/any-promise",
-      "text": 30
+      "text": 31
     },
     {
       "name": "asn1",
@@ -682,7 +690,7 @@
       "license": "MIT",
       "publisher": "Joyent",
       "url": "https://github.com/joyent/node-asn1",
-      "text": 31
+      "text": 32
     },
     {
       "name": "assert-plus",
@@ -690,7 +698,7 @@
       "license": "MIT",
       "publisher": "Mark Cavage",
       "url": "https://github.com/mcavage/node-assert-plus",
-      "text": 32,
+      "text": 33,
       "reconstructed": true
     },
     {
@@ -699,7 +707,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/basic-devtools",
-      "text": 33
+      "text": 34
     },
     {
       "name": "bcrypt-pbkdf",
@@ -707,7 +715,7 @@
       "license": "BSD-3-Clause",
       "publisher": "",
       "url": "https://github.com/joyent/node-bcrypt-pbkdf",
-      "text": 34
+      "text": 35
     },
     {
       "name": "bcryptjs",
@@ -715,7 +723,7 @@
       "license": "BSD-3-Clause",
       "publisher": "Daniel Wirtz",
       "url": "https://github.com/dcodeIO/bcrypt.js",
-      "text": 35
+      "text": 36
     },
     {
       "name": "clsx",
@@ -723,7 +731,7 @@
       "license": "MIT",
       "publisher": "Luke Edwards",
       "url": "lukeed/clsx",
-      "text": 36
+      "text": 37
     },
     {
       "name": "codedent",
@@ -731,7 +739,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "",
-      "text": 24,
+      "text": 25,
       "reconstructed": true
     },
     {
@@ -748,7 +756,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/coincident",
-      "text": 27
+      "text": 28
     },
     {
       "name": "commander",
@@ -756,7 +764,7 @@
       "license": "MIT",
       "publisher": "TJ Holowaychuk",
       "url": "https://github.com/tj/commander.js",
-      "text": 37
+      "text": 38
     },
     {
       "name": "country-flag-emoji-polyfill",
@@ -764,7 +772,7 @@
       "license": "MIT",
       "publisher": "Egbert Teeselink",
       "url": "https://github.com/talkjs/country-flag-emoji-polyfill",
-      "text": 38
+      "text": 39
     },
     {
       "name": "crelt",
@@ -772,7 +780,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/marijn/crelt",
-      "text": 39
+      "text": 40
     },
     {
       "name": "csstype",
@@ -780,7 +788,7 @@
       "license": "MIT",
       "publisher": "Fredrik Nicol",
       "url": "https://github.com/frenic/csstype",
-      "text": 40
+      "text": 41
     },
     {
       "name": "dashdash",
@@ -788,7 +796,7 @@
       "license": "MIT",
       "publisher": "Trent Mick",
       "url": "https://github.com/trentm/node-dashdash",
-      "text": 41
+      "text": 42
     },
     {
       "name": "dayjs",
@@ -796,7 +804,7 @@
       "license": "MIT",
       "publisher": "iamkun",
       "url": "https://github.com/iamkun/dayjs",
-      "text": 42
+      "text": 43
     },
     {
       "name": "detect-node-es",
@@ -804,7 +812,7 @@
       "license": "MIT",
       "publisher": "Ilya Kantor",
       "url": "https://github.com/thekashey/detect-node",
-      "text": 43
+      "text": 44
     },
     {
       "name": "dompurify",
@@ -812,7 +820,7 @@
       "license": "(MPL-2.0 OR Apache-2.0)",
       "publisher": "Dr.-Ing. Mario Heiderich, Cure53",
       "url": "https://github.com/cure53/DOMPurify",
-      "text": 20
+      "text": 21
     },
     {
       "name": "ecc-jsbn",
@@ -820,7 +828,7 @@
       "license": "MIT",
       "publisher": "Jeremie Miller",
       "url": "https://github.com/quartzjer/ecc-jsbn",
-      "text": 44
+      "text": 45
     },
     {
       "name": "fdir",
@@ -828,7 +836,7 @@
       "license": "MIT",
       "publisher": "thecodrr",
       "url": "https://github.com/thecodrr/fdir",
-      "text": 45
+      "text": 46
     },
     {
       "name": "fuse.js",
@@ -836,7 +844,7 @@
       "license": "Apache-2.0",
       "publisher": "Kiro Risk",
       "url": "https://github.com/krisk/Fuse",
-      "text": 46
+      "text": 47
     },
     {
       "name": "get-nonce",
@@ -844,7 +852,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "git@github.com:theKashey/get-nonce",
-      "text": 47
+      "text": 48
     },
     {
       "name": "getpass",
@@ -852,7 +860,7 @@
       "license": "MIT",
       "publisher": "Alex Wilson",
       "url": "https://github.com/arekinath/node-getpass",
-      "text": 48
+      "text": 49
     },
     {
       "name": "html-escaper",
@@ -860,7 +868,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/html-escaper",
-      "text": 49
+      "text": 50
     },
     {
       "name": "jose",
@@ -868,7 +876,7 @@
       "license": "MIT",
       "publisher": "Filip Skokan",
       "url": "panva/jose",
-      "text": 50
+      "text": 51
     },
     {
       "name": "jsbn",
@@ -876,7 +884,7 @@
       "license": "MIT",
       "publisher": "Tom Wu",
       "url": "https://github.com/andyperlitch/jsbn",
-      "text": 51
+      "text": 52
     },
     {
       "name": "libphonenumber-js",
@@ -884,7 +892,7 @@
       "license": "MIT",
       "publisher": "catamphetamine",
       "url": "https://gitlab.com/catamphetamine/libphonenumber-js",
-      "text": 52
+      "text": 53
     },
     {
       "name": "lines-and-columns",
@@ -892,7 +900,7 @@
       "license": "MIT",
       "publisher": "Brian Donovan",
       "url": "https://github.com/eventualbuddha/lines-and-columns",
-      "text": 53
+      "text": 54
     },
     {
       "name": "mantine-datatable",
@@ -900,7 +908,7 @@
       "license": "MIT",
       "publisher": "Ionut-Cristian Florescu",
       "url": "https://github.com/icflorescu/mantine-datatable",
-      "text": 54
+      "text": 55
     },
     {
       "name": "marked",
@@ -908,7 +916,7 @@
       "license": "MIT",
       "publisher": "Christopher Jeffrey",
       "url": "https://github.com/markedjs/marked",
-      "text": 55
+      "text": 56
     },
     {
       "name": "mitt",
@@ -916,7 +924,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "developit/mitt",
-      "text": 56
+      "text": 57
     },
     {
       "name": "mz",
@@ -924,7 +932,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "normalize/mz",
-      "text": 57
+      "text": 58
     },
     {
       "name": "next-resolver",
@@ -932,7 +940,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/next-resolver",
-      "text": 28
+      "text": 29
     },
     {
       "name": "node-forge",
@@ -940,7 +948,7 @@
       "license": "(BSD-3-Clause OR GPL-2.0)",
       "publisher": "Digital Bazaar, Inc.",
       "url": "https://github.com/digitalbazaar/forge",
-      "text": 58
+      "text": 59
     },
     {
       "name": "object-assign",
@@ -948,7 +956,7 @@
       "license": "MIT",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/object-assign",
-      "text": 59
+      "text": 60
     },
     {
       "name": "openpgp",
@@ -956,7 +964,7 @@
       "license": "LGPL-3.0+",
       "publisher": "",
       "url": "https://github.com/openpgpjs/openpgpjs",
-      "text": 60
+      "text": 61
     },
     {
       "name": "picomatch",
@@ -964,7 +972,7 @@
       "license": "MIT",
       "publisher": "Jon Schlinkert",
       "url": "micromatch/picomatch",
-      "text": 61
+      "text": 62
     },
     {
       "name": "pirates",
@@ -972,7 +980,7 @@
       "license": "MIT",
       "publisher": "Ari Porad",
       "url": "https://github.com/danez/pirates",
-      "text": 62
+      "text": 63
     },
     {
       "name": "plain-tag",
@@ -980,7 +988,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/plain-tag",
-      "text": 63
+      "text": 64
     },
     {
       "name": "polyscript",
@@ -988,7 +996,7 @@
       "license": "APACHE-2.0",
       "publisher": "Anaconda Inc.",
       "url": "",
-      "text": 64
+      "text": 65
     },
     {
       "name": "pyodide",
@@ -996,7 +1004,7 @@
       "license": "MPL-2.0",
       "publisher": "",
       "url": "https://github.com/pyodide/pyodide",
-      "text": 65,
+      "text": 66,
       "reconstructed": true
     },
     {
@@ -1005,7 +1013,7 @@
       "license": "MIT",
       "publisher": "Kazuhiko Arase",
       "url": "https://github.com/kazuhikoarase/qrcode-generator",
-      "text": 66,
+      "text": 67,
       "reconstructed": true
     },
     {
@@ -1022,7 +1030,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
-      "text": 67
+      "text": 68
     },
     {
       "name": "react-dom",
@@ -1030,7 +1038,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
-      "text": 67
+      "text": 68
     },
     {
       "name": "react-number-format",
@@ -1038,7 +1046,7 @@
       "license": "MIT",
       "publisher": "Sudhanshu Yadav",
       "url": "https://github.com/s-yadav/react-number-format",
-      "text": 68
+      "text": 69
     },
     {
       "name": "react-remove-scroll",
@@ -1046,7 +1054,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-remove-scroll",
-      "text": 69
+      "text": 70
     },
     {
       "name": "react-remove-scroll-bar",
@@ -1054,7 +1062,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-remove-scroll-bar",
-      "text": 70,
+      "text": 71,
       "reconstructed": true
     },
     {
@@ -1063,7 +1071,7 @@
       "license": "MIT",
       "publisher": "Anton Korzunov",
       "url": "https://github.com/theKashey/react-style-singleton",
-      "text": 69
+      "text": 70
     },
     {
       "name": "reflected-ffi",
@@ -1071,7 +1079,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/reflected-ffi",
-      "text": 28
+      "text": 29
     },
     {
       "name": "regexparam",
@@ -1079,7 +1087,7 @@
       "license": "MIT",
       "publisher": "Luke Edwards",
       "url": "lukeed/regexparam",
-      "text": 71
+      "text": 72
     },
     {
       "name": "safer-buffer",
@@ -1087,7 +1095,7 @@
       "license": "MIT",
       "publisher": "Nikita Skovoroda",
       "url": "https://github.com/ChALkeR/safer-buffer",
-      "text": 72
+      "text": 73
     },
     {
       "name": "scheduler",
@@ -1095,7 +1103,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/facebook/react",
-      "text": 67
+      "text": 68
     },
     {
       "name": "sshpk",
@@ -1103,7 +1111,7 @@
       "license": "MIT",
       "publisher": "Joyent, Inc",
       "url": "https://github.com/joyent/node-sshpk",
-      "text": 48
+      "text": 49
     },
     {
       "name": "sticky-module",
@@ -1111,7 +1119,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/sticky-module",
-      "text": 33
+      "text": 34
     },
     {
       "name": "style-mod",
@@ -1119,7 +1127,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/marijnh/style-mod",
-      "text": 73
+      "text": 74
     },
     {
       "name": "sucrase",
@@ -1127,7 +1135,7 @@
       "license": "MIT",
       "publisher": "Alan Pierce",
       "url": "https://github.com/alangpierce/sucrase",
-      "text": 74
+      "text": 75
     },
     {
       "name": "tabbable",
@@ -1135,7 +1143,7 @@
       "license": "MIT",
       "publisher": "David Clark",
       "url": "https://github.com/focus-trap/tabbable",
-      "text": 75
+      "text": 76
     },
     {
       "name": "tagged-tag",
@@ -1143,7 +1151,7 @@
       "license": "MIT",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/tagged-tag",
-      "text": 76
+      "text": 77
     },
     {
       "name": "thenify",
@@ -1151,7 +1159,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "thenables/thenify",
-      "text": 77
+      "text": 78
     },
     {
       "name": "thenify-all",
@@ -1159,7 +1167,7 @@
       "license": "MIT",
       "publisher": "Jonathan Ong",
       "url": "thenables/thenify-all",
-      "text": 78
+      "text": 79
     },
     {
       "name": "tinyglobby",
@@ -1167,7 +1175,7 @@
       "license": "MIT",
       "publisher": "Superchupu",
       "url": "https://github.com/SuperchupuDev/tinyglobby",
-      "text": 79
+      "text": 80
     },
     {
       "name": "to-json-callback",
@@ -1175,7 +1183,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/to-json-callback",
-      "text": 24,
+      "text": 25,
       "reconstructed": true
     },
     {
@@ -1184,7 +1192,7 @@
       "license": "Apache-2.0",
       "publisher": "Dmitry S, Grist Labs",
       "url": "https://github.com/gristlabs/ts-interface-checker",
-      "text": 80
+      "text": 81
     },
     {
       "name": "tslib",
@@ -1192,7 +1200,7 @@
       "license": "0BSD",
       "publisher": "Microsoft Corp.",
       "url": "https://github.com/Microsoft/tslib",
-      "text": 81
+      "text": 82
     },
     {
       "name": "tweetnacl",
@@ -1200,7 +1208,7 @@
       "license": "Unlicense",
       "publisher": "TweetNaCl-js contributors",
       "url": "https://github.com/dchest/tweetnacl-js",
-      "text": 82
+      "text": 83
     },
     {
       "name": "type-checked-collections",
@@ -1208,7 +1216,7 @@
       "license": "ISC",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/type-checked-collections",
-      "text": 33
+      "text": 34
     },
     {
       "name": "type-fest",
@@ -1216,7 +1224,7 @@
       "license": "(MIT OR CC0-1.0)",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/type-fest",
-      "text": 83
+      "text": 84
     },
     {
       "name": "use-callback-ref",
@@ -1224,7 +1232,7 @@
       "license": "MIT",
       "publisher": "theKashey",
       "url": "https://github.com/theKashey/use-callback-ref/",
-      "text": 69
+      "text": 70
     },
     {
       "name": "use-sidecar",
@@ -1232,7 +1240,7 @@
       "license": "MIT",
       "publisher": "theKashey",
       "url": "https://github.com/theKashey/use-sidecar",
-      "text": 69
+      "text": 70
     },
     {
       "name": "use-sync-external-store",
@@ -1240,7 +1248,7 @@
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/facebook/react",
-      "text": 67
+      "text": 68
     },
     {
       "name": "w3c-keyname",
@@ -1248,7 +1256,7 @@
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://github.com/marijnh/w3c-keyname",
-      "text": 84
+      "text": 85
     },
     {
       "name": "weak-id",
@@ -1256,7 +1264,7 @@
       "license": "MIT",
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/weak-id",
-      "text": 28
+      "text": 29
     },
     {
       "name": "world-countries",
@@ -1264,7 +1272,7 @@
       "license": "ODbL-1.0",
       "publisher": "Mohammed Le Doze",
       "url": "https://github.com/mledoze/countries",
-      "text": 85
+      "text": 86
     },
     {
       "name": "wouter",
@@ -1272,7 +1280,7 @@
       "license": "Unlicense",
       "publisher": "Alexey Taktarov",
       "url": "https://github.com/molefrog/wouter",
-      "text": 86,
+      "text": 87,
       "reconstructed": true
     },
     {
@@ -1281,7 +1289,7 @@
       "license": "MIT",
       "publisher": "Einar Otto Stangvik",
       "url": "https://github.com/websockets/ws",
-      "text": 87
+      "text": 88
     }
   ],
   "texts": [
@@ -1303,6 +1311,7 @@
     "MIT License\n\nCopyright (C) 2024 by Marijn Haverbeke <marijnh@gmail.com> and others\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "MIT License\n\nCopyright (c) 2021 Vitaly Rtishchev\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.",
     "MIT License\n\nCopyright (C) 2024 by Marijn Haverbeke <marijn@haverbeke.berlin>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
+    "The MIT License (MIT)\n\nCopyright (c) 2022 Paul Miller (https://paulmillr.com)\nCopyright (c) 2016 Thomas Pornin <pornin@bolet.org>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the “Software”), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "The MIT License (MIT)\n\nCopyright (c) 2022 Paul Miller (https://paulmillr.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the “Software”), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
     "Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n\n   Copyright (c) 2022-present, PyScript Development Team\n\n   Originated at Anaconda, Inc. in 2022\n\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.",
     "Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.",

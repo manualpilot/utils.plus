@@ -42,10 +42,17 @@ const fuse = new Fuse(
   },
 );
 
+const SPELLED = new Map<string, Set<string>>(
+  utilities.map(({ path, keywords }) => [path, new Set(keywords.flatMap((word) => [word, ...word.split(/\s+/)]))]),
+);
+
 export const filterUtilities: SpotlightFilterFunction = (query, actions) => {
   const search = query.trim();
   if (!search) return actions;
 
   const byPath = new Map(actions.flatMap((action) => "id" in action ? [[action.id, action] as const] : []));
-  return fuse.search(search).flatMap(({ item }) => byPath.get(item.path) ?? []);
+  const ranked = fuse.search(search).map(({ item }) => item.path);
+  const spelled = (path: string) => SPELLED.get(path)?.has(search.toLowerCase()) ?? false;
+  return [...ranked.filter(spelled), ...ranked.filter((path) => !spelled(path))]
+    .flatMap((path) => byPath.get(path) ?? []);
 };

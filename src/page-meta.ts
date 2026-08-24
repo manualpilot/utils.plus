@@ -126,6 +126,25 @@ export const PAGE_META = {
       "crontab editor",
     ],
   },
+  "/cryptography": {
+    title: "AES, ChaCha, NaCl & PGP Encryption",
+    description:
+      "Encrypt and decrypt text or a file with AES-GCM, AES-CBC, AES-CTR, ChaCha20-Poly1305, NaCl secretbox and box, or OpenPGP. Keys are made and used in the tab.",
+    keywords: [
+      "encrypt text online",
+      "decrypt text online",
+      "aes encryption",
+      "aes-gcm",
+      "aes-cbc",
+      "chacha20-poly1305",
+      "xchacha20",
+      "nacl secretbox",
+      "tweetnacl box",
+      "x25519",
+      "pgp encrypt message",
+      "encrypt a file in the browser",
+    ],
+  },
   "/csv": {
     title: "CSV Viewer, Parser & Data Table",
     description:
