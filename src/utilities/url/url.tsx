@@ -1,5 +1,6 @@
 import { ActionIcon, Box, Button, Card, CopyButton, Group, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { type RefObject, useMemo, useState } from "react";
+import { useNewRowFocus } from "../../common/new-row-focus";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconPlus, IconTrash } from "../../icons";
@@ -14,11 +15,17 @@ export default function Url() {
   useRegisterShareState(() => ({ url }));
 
   const { parts, pairs, partErrors } = useMemo(() => readUrl(url), [url]);
+  const { ref: newRow, focusNewRow } = useNewRowFocus();
 
   const setPart = (key: PartKey, value: string) => setUrl(writeUrl(withPart(parts, key, value)));
   const setPairs = (next: Pair[]) => setUrl(writeUrl(withPairs(parts, next)));
   const patchPair = (index: number, patch: { name?: string; value?: string }) =>
     setPairs(pairs.map((pair, at) => at === index ? editPair(pair, patch) : pair));
+
+  const addPair = () => {
+    setPairs([...pairs, newPair()]);
+    focusNewRow();
+  };
 
   return (
     <Stack gap="md">
@@ -87,17 +94,7 @@ export default function Url() {
 
       <Card withBorder shadow="sm" radius="md">
         <Stack>
-          <Group justify="space-between">
-            <Title order={4}>Query parameters</Title>
-            <Button
-              size="xs"
-              variant="light"
-              leftSection={<IconPlus size="0.9rem" />}
-              onClick={() => setPairs([...pairs, newPair()])}
-            >
-              Add parameter
-            </Button>
-          </Group>
+          <Title order={4}>Query parameters</Title>
 
           <Box className="settings-row">
             <PartField spec={QUERY_PART} parts={parts} error={partErrors.query} onChange={setPart} />
@@ -110,10 +107,22 @@ export default function Url() {
                 key={index}
                 pair={pair}
                 index={index}
+                inputRef={index === pairs.length - 1 ? newRow : undefined}
                 onChange={patchPair}
                 onRemove={() => setPairs(pairs.filter((_, at) => at !== index))}
               />
             ))}
+
+          <Group>
+            <Button
+              size="xs"
+              variant="light"
+              leftSection={<IconPlus size="0.9rem" />}
+              onClick={addPair}
+            >
+              Add parameter
+            </Button>
+          </Group>
         </Stack>
       </Card>
     </Stack>
@@ -138,12 +147,13 @@ function PartField({ spec, parts, error, onChange }: PartFieldProps) {
   );
 }
 
-function PairRow({ pair, index, onChange, onRemove }: PairRowProps) {
+function PairRow({ pair, index, inputRef, onChange, onRemove }: PairRowProps) {
   const rowError = pair.nameError ?? pair.valueError;
 
   return (
     <Box className={rowError ? "settings-row has-error" : "settings-row"} mb={rowError ? "md" : 0}>
       <TextInput
+        ref={inputRef}
         label={index === 0 ? "Name" : undefined}
         aria-label={`Parameter ${index + 1} name`}
         value={pair.name}
@@ -195,6 +205,7 @@ interface PartFieldProps {
 interface PairRowProps {
   pair: Pair;
   index: number;
+  inputRef: RefObject<HTMLInputElement | null> | undefined;
   onChange: (index: number, patch: { name?: string; value?: string }) => void;
   onRemove: () => void;
 }

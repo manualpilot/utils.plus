@@ -80,6 +80,7 @@ test("a parameter is added, edited and removed, and the query follows each time"
   await openUrl(page);
 
   await page.getByRole("button", { name: "Add parameter" }).click();
+  await expect(name(page, 4)).toBeFocused();
   await name(page, 4).fill("sort");
   await value(page, 4).fill("newest first");
   await expect(part(page, "Query")).toHaveValue("q=caf%C3%A9+latte&limit=20&tags=hot,fast&sort=newest%20first");

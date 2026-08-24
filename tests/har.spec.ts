@@ -224,6 +224,7 @@ test("a condition narrows the list, and every condition has to hold", async ({ p
   await expect(cards(page).first().locator("[data-har-status]")).toHaveText("404");
 
   await page.getByRole("button", { name: "Add condition" }).click();
+  await expect(condition(page, 1).getByLabel("Value", { exact: true })).toBeFocused();
   await fill(page, 1, "Host", "contains", "api.");
   await expect(cards(page)).toHaveCount(0);
   await expect(page.getByText("No request matches every condition above.")).toBeVisible();

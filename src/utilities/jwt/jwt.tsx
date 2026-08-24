@@ -1,5 +1,6 @@
 import { ActionIcon, Autocomplete, Badge, Box, Button, Card, CopyButton, Group, SegmentedControl, Select, Stack, Table, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNewRowFocus } from "../../common/new-row-focus";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconPlus, IconRefresh, IconTrash, IconX } from "../../icons";
@@ -386,21 +387,17 @@ function VerdictBadge({ check, unsigned, given }: { check: Check | null; unsigne
 function FieldCard({ title, kind, fields, names, onChange, onAdd, onRemove }: FieldCardProps) {
   const errors = duplicateErrors(fields);
   const singular = kind === "headers" ? "Header" : "Claim";
+  const { ref: newRow, focusNewRow } = useNewRowFocus();
+
+  const handleAdd = () => {
+    onAdd(kind);
+    focusNewRow();
+  };
 
   return (
     <Card withBorder shadow="sm" radius="md">
       <Stack>
-        <Group justify="space-between">
-          <Title order={4}>{title}</Title>
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconPlus size="0.9rem" />}
-            onClick={() => onAdd(kind)}
-          >
-            Add {singular.toLowerCase()}
-          </Button>
-        </Group>
+        <Title order={4}>{title}</Title>
 
         {fields.length === 0
           ? <Text size="sm" c="dimmed">Nothing here yet</Text>
@@ -411,6 +408,7 @@ function FieldCard({ title, kind, fields, names, onChange, onAdd, onRemove }: Fi
               mb={errors[index] ? "md" : 0}
             >
               <Autocomplete
+                ref={index === fields.length - 1 ? newRow : undefined}
                 label={index === 0 ? "Name" : undefined}
                 aria-label={`${singular} ${index + 1} name`}
                 data={names}
@@ -447,6 +445,17 @@ function FieldCard({ title, kind, fields, names, onChange, onAdd, onRemove }: Fi
               />
             </Box>
           ))}
+
+        <Group>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconPlus size="0.9rem" />}
+            onClick={handleAdd}
+          >
+            Add {singular.toLowerCase()}
+          </Button>
+        </Group>
       </Stack>
     </Card>
   );

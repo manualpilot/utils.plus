@@ -163,6 +163,7 @@ test("a name used twice is the one thing a row can get wrong", async ({ page }) 
   await switchTo(page, "Encode");
 
   await page.getByRole("button", { name: "Add claim" }).click();
+  await expect(claimName(page, 4)).toBeFocused();
   await claimName(page, 4).fill("sub");
   await expect(page.getByText("Already used above")).toBeVisible();
 

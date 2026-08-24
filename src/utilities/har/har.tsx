@@ -1,6 +1,7 @@
 import { ActionIcon, Alert, Badge, Box, Button, Card, Code, Collapse, Group, Image, Progress, Select, Stack, Table, Tabs, Text, TextInput, Title, Tooltip, UnstyledButton } from "@mantine/core";
-import { type ChangeEvent, type DragEvent, memo, type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ChangeEvent, type DragEvent, memo, type ReactNode, type RefObject, useCallback, useMemo, useState } from "react";
 import { FactTable } from "../../common/fact-table";
+import { useNewRowFocus } from "../../common/new-row-focus";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconChevronRight, IconPlus, IconTrash, IconUpload, IconX } from "../../icons";
@@ -64,11 +65,18 @@ export default function Har() {
     });
   }, []);
 
+  const { ref: newRow, focusNewRow } = useNewRowFocus();
+
   const onCondition = useCallback((key: number, change: Partial<Condition>) => {
     setConditions((current) =>
       current.map((condition) => condition.key === key ? { ...condition, ...change } : condition)
     );
   }, []);
+
+  const onAdd = useCallback(() => {
+    setConditions((current) => [...current, blankCondition()]);
+    focusNewRow();
+  }, [focusNewRow]);
 
   const onRemove = useCallback((key: number) => {
     setConditions((current) => {
@@ -160,27 +168,30 @@ export default function Har() {
       {archive !== null && (
         <Card withBorder shadow="sm" radius="md">
           <Stack gap="sm">
-            <Group justify="space-between" wrap="nowrap" gap="sm">
-              <Title order={4}>Filter</Title>
-              <Button
-                variant="light"
-                size="compact-sm"
-                leftSection={<IconPlus size="0.9rem" />}
-                onClick={() => setConditions((current) => [...current, blankCondition()])}
-              >
-                Add condition
-              </Button>
-            </Group>
+            <Title order={4}>Filter</Title>
 
             {conditions.map((condition, at) => (
               <ConditionRow
                 key={condition.key}
                 condition={condition}
                 first={at === 0}
+                last={at === conditions.length - 1}
+                inputRef={newRow}
                 onChange={onCondition}
                 onRemove={onRemove}
               />
             ))}
+
+            <Group>
+              <Button
+                variant="light"
+                size="compact-sm"
+                leftSection={<IconPlus size="0.9rem" />}
+                onClick={onAdd}
+              >
+                Add condition
+              </Button>
+            </Group>
 
             <Text size="sm" c="dimmed" data-har-count>
               {asked
@@ -217,7 +228,7 @@ export default function Har() {
 
 const MAX_SHOWN = 200;
 
-function ConditionRow({ condition, first, onChange, onRemove }: ConditionRowProps) {
+function ConditionRow({ condition, first, last, inputRef, onChange, onRemove }: ConditionRowProps) {
   const field = fieldOf(condition.field);
   const comparator = comparatorOf(condition.comparator, field.kind);
   const problem = conditionProblem(condition);
@@ -253,6 +264,7 @@ function ConditionRow({ condition, first, onChange, onRemove }: ConditionRowProp
           comboboxProps={{ withinPortal: true }}
         />
         <TextInput
+          ref={last ? inputRef : undefined}
           label={first ? "Value" : undefined}
           aria-label="Value"
           placeholder={field.unit === "bytes" ? "bytes" : field.unit === "ms" ? "milliseconds" : "Anything to look for"}
@@ -282,6 +294,8 @@ function ConditionRow({ condition, first, onChange, onRemove }: ConditionRowProp
 interface ConditionRowProps {
   condition: Condition;
   first: boolean;
+  last: boolean;
+  inputRef: RefObject<HTMLInputElement | null>;
   onChange: (key: number, change: Partial<Condition>) => void;
   onRemove: (key: number) => void;
 }
