@@ -440,7 +440,6 @@ export const PAGE_META = {
       "python repl",
       "python playground",
       "pyodide",
-      "pyscript",
       "python interpreter online",
       "webassembly python",
     ],

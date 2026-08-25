@@ -1,4 +1,4 @@
-"""Bootstraps the PyScript worker: the page hands over a script or a line, which writes to the output as it goes."""
+"""The interpreter's side of /python: the page hands over a script or a line, which writes as it goes."""
 
 import ast
 import codeop
@@ -10,7 +10,6 @@ import types
 from itertools import islice
 
 import js
-from pyscript import sync
 
 MAX_DEPTH = 4
 MAX_CHILDREN = 100
@@ -187,6 +186,3 @@ BOUNDED.maxstring = 160
 BOUNDED.maxother = 160
 BOUNDED.maxlist = BOUNDED.maxtuple = BOUNDED.maxset = BOUNDED.maxfrozenset = BOUNDED.maxdict = 8
 BOUNDED.maxarray = BOUNDED.maxdeque = 8
-
-sync.run = run
-sync.repl = repl

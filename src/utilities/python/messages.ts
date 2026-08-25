@@ -18,6 +18,8 @@ export function sessionMessage(run: Run, scope: Scope | null, session: Session):
 
 export type Mode = "script" | "repl";
 
+export const COULD_NOT_START = "The interpreter could not be started.";
+
 export const IMPORTED = { label: "Imported", one: "name", many: "names" };
 
 export const MARKS = { prompt: ">>>", continued: "..." };

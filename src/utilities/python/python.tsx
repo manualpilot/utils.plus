@@ -3,16 +3,16 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EDITOR_BACKGROUND, EDITOR_STYLE } from "../../common/editor-theme";
 import { ABANDONED, BLANK_ENTRY, type Entry, NO_SESSION, Repl, type Session, written } from "../../common/repl-console";
-import { type Chunk, DRAW_DELAY, DROPPED_NOTE, IDLE, isWorking, MAX_OUTPUT, message, NOTHING_HELD, type Run, runStats, RunStatus } from "../../common/run-output";
+import { type Chunk, DRAW_DELAY, DROPPED_NOTE, IDLE, isWorking, MAX_OUTPUT, NOTHING_HELD, type Run, runStats, RunStatus } from "../../common/run-output";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { Panes } from "../../common/split-panes";
 import { UtilityTitle } from "../../common/utility-title";
 import { type Scope, Variables } from "../../common/variables-panel";
 import { IconPlayerPlay, IconPlayerStop } from "../../icons";
 import { EDITOR_EXTENSIONS } from "./editor";
-import { IMPORTED, MARKS, type Mode, runMessage, sessionMessage, STOPPED_NOTE } from "./messages";
+import type { Message, Request } from "./interpreter";
+import { COULD_NOT_START, IMPORTED, MARKS, type Mode, runMessage, sessionMessage, STOPPED_NOTE } from "./messages";
 import { SAMPLE_SCRIPT } from "./samples";
-import { type PyodideWorker, readReply, startWorker } from "./worker-bridge";
 
 export default function Python() {
   const initialState = useInitialHashState<{
@@ -35,7 +35,8 @@ export default function Python() {
   const [sessionScope, setSessionScope] = useState<Scope | null>(null);
   const [line, setLine] = useState(initialState?.line ?? "");
 
-  const workerRef = useRef<Promise<PyodideWorker> | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const waiting = useRef(new Map<number, (message: Message) => void>());
   const runId = useRef(0);
 
   const held = useRef<Chunk>(NOTHING_HELD);
@@ -54,7 +55,7 @@ export default function Python() {
   }, []);
 
   const stopWorker = useCallback(() => {
-    workerRef.current?.then((worker) => worker.terminate(), () => {});
+    workerRef.current?.terminate();
     workerRef.current = null;
   }, []);
 
@@ -88,6 +89,36 @@ export default function Python() {
     stopWorker();
     if (drawing.current !== null) clearTimeout(drawing.current);
   }, [stopWorker]);
+
+  const makeWorker = useCallback(() => {
+    const worker = new Worker(new URL("./interpreter.ts", import.meta.url), { type: "module" });
+
+    worker.onmessage = ({ data }: MessageEvent<Message>) => {
+      if (data.kind === "output") return receive({ text: data.text, dropped: data.dropped });
+      if (data.kind === "started") return setRun({ state: "running" });
+
+      const settle = waiting.current.get(data.id);
+      waiting.current.delete(data.id);
+      settle?.(data);
+    };
+
+    worker.onerror = (event) => {
+      const failed = event.message || COULD_NOT_START;
+      for (const [id, settle] of waiting.current) settle({ kind: "done", id, failed });
+      waiting.current.clear();
+    };
+
+    return worker;
+  }, [receive]);
+
+  const ask = useCallback((request: Request) => {
+    const worker = workerRef.current ?? (workerRef.current = makeWorker());
+
+    return new Promise<Message>((settle) => {
+      waiting.current.set(request.id, settle);
+      worker.postMessage(request);
+    });
+  }, [makeWorker]);
 
   const handleChange = useCallback((next: string) => {
     codeRef.current = next;
@@ -123,26 +154,20 @@ export default function Python() {
     setDropped(false);
     setScope(null);
 
-    try {
-      const worker = workerRef.current ?? (workerRef.current = startWorker(receive));
-      const ready = await worker;
-      if (runId.current !== id) return;
+    const answer = await ask({ id, kind: "run", code: codeRef.current });
+    if (runId.current !== id || answer.kind !== "done") return;
 
-      setRun({ state: "running" });
-      const started = performance.now();
-      const payload = await ready.sync.run(codeRef.current);
-      if (runId.current !== id) return;
-
-      draw();
-      setScope(readReply(payload).scope);
-      setRun({ state: "finished", seconds: (performance.now() - started) / 1000 });
-    } catch (error) {
-      if (runId.current !== id) return;
+    draw();
+    if (answer.failed !== undefined) {
       stopWorker();
-      setRun({ state: "failed", message: message(error) });
-      endSession(message(error));
+      setRun({ state: "failed", message: answer.failed });
+      endSession(answer.failed);
+      return;
     }
-  }, [draw, endSession, receive, stopWorker]);
+
+    setScope(answer.scope ?? null);
+    setRun({ state: "finished", seconds: answer.seconds ?? 0 });
+  }, [ask, draw, endSession, stopWorker]);
 
   const handleEnter = useCallback(async (text: string) => {
     const id = ++runId.current;
@@ -157,28 +182,23 @@ export default function Python() {
     sink.current = "repl";
     setRun({ state: booting ? "starting" : "running" });
 
-    try {
-      const worker = workerRef.current ?? (workerRef.current = startWorker(receive));
-      const ready = await worker;
-      if (runId.current !== id) return;
+    const answer = await ask({ id, kind: "enter", code: block.lines.join("\n") });
+    if (runId.current !== id || answer.kind !== "done") return;
 
-      setRun({ state: "running" });
-      const answer = readReply(await ready.sync.repl(block.lines.join("\n")));
-      if (runId.current !== id) return;
-
-      draw();
-      setRun(IDLE);
-      if (answer.incomplete) return;
-
-      setSession((session) => ({ entries: [...session.entries, session.current ?? block], current: null }));
-      setSessionScope(answer.scope);
-    } catch (error) {
-      if (runId.current !== id) return;
+    draw();
+    if (answer.failed !== undefined) {
       stopWorker();
-      setRun({ state: "failed", message: message(error) });
-      endSession(message(error));
+      setRun({ state: "failed", message: answer.failed });
+      endSession(answer.failed);
+      return;
     }
-  }, [draw, endSession, receive, session, stopWorker]);
+
+    setRun(IDLE);
+    if (answer.incomplete) return;
+
+    setSession((session) => ({ entries: [...session.entries, session.current ?? block], current: null }));
+    setSessionScope(answer.scope ?? null);
+  }, [ask, draw, endSession, session, stopWorker]);
 
   const handleAbandon = useCallback(() => {
     setLine("");
@@ -313,5 +333,4 @@ export default function Python() {
 
 declare global {
   var pythonEditor: EditorView | undefined;
-  var flushScriptOutput: () => void;
 }
