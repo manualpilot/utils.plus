@@ -65,6 +65,10 @@ export async function openDatabase(mode: ModeId): Promise<Engine> {
   return open();
 }
 
+export function populated(schemas: Schema[]): boolean {
+  return schemas.some((schema) => schema.relations.length > 0);
+}
+
 export function failureText(error: unknown): string {
   if (error instanceof Error) return error.message;
   return typeof error === "string" ? error : String(error);

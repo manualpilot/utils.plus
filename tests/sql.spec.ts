@@ -43,6 +43,7 @@ const grid = (page: Page) => page.getByRole("table");
 const log = (page: Page) => page.getByRole("log", { name: "Database log" });
 const tree = (page: Page) => page.getByRole("tree", { name: "Database schema" });
 const emptyNote = (page: Page) => page.getByText(/^This database is empty\./);
+const completions = (page: Page) => page.locator(".cm-tooltip-autocomplete");
 
 function openLogs(page: Page) {
   return page.getByRole("tab", { name: /^Logs/ }).click();
@@ -89,6 +90,31 @@ test("runs a script somebody typed and reads the catalogue it built", async ({ p
   await expect(grid(page).getByText("from SQLite")).toBeVisible();
   await expect(page.getByText(/SELECT, 2 rows in /)).toBeVisible();
   await expect(tree(page).getByText("greeting", { exact: true })).toBeVisible();
+});
+
+test("completes the tables and columns of the database in front of it", async ({ page }) => {
+  await openSql(page);
+  await execute(page, "CREATE TABLE greeting (id INTEGER PRIMARY KEY, message TEXT NOT NULL);");
+  await setEditor(page, "");
+
+  await page.locator(".cm-content").click();
+  await page.keyboard.type("SELECT * FROM gree");
+  await expect(completions(page)).toContainText("greeting");
+  await expect(completions(page)).toContainText("table");
+
+  await setEditor(page, "");
+  await page.keyboard.type("SELECT greeting.mess");
+  await expect(completions(page)).toContainText("message");
+  await expect(completions(page)).toContainText("TEXT");
+
+  await setEditor(page, "");
+  await page.keyboard.type("SELECT * FROM main.gree");
+  await expect(completions(page)).toContainText("greeting");
+
+  await setEditor(page, "");
+  await page.keyboard.type("SELECT * FROM greeting WHERE mess");
+  await expect(completions(page)).toContainText("message");
+  await expect(completions(page)).toContainText("TEXT");
 });
 
 test("loads the Library dataset by putting its script in the editor and running it", async ({ page }) => {

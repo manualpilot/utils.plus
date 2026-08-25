@@ -1,7 +1,10 @@
+import { PostgreSQL, SQLite } from "@codemirror/lang-sql";
+import { EditorState } from "@uiw/react-codemirror";
 import { describe, expect, it } from "vitest";
 import { isNull, writeCell } from "../src/utilities/sql/cells";
+import { catalogueCompletion, type Option, statementScope } from "../src/utilities/sql/completion";
 import { datasetNamed, DATASETS, isDataset } from "../src/utilities/sql/datasets";
-import type { Relation, Schema } from "../src/utilities/sql/engine";
+import { type ModeId, populated, type Relation, type Schema } from "../src/utilities/sql/engine";
 import { appended, type LogEntry, MAX_LOG_ENTRIES, writeLog } from "../src/utilities/sql/logs";
 import { commandOf, oneLine, splitStatements } from "../src/utilities/sql/statements";
 import { defaultOpen, schemaTree } from "../src/utilities/sql/tree";
@@ -237,6 +240,154 @@ describe("the schema tree", () => {
       "Columns",
       "Definition",
     ]);
+  });
+});
+
+describe("completing from the catalogue", () => {
+  const column = (name: string, type: string) => ({ name, type, notNull: false, primaryKey: false, fallback: null });
+
+  const relation = (name: string, kind: string, columns: ReturnType<typeof column>[]): Relation => ({
+    name,
+    kind,
+    columns,
+    indexes: [],
+    constraints: [],
+    definition: null,
+  });
+
+  const sqlite: Schema[] = [{
+    name: "main",
+    relations: [
+      relation("greeting", "table", [column("id", "INTEGER"), column("message", "TEXT")]),
+      relation("people", "table", [column("id", "INTEGER"), column("name", "TEXT")]),
+      relation("v1.2", "view", [column("n", "INTEGER")]),
+      relation("Order Items", "table", [column("quantity", "INTEGER")]),
+    ],
+  }];
+
+  const postgres: Schema[] = [
+    { name: "public", relations: [relation("people", "table", [column("id", "integer"), column("userId", "text")])] },
+    { name: "app", relations: [relation("audit", "materialized view", [column("at", "timestamp")])] },
+  ];
+
+  type Source = (context: { state: EditorState; pos: number; explicit: boolean }) => { options: Option[] } | null;
+
+  function offered(doc: string, mode: ModeId, schemas: Schema[], at = doc.length): Option[] {
+    const state = editing(doc, mode, schemas);
+    return state.languageDataAt<Source>("autocomplete", at)
+      .flatMap((source) => source({ state, pos: at, explicit: true })?.options ?? []);
+  }
+
+  function editing(doc: string, mode: ModeId, schemas: Schema[]): EditorState {
+    const dialect = mode === "sqlite" ? SQLite : PostgreSQL;
+    return EditorState.create({
+      doc,
+      extensions: [dialect.language, catalogueCompletion(dialect, mode, () => schemas)],
+    });
+  }
+
+  const scopeColumns = (options: Option[]) => options.filter((option) => option.type === "property");
+
+  it("offers the relations of the schema a bare name resolves against, and the schemas over them", () => {
+    expect(offered("SELECT * FROM ", "postgres", postgres)).toEqual([
+      { label: "public", type: "namespace", detail: "schema" },
+      { label: "app", type: "namespace", detail: "schema" },
+      { label: "people", type: "type", detail: "table" },
+    ]);
+  });
+
+  it("offers a relation's columns with the type the database gave them", () => {
+    const columns = [
+      { label: "id", type: "property", detail: "integer" },
+      { label: "userId", type: "property", detail: "text", apply: "\"userId\"" },
+    ];
+
+    expect(offered("SELECT people.", "postgres", postgres)).toEqual(columns);
+    expect(offered("SELECT * FROM people p WHERE p.", "postgres", postgres)).toEqual(columns);
+  });
+
+  it("offers what a schema holds when that schema is the one named", () => {
+    expect(offered("SELECT * FROM app.", "postgres", postgres)).toEqual([
+      { label: "audit", type: "type", detail: "materialized view" },
+    ]);
+    expect(offered("SELECT * FROM app.audit a WHERE a.", "postgres", postgres)).toEqual([
+      { label: "at", type: "property", detail: "timestamp" },
+    ]);
+  });
+
+  it("writes a name that cannot be written plainly as the dialect quotes it", () => {
+    expect(offered("SELECT * FROM Ord", "sqlite", sqlite)).toContainEqual({
+      label: "Order Items",
+      type: "type",
+      detail: "table",
+      apply: "`Order Items`",
+    });
+  });
+
+  it("keeps a name with a dot of its own whole", () => {
+    expect(offered("SELECT * FROM ", "sqlite", sqlite).map((option) => option.label)).toContain("v1.2");
+    expect(offered("SELECT * FROM v1.", "sqlite", sqlite)).toEqual([]);
+  });
+
+  it("offers the columns of the relations the statement names, where a column can be written", () => {
+    expect(scopeColumns(offered("SELECT * FROM greeting WHERE mes", "sqlite", sqlite))).toEqual([
+      { label: "id", type: "property", detail: "INTEGER", boost: 1 },
+      { label: "message", type: "property", detail: "TEXT", boost: 1 },
+    ]);
+
+    expect(scopeColumns(offered("SELECT  FROM greeting", "sqlite", sqlite, 7)).map((option) => option.label))
+      .toEqual(["id", "message"]);
+  });
+
+  it("offers the columns of every relation a join or a comma brought in", () => {
+    const joined = "SELECT * FROM greeting g JOIN people p ON ";
+    expect(scopeColumns(offered(joined, "sqlite", sqlite)).map((option) => option.label))
+      .toEqual(["id", "message", "name"]);
+    expect(scopeColumns(offered("SELECT * FROM greeting, people WHERE ", "sqlite", sqlite)).map((o) => o.label))
+      .toEqual(["id", "message", "name"]);
+  });
+
+  it.each([
+    "UPDATE greeting SET mes",
+    "INSERT INTO greeting (mes",
+    "DELETE FROM greeting WHERE mes",
+  ])("offers them in %s", (doc) => {
+    expect(scopeColumns(offered(doc, "sqlite", sqlite)).map((option) => option.label)).toContain("message");
+  });
+
+  it("offers no column where the name being written is a relation's own", () => {
+    expect(scopeColumns(offered("SELECT * FROM gree", "sqlite", sqlite))).toEqual([]);
+    expect(scopeColumns(offered("INSERT INTO gree", "sqlite", sqlite))).toEqual([]);
+  });
+
+  it("leaves a name written in front of the caret to the catalogue alone", () => {
+    expect(offered("SELECT * FROM greeting g WHERE g.", "sqlite", sqlite)).toEqual([
+      { label: "id", type: "property", detail: "INTEGER" },
+      { label: "message", type: "property", detail: "TEXT" },
+    ]);
+  });
+
+  it("reads the relations of the statement the caret is in and of no other", () => {
+    const scope = (doc: string) => statementScope(editing(doc, "sqlite", sqlite), doc.length);
+
+    expect(scope("SELECT * FROM main.greeting g, people WHERE ")).toEqual({
+      relations: [["main", "greeting"], ["people"]],
+      naming: false,
+    });
+    expect(scope("SELECT * FROM gree")).toEqual({ relations: [["gree"]], naming: true });
+    expect(scope("SELECT * FROM greeting; SELECT ")).toEqual({ relations: [], naming: false });
+  });
+
+  it("offers nothing of a relation the catalogue has never heard of", () => {
+    expect(scopeColumns(offered("SELECT * FROM nowhere WHERE ", "sqlite", sqlite))).toEqual([]);
+  });
+
+  it("answers with nothing at all until something has been made", () => {
+    expect(populated([{ name: "public", relations: [] }])).toBe(false);
+    expect(populated(postgres)).toBe(true);
+
+    expect(offered("SELECT * FROM ", "postgres", [{ name: "public", relations: [] }])).toEqual([]);
+    expect(offered("SELECT * FROM ", "sqlite", [])).toEqual([]);
   });
 });
 

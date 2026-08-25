@@ -9,8 +9,8 @@ import { UtilityTitle } from "../../common/utility-title";
 import { IconChevronRight, IconDatabaseImport, IconPlayerPlay, IconRestore, IconTable, IconTerminal2 } from "../../icons";
 import { type Cell, isNull, MAX_ROWS, writeCell } from "./cells";
 import { type DatasetId, datasetNamed, DATASETS, datasetScript, isDataset } from "./datasets";
-import { EDITOR_EXTENSIONS } from "./editor";
-import { type Engine, failureText, isMode, type ModeId, MODES, openDatabase, type Outcome, type Schema } from "./engine";
+import { editorExtensions } from "./editor";
+import { type Engine, failureText, isMode, type ModeId, MODES, openDatabase, type Outcome, populated, type Schema } from "./engine";
 import { appended, type LogEntry, type LogLevel, writeLog } from "./logs";
 import { EMPTY_SCHEMA, LOAD_UNDONE, loadingMessage, loadWarning, NO_LOG_YET, NO_SCHEMA_YET, NOT_RUN_YET, NOTHING_TO_RUN, ranMessage, readyMessage, RESETTING, RUNNING, schemaFailure, startFailure, startingMessage, summarise, truncatedMessage } from "./messages";
 
@@ -46,6 +46,13 @@ export default function Sql() {
   const [problem, setProblem] = useState<string | null>(null);
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [tab, setTab] = useState<string | null>(RESULTS_TAB);
+
+  const catalogue = useRef<Schema[]>(NO_SCHEMAS);
+  useEffect(() => {
+    catalogue.current = schemas ?? NO_SCHEMAS;
+  }, [schemas]);
+  const readCatalogue = useCallback(() => catalogue.current, []);
+  const extensions = useMemo(() => editorExtensions(mode, readCatalogue), [mode, readCatalogue]);
 
   const syncShareState = useRegisterShareState(() => ({ mode, dataset, sql: sqlRef.current || undefined }));
 
@@ -176,7 +183,7 @@ export default function Sql() {
     setGeneration((generation) => generation + 1);
   }, [record]);
 
-  const populated = useMemo(() => (schemas ?? []).some((schema) => schema.relations.length > 0), [schemas]);
+  const filled = useMemo(() => populated(schemas ?? NO_SCHEMAS), [schemas]);
 
   const applyLoad = useCallback(() => {
     setAsking(false);
@@ -188,9 +195,9 @@ export default function Sql() {
   }, [dataset, mode, record, writeSample]);
 
   const handleLoad = useCallback(() => {
-    if (sqlRef.current.trim() === "" && !populated) return applyLoad();
+    if (sqlRef.current.trim() === "" && !filled) return applyLoad();
     setAsking(true);
-  }, [applyLoad, populated]);
+  }, [applyLoad, filled]);
 
   const handleExecute = useCallback(() => {
     if (!engine || running) return;
@@ -275,7 +282,7 @@ export default function Sql() {
                     height="100%"
                     style={EDITOR_STYLE}
                     theme="dark"
-                    extensions={EDITOR_EXTENSIONS[mode]}
+                    extensions={extensions}
                     onCreateEditor={(view) => {
                       viewRef.current = view;
                       self.sqlEditor = view;
@@ -318,7 +325,7 @@ export default function Sql() {
 
       <Modal opened={asking} onClose={() => setAsking(false)} title="Load over what is here?" centered>
         <Stack gap="lg">
-          <Text size="sm">{loadWarning(datasetNamed(dataset).label, populated)} {LOAD_UNDONE}</Text>
+          <Text size="sm">{loadWarning(datasetNamed(dataset).label, filled)} {LOAD_UNDONE}</Text>
           <Group justify="flex-end" gap="sm">
             <Button variant="default" onClick={() => setAsking(false)}>Cancel</Button>
             <Button color="red" onClick={applyLoad}>Reset and load</Button>
@@ -529,6 +536,8 @@ const RESULTS_FLOORS = { first: 144, second: 128 };
 const FOLLOW_SLACK = 24;
 
 const ROW_KEY = "__row";
+
+const NO_SCHEMAS: Schema[] = [];
 
 const EMPTY_ROWS: Cell[][] = [];
 const EMPTY_COLUMNS: string[] = [];
