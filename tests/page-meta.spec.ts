@@ -10,14 +10,24 @@ test("the welcome page's head is in the document it was served", async ({ page }
   expect(html).toContain(PAGE_META["/"].description);
 });
 
-test("the welcome page's document says what each utility is", async ({ page }) => {
-  const html = await (await page.request.get("/")).text();
-  const graph = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1])["@graph"];
+test("the welcome page says what each utility is", async ({ page }) => {
+  await page.goto("/");
+  const script = page.locator("head script[type=\"application/ld+json\"]");
+
+  await expect(script).toHaveCount(1);
+  const graph = JSON.parse((await script.textContent())!)["@graph"];
   const list = graph.find((node: { "@type": string }) => node["@type"] === "ItemList");
   const items: { item: { name: string; url: string } }[] = list.itemListElement;
 
   expect(items.map((entry) => entry.item.url)).toEqual(utilities.map((utility) => `https://utils.plus${utility.path}`));
   expect(items.map((entry) => entry.item.name)).toEqual(utilities.map((utility) => PAGE_META[utility.path].title));
+});
+
+test("the graph is on the page before the application asks for anything", async ({ page }) => {
+  const html = await (await page.request.get("/")).text();
+
+  expect(html).not.toContain("application/ld+json");
+  expect(html).toMatch(/<script type="module"[^>]*utils-metadata/);
 });
 
 test("routing off the welcome page takes its list of utilities with it", async ({ page }) => {

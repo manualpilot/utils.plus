@@ -10,6 +10,8 @@ const TITLE_MAX = 60;
 
 const PAGES = (Object.keys(PAGE_META) as PagePath[]).map((path) => ({ path, meta: PAGE_META[path] }));
 
+const INDEX_HTML = readFileSync(join(import.meta.dirname, "../src/index.html"), "utf8");
+
 describe("page metadata", () => {
   it.each(PAGES)("$path says what the page is for", ({ meta }) => {
     expect(meta.description.length).toBeGreaterThanOrEqual(DESCRIPTION_RANGE.min);
@@ -145,19 +147,18 @@ describe("headHtml", () => {
     }
   });
 
-  it("writes the graph as text a parser reads back and a browser cannot end early", () => {
-    const script = headHtml(HOME_PATH).match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1];
-
-    expect(JSON.parse(script)).toEqual(structuredData(HOME_PATH));
-    expect(script).not.toMatch(/[<>&]/);
-    expect(script).toContain("\\u0026");
+  it("leaves the graph to the script the document loads", () => {
+    for (const path of indexablePaths()) expect(headHtml(path)).not.toContain("application/ld+json");
   });
 
   it("is what index.html leaves room for", () => {
-    const source = readFileSync(join(import.meta.dirname, "../src/index.html"), "utf8");
+    expect(INDEX_HTML).toContain("<!--page-head-->");
+    expect(INDEX_HTML).not.toContain("<title>");
+  });
 
-    expect(source).toContain("<!--page-head-->");
-    expect(source).not.toContain("<title>");
+  it("is loaded beside the script that writes the graph", () => {
+    expect(INDEX_HTML).toContain("<script type=\"module\" vite-ignore src=\"/utils-metadata.ts\"></script>");
+    expect(withHead(INDEX_HTML, "/keygen")).toContain("src=\"/utils-metadata.ts\"");
   });
 });
 
@@ -197,7 +198,8 @@ describe("pageDocuments", () => {
     }
   });
 
-  it("leaves the list of utilities on the welcome page it was copied from", () => {
+  it("leaves the list of utilities to the script the document loads", () => {
+    expect(withHead(INDEX, HOME_PATH)).not.toContain("application/ld+json");
     for (const html of Object.values(documents)) expect(html).not.toContain("application/ld+json");
   });
 });

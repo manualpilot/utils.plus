@@ -621,7 +621,6 @@ export function headMeta(path: string): HeadMeta {
   return {
     title,
     canonical: url,
-    data: structuredData(path),
     metas: [
       { attribute: "name", key: "description", content: meta.description },
       { attribute: "name", key: "keywords", content: meta.keywords.join(", ") },
@@ -642,7 +641,6 @@ export interface HeadMeta {
   title: string;
   canonical: string;
   metas: MetaTag[];
-  data?: StructuredData;
 }
 
 export interface MetaTag {
@@ -706,13 +704,12 @@ export interface StructuredData {
 }
 
 export function headHtml(path: string): string {
-  const { title, canonical, metas, data } = headMeta(path);
+  const { title, canonical, metas } = headMeta(path);
 
   return [
     `<title>${escapeHtml(title)}</title>`,
     ...metas.map(({ attribute, key, content }) => `<meta ${attribute}="${key}" content="${escapeHtml(content)}" />`),
     `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
-    ...(data ? [`<script type="application/ld+json">${jsonLd(data)}</script>`] : []),
   ].join("\n  ");
 }
 
@@ -762,13 +759,6 @@ export function robotsTxt(): string {
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     "",
   ].join("\n");
-}
-
-function jsonLd(data: StructuredData): string {
-  return JSON.stringify(data, undefined, 2).replace(
-    /[<>&]/g,
-    (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`,
-  );
 }
 
 function escapeHtml(value: string): string {

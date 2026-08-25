@@ -7,6 +7,9 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { defineConfig } from "vitest/config";
 import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, robotsTxt, sitemapXml, withHead } from "./src/page-meta.ts";
 
+const METADATA_NAME = "utils-metadata";
+const METADATA_SRC = `/${METADATA_NAME}.ts`;
+
 export default defineConfig({
   root: "src",
   publicDir: false,
@@ -17,7 +20,13 @@ export default defineConfig({
     sourcemap: true,
     assetsInlineLimit: (file) =>
       PHONE_GEO.test(file) || COUNTRY_VIEW.test(file) || LICENCE.test(file) ? false : undefined,
-    rolldownOptions: { output: { chunkFileNames, assetFileNames } },
+    rolldownOptions: {
+      input: {
+        index: join(import.meta.dirname, "src/index.html"),
+        [METADATA_NAME]: join(import.meta.dirname, `src/${METADATA_NAME}.ts`),
+      },
+      output: { chunkFileNames, assetFileNames },
+    },
   },
   plugins: [
     react(),
@@ -133,7 +142,18 @@ function pageMetaFiles(): Plugin {
         const index = bundle["index.html"];
         if (index?.type !== "asset") throw new Error("page-meta-files: index.html is not in the bundle");
 
-        for (const [fileName, source] of Object.entries(pageDocuments(index.source.toString()))) {
+        const metadata = Object.values(bundle).find((file) => file.type === "chunk" && file.name === METADATA_NAME);
+        if (!metadata) throw new Error(`page-meta-files: ${METADATA_NAME} is not in the bundle`);
+
+        const template = index.source.toString();
+        if (!template.includes(METADATA_SRC)) {
+          throw new Error(`page-meta-files: index.html does not load ${METADATA_SRC}`);
+        }
+
+        const welcome = template.replace(METADATA_SRC, `/${metadata.fileName}`);
+        index.source = welcome;
+
+        for (const [fileName, source] of Object.entries(pageDocuments(welcome))) {
           this.emitFile({ type: "asset", fileName, source });
         }
       },

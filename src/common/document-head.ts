@@ -1,17 +1,18 @@
 import { useEffect } from "react";
-import { headMeta, type StructuredData } from "../page-meta";
+import { headMeta, structuredData } from "../page-meta";
+import { setStructuredData } from "../utils-metadata";
 
 export function useDocumentHead(path: string) {
   useEffect(() => applyDocumentHead(path), [path]);
 }
 
 export function applyDocumentHead(path: string) {
-  const { title, canonical, metas, data } = headMeta(path);
+  const { title, canonical, metas } = headMeta(path);
 
   document.title = title;
   for (const { attribute, key, content } of metas) setMeta(attribute, key, content);
   setLink("canonical", canonical);
-  setStructuredData(data);
+  setStructuredData(structuredData(path));
 }
 
 function setMeta(attribute: "name" | "property", key: string, content: string) {
@@ -23,17 +24,6 @@ function setMeta(attribute: "name" | "property", key: string, content: string) {
   }
   tag.setAttribute("content", content);
 }
-
-function setStructuredData(data: StructuredData | undefined) {
-  const existing = document.head.querySelector<HTMLScriptElement>(`script[type="${JSON_LD}"]`);
-  if (!data) return existing?.remove();
-
-  const tag = existing ?? document.head.appendChild(document.createElement("script"));
-  tag.type = JSON_LD;
-  tag.textContent = JSON.stringify(data);
-}
-
-const JSON_LD = "application/ld+json";
 
 function setLink(rel: string, href: string) {
   let tag = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
