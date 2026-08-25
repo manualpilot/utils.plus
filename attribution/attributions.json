@@ -562,6 +562,14 @@
       "reconstructed": true
     },
     {
+      "name": "@swc/helpers",
+      "version": "0.5.23",
+      "license": "Apache-2.0",
+      "publisher": "강동윤",
+      "url": "https://github.com/swc-project/swc",
+      "file": "swc-helpers"
+    },
+    {
       "name": "@tabler/icons",
       "version": "3.46.0",
       "license": "MIT",
@@ -702,6 +710,14 @@
       "reconstructed": true
     },
     {
+      "name": "base64-js",
+      "version": "1.5.1",
+      "license": "MIT",
+      "publisher": "T. Jameson Little",
+      "url": "https://github.com/beatgammit/base64-js",
+      "file": "base64-js"
+    },
+    {
       "name": "basic-devtools",
       "version": "0.1.6",
       "license": "ISC",
@@ -724,6 +740,31 @@
       "publisher": "Daniel Wirtz",
       "url": "https://github.com/dcodeIO/bcrypt.js",
       "file": "bcryptjs"
+    },
+    {
+      "name": "brotli",
+      "version": "1.3.3",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/brotli.js",
+      "file": "brotli",
+      "reconstructed": true
+    },
+    {
+      "name": "browserify-zlib",
+      "version": "0.2.0",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/browserify-zlib",
+      "file": "browserify-zlib"
+    },
+    {
+      "name": "clone",
+      "version": "2.1.2",
+      "license": "MIT",
+      "publisher": "Paul Vorbach",
+      "url": "https://github.com/pvorb/node-clone",
+      "file": "clone"
     },
     {
       "name": "clsx",
@@ -815,6 +856,15 @@
       "file": "detect-node-es"
     },
     {
+      "name": "dfa",
+      "version": "1.2.0",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "ssh://git@github.com/devongovett/dfa",
+      "file": "dfa",
+      "reconstructed": true
+    },
+    {
       "name": "dompurify",
       "version": "3.4.14",
       "license": "(MPL-2.0 OR Apache-2.0)",
@@ -831,12 +881,29 @@
       "file": "ecc-jsbn"
     },
     {
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "license": "MIT",
+      "publisher": "Evgeny Poberezkin",
+      "url": "https://github.com/epoberezkin/fast-deep-equal",
+      "file": "fast-deep-equal"
+    },
+    {
       "name": "fdir",
       "version": "6.5.0",
       "license": "MIT",
       "publisher": "thecodrr",
       "url": "https://github.com/thecodrr/fdir",
       "file": "fdir"
+    },
+    {
+      "name": "fontkit",
+      "version": "2.0.4",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/foliojs/fontkit",
+      "file": "fontkit",
+      "reconstructed": true
     },
     {
       "name": "fuse.js",
@@ -879,6 +946,14 @@
       "file": "jose"
     },
     {
+      "name": "js-md5",
+      "version": "0.8.3",
+      "license": "MIT",
+      "publisher": "Chen, Yi-Cyuan",
+      "url": "https://github.com/emn178/js-md5",
+      "file": "js-md5"
+    },
+    {
       "name": "jsbn",
       "version": "0.1.1",
       "license": "MIT",
@@ -893,6 +968,14 @@
       "publisher": "catamphetamine",
       "url": "https://gitlab.com/catamphetamine/libphonenumber-js",
       "file": "libphonenumber-js"
+    },
+    {
+      "name": "linebreak",
+      "version": "1.1.0",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/linebreaker",
+      "file": "linebreak"
     },
     {
       "name": "lines-and-columns",
@@ -967,6 +1050,30 @@
       "file": "openpgp"
     },
     {
+      "name": "pako",
+      "version": "1.0.11",
+      "license": "(MIT AND Zlib)",
+      "publisher": "Andrei Tuputcyn",
+      "url": "nodeca/pako",
+      "file": "pako"
+    },
+    {
+      "name": "pdfkit",
+      "version": "0.19.1",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/foliojs/pdfkit",
+      "file": "pdfkit"
+    },
+    {
+      "name": "pdfmake",
+      "version": "0.3.11",
+      "license": "MIT",
+      "publisher": "Bartek Pampuch",
+      "url": "https://github.com/bpampuch/pdfmake",
+      "file": "pdfmake"
+    },
+    {
       "name": "picomatch",
       "version": "4.0.7",
       "license": "MIT",
@@ -989,6 +1096,14 @@
       "publisher": "Andrea Giammarchi",
       "url": "https://github.com/WebReflection/plain-tag",
       "file": "plain-tag"
+    },
+    {
+      "name": "png-js",
+      "version": "1.1.0",
+      "license": "UNKNOWN",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/png.js",
+      "file": "png-js"
     },
     {
       "name": "polyscript",
@@ -1090,12 +1205,28 @@
       "file": "regexparam"
     },
     {
+      "name": "restructure",
+      "version": "3.0.2",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/restructure",
+      "file": "restructure"
+    },
+    {
       "name": "safer-buffer",
       "version": "2.1.2",
       "license": "MIT",
       "publisher": "Nikita Skovoroda",
       "url": "https://github.com/ChALkeR/safer-buffer",
       "file": "safer-buffer"
+    },
+    {
+      "name": "sax",
+      "version": "1.6.1",
+      "license": "BlueOak-1.0.0",
+      "publisher": "Isaac Z. Schlueter",
+      "url": "ssh://git@github.com/isaacs/sax-js",
+      "file": "sax"
     },
     {
       "name": "scheduler",
@@ -1170,6 +1301,14 @@
       "file": "thenify-all"
     },
     {
+      "name": "tiny-inflate",
+      "version": "1.0.3",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/tiny-inflate",
+      "file": "tiny-inflate"
+    },
+    {
       "name": "tinyglobby",
       "version": "0.2.17",
       "license": "MIT",
@@ -1225,6 +1364,22 @@
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/type-fest",
       "file": "type-fest"
+    },
+    {
+      "name": "unicode-properties",
+      "version": "1.4.1",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/unicode-properties",
+      "file": "unicode-properties"
+    },
+    {
+      "name": "unicode-trie",
+      "version": "2.0.0",
+      "license": "MIT",
+      "publisher": "Devon Govett",
+      "url": "https://github.com/devongovett/unicode-trie",
+      "file": "unicode-trie"
     },
     {
       "name": "use-callback-ref",
@@ -1290,6 +1445,14 @@
       "publisher": "Einar Otto Stangvik",
       "url": "https://github.com/websockets/ws",
       "file": "ws"
+    },
+    {
+      "name": "xmldoc",
+      "version": "2.0.3",
+      "license": "MIT",
+      "publisher": "Nick Farina",
+      "url": "https://github.com/nfarina/xmldoc",
+      "file": "xmldoc"
     }
   ]
 }

@@ -22,6 +22,7 @@ export { default as IconCalendarClock } from "@tabler/icons-react/dist/esm/icons
 export { default as IconCalendarRepeat } from "@tabler/icons-react/dist/esm/icons/IconCalendarRepeat.mjs";
 export { default as IconCertificate } from "@tabler/icons-react/dist/esm/icons/IconCertificate.mjs";
 export { default as IconCheck } from "@tabler/icons-react/dist/esm/icons/IconCheck.mjs";
+export { default as IconChevronDown } from "@tabler/icons-react/dist/esm/icons/IconChevronDown.mjs";
 export { default as IconChevronRight } from "@tabler/icons-react/dist/esm/icons/IconChevronRight.mjs";
 export { default as IconClock } from "@tabler/icons-react/dist/esm/icons/IconClock.mjs";
 export { default as IconCode } from "@tabler/icons-react/dist/esm/icons/IconCode.mjs";
@@ -35,6 +36,8 @@ export { default as IconEraser } from "@tabler/icons-react/dist/esm/icons/IconEr
 export { default as IconEye } from "@tabler/icons-react/dist/esm/icons/IconEye.mjs";
 export { default as IconFileDigit } from "@tabler/icons-react/dist/esm/icons/IconFileDigit.mjs";
 export { default as IconFileTypeCsv } from "@tabler/icons-react/dist/esm/icons/IconFileTypeCsv.mjs";
+export { default as IconFileTypeHtml } from "@tabler/icons-react/dist/esm/icons/IconFileTypeHtml.mjs";
+export { default as IconFileTypePdf } from "@tabler/icons-react/dist/esm/icons/IconFileTypePdf.mjs";
 export { default as IconFlag } from "@tabler/icons-react/dist/esm/icons/IconFlag.mjs";
 export { default as IconFlipHorizontal } from "@tabler/icons-react/dist/esm/icons/IconFlipHorizontal.mjs";
 export { default as IconFlipVertical } from "@tabler/icons-react/dist/esm/icons/IconFlipVertical.mjs";

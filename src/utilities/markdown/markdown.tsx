@@ -1,16 +1,17 @@
-import { ActionIcon, Alert, Box, Button, Card, Divider, Group, Paper, SegmentedControl, Select, Stack, Tooltip, Typography } from "@mantine/core";
+import { ActionIcon, Alert, Box, Button, Card, Divider, Group, Menu, Paper, SegmentedControl, Select, Stack, Text, Tooltip, Typography } from "@mantine/core";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { type ChangeEvent, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_STYLE } from "../../common/editor-theme";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
-import { IconUpload, IconX } from "../../icons";
+import { IconChevronDown, IconDownload, IconUpload, IconX } from "../../icons";
 import { applyFormat, EDITOR_EXTENSIONS, fileDropHandlers, replaceDocument } from "./editor";
 import { DEFAULT_FLAVOUR, FLAVOUR_OPTIONS, isFlavour } from "./flavours";
 import type { FormatKind } from "./format";
 import { ACCEPT, message, readDocument } from "./open";
 import { renderMarkdown } from "./render";
 import { SAMPLE_DOCUMENT } from "./sample";
+import { SAVE_FORMATS, saveDocument, type SaveKind } from "./save";
 import { FORMAT_GROUPS, shortcutLabel } from "./toolbar";
 import { DEFAULT_VIEW, isView, VIEWS } from "./views";
 
@@ -33,7 +34,8 @@ export default function Markdown() {
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [dragging, setDragging] = useState(false);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [failure, setFailure] = useState<Failure | null>(null);
 
   const html = useMemo(() => renderMarkdown(previewed, flavour), [previewed, flavour]);
 
@@ -57,6 +59,17 @@ export default function Markdown() {
 
   const handleFormat = useCallback((kind: FormatKind) => applyFormat(editorRef.current, kind), []);
 
+  const handleSave = useCallback(async (kind: SaveKind) => {
+    setSaving(true);
+    try {
+      await saveDocument(kind, valueRef.current, flavour);
+    } catch (error) {
+      setFailure({ title: "That document was not saved", message: message(error) });
+    } finally {
+      setSaving(false);
+    }
+  }, [flavour]);
+
   const handleFile = useCallback(async (file: File | null) => {
     if (!file) return;
     try {
@@ -64,7 +77,7 @@ export default function Markdown() {
       setFailure(null);
       replaceDocument(editorRef.current, text);
     } catch (error) {
-      setFailure(message(error));
+      setFailure({ title: "That file did not open", message: message(error) });
     }
   }, []);
 
@@ -104,6 +117,31 @@ export default function Markdown() {
                 }}
               />
             </Button>
+
+            <Menu shadow="md" position="bottom-start" withinPortal>
+              <Menu.Target>
+                <Button
+                  variant="default"
+                  loading={saving}
+                  leftSection={<IconDownload size="1rem" stroke={1.5} />}
+                  rightSection={<IconChevronDown size="0.9rem" stroke={1.5} />}
+                >
+                  Download
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {SAVE_FORMATS.map(({ value, label, Icon, note }) => (
+                  <Menu.Item
+                    key={value}
+                    leftSection={<Icon size="1rem" stroke={1.5} />}
+                    onClick={() => void handleSave(value)}
+                  >
+                    {label}
+                    <Text component="span" display="block" size="xs" c="dimmed">{note}</Text>
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
           </Group>
           <SegmentedControl
             value={view}
@@ -126,11 +164,11 @@ export default function Markdown() {
         <Alert
           color="red"
           icon={<IconX size="1rem" />}
-          title="That file did not open"
+          title={failure.title}
           withCloseButton
           onClose={() => setFailure(null)}
         >
-          {failure}
+          {failure.message}
         </Alert>
       )}
 
@@ -190,6 +228,11 @@ export default function Markdown() {
 }
 
 const PREVIEW_DELAY = 120;
+
+interface Failure {
+  title: string;
+  message: string;
+}
 
 declare global {
   var markdownEditor: EditorView | undefined;

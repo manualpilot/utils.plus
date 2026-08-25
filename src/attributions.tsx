@@ -183,7 +183,11 @@ export default function Attributions() {
                 Roboto
               </Anchor>, self-hosted here under the{" "}
               <strong>SIL Open Font License 1.1</strong>. It is served unmodified and under its own name, and it is not
-              sold, on its own or with anything else.
+              sold, on its own or with anything else. The PDF that <Anchor href="/markdown" inherit>Markdown</Anchor>
+              {" "}
+              writes is typeset by pdfmake, which carries a copy of the same typeface of its own and embeds it in the
+              file it writes: the same faces, arriving inside a package rather than as files beside it, and named here
+              for the reason the served copy is.
             </Text>
           </Box>
           <Box>

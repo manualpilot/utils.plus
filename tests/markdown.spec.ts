@@ -1,4 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { inflateSync } from "node:zlib";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -180,6 +182,91 @@ test("a file that is not text is refused and the document is left alone", async 
 
   await expect(page.getByText("That file did not open")).toBeVisible();
   expect(await page.evaluate(readEditor)).toBe("# Being written");
+});
+
+function save(page: Page, format: string) {
+  return page.getByRole("button", { name: "Download" }).click()
+    .then(() => page.getByRole("menuitem", { name: format }).click());
+}
+
+test("the document comes down as itself, under the name its heading gives it", async ({ page }) => {
+  await openMarkdown(page);
+  await replaceDocument(page, "# Release Notes\n\nSome **bold** words.");
+
+  const saving = page.waitForEvent("download");
+  await save(page, "Markdown");
+  const saved = await saving;
+
+  expect(saved.suggestedFilename()).toBe("release-notes.md");
+  expect(readFileSync((await saved.path())!).toString()).toBe("# Release Notes\n\nSome **bold** words.");
+});
+
+test("the HTML is the preview as a page of its own, styled and sanitised", async ({ page }) => {
+  await openMarkdown(page);
+  await replaceDocument(page, "# Release Notes\n\nSome **bold** words.\n\n<script>alert(1)</script>");
+
+  const saving = page.waitForEvent("download");
+  await save(page, "HTML");
+  const saved = await saving;
+
+  expect(saved.suggestedFilename()).toBe("release-notes.html");
+
+  const html = readFileSync((await saved.path())!).toString();
+  expect(html).toContain("<title>Release Notes</title>");
+  expect(html).toContain("<strong>bold</strong>");
+  expect(html).toContain("<style>");
+  expect(html).not.toMatch(/<link\b/);
+  expect(html).not.toContain("<script");
+});
+
+function readPdf(path: string) {
+  const raw = readFileSync(path);
+  let text = 0;
+
+  for (const match of raw.toString("latin1").matchAll(/stream\r?\n/g)) {
+    const start = match.index + match[0].length;
+    const end = raw.indexOf("endstream", start);
+    try {
+      text += (inflateSync(raw.subarray(start, end)).toString("latin1").match(/\b(Tj|TJ)\b/g) ?? []).length;
+    } catch {
+    }
+  }
+
+  return { bytes: raw.length, head: raw.subarray(0, 5).toString(), embedded: raw.includes("/FontFile"), text };
+}
+
+test("a PDF is written here, as text and not as a picture of the page", async ({ page }) => {
+  await openMarkdown(page);
+  await replaceDocument(page, "# Release Notes\n\nSome **bold** words, and a `codespan` beside them.");
+
+  const saving = page.waitForEvent("download");
+  await save(page, "PDF");
+  const saved = await saving;
+
+  expect(saved.suggestedFilename()).toBe("release-notes.pdf");
+
+  const pdf = readPdf((await saved.path())!);
+  expect(pdf.head).toBe("%PDF-");
+  expect(pdf.embedded).toBe(true);
+  expect(pdf.text).toBeGreaterThan(0);
+  expect(pdf.bytes).toBeLessThan(200_000);
+});
+
+test("the writer is fetched when a PDF is asked for and not before", async ({ page }) => {
+  const chunks: string[] = [];
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (/pdfmake/i.test(path)) chunks.push(path);
+  });
+
+  await openMarkdown(page);
+  await page.waitForTimeout(500);
+  expect(chunks).toEqual([]);
+
+  const saving = page.waitForEvent("download");
+  await save(page, "PDF");
+  await saving;
+  expect(chunks.length).toBeGreaterThan(0);
 });
 
 test("the address bar tracks the document, the flavour and the view", async ({ page }) => {

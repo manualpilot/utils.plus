@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { formatEdit, type FormatKind } from "../src/utilities/markdown/format";
 import { renderMarkdown } from "../src/utilities/markdown/render";
+import { documentTitle, fileName, standaloneDocument } from "../src/utilities/markdown/save";
 
 function format(kind: FormatKind, marked: string): string {
   const caret = marked.indexOf("‸");
@@ -146,5 +147,63 @@ describe("renderMarkdown", () => {
     expect(html).toContain("rel=\"noopener noreferrer\"");
   });
 });
+
+describe("what a saved document is called", () => {
+  it("takes the heading the document opens with", () => {
+    expect(documentTitle("# Release Notes\n\nSome prose.")).toBe("Release Notes");
+    expect(documentTitle("Some prose.\n\n## Later heading")).toBe("Later heading");
+  });
+
+  it("reads a setext heading, a document written that way still having a title", () => {
+    expect(documentTitle("Release Notes\n=============\n\nSome prose.")).toBe("Release Notes");
+  });
+
+  it("reads the heading for its words rather than its emphasis", () => {
+    expect(documentTitle("# The **bold** `truth` ##")).toBe("The bold truth");
+    expect(documentTitle("# [utils+](https://utils.plus) notes")).toBe("utils+ notes");
+  });
+
+  it("falls back where there is no heading to take, and where the heading is only marks", () => {
+    expect(documentTitle("just some prose")).toBe("Markdown");
+    expect(documentTitle("# **")).toBe("Markdown");
+  });
+
+  it("makes a name a file system will take and somebody can still read", () => {
+    expect(fileName("Release Notes", "md")).toBe("release-notes.md");
+    expect(fileName("What's new? (2026/08)", "html")).toBe("what-s-new-2026-08.html");
+    expect(fileName("Résumé", "md")).toBe("résumé.md");
+    expect(fileName("...", "md")).toBe("document.md");
+  });
+
+  it("cuts a long heading without leaving the dash it was cut at", () => {
+    const name = fileName(`${"a".repeat(64)} and more`, "md");
+    expect(name).toBe(`${"a".repeat(64)}.md`);
+  });
+});
+
+describe("the preview as a page of its own", () => {
+  const page = () => standaloneDocument(documentTitle(SAMPLE), renderMarkdown(SAMPLE, "gfm"));
+
+  it("is one whole document with the rendering inside it", () => {
+    expect(page()).toMatch(/^<!doctype html>/);
+    expect(page()).toContain("<title>Notes &amp; things</title>");
+    expect(page()).toContain("<h1>Notes &amp; things</h1>");
+    expect(page()).toContain("<strong>bold</strong>");
+  });
+
+  it("carries its own styling and asks no host for any of it", () => {
+    expect(page()).toContain("<style>");
+    expect(page()).not.toMatch(/<link\b/);
+    expect(page()).not.toMatch(/https?:\/\/fonts\./);
+  });
+
+  it("closes the title on a heading that carries a tag of its own", () => {
+    const html = standaloneDocument(documentTitle("# </title><script>alert(1)</script>"), "");
+    expect(html).not.toContain("<script");
+    expect(html).toContain("&lt;/title&gt;");
+  });
+});
+
+const SAMPLE = "# Notes & things\n\nSome **bold** words.";
 
 const TABLE = "| a | b |\n| --- | --- |\n| 1 | 2 |";

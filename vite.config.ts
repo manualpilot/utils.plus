@@ -55,15 +55,17 @@ function scopedName(name: string, chunk: Rolldown.PreRenderedChunk): string {
   if (editor) return `codemirror/${editor[1] ?? "codemirror"}`;
   const icon = ICON.exec(name);
   if (icon) return `icons/${icon[1]}`;
-  return isMantine(chunk) ? `mantine/${name}` : name;
+  if (allFrom(chunk, "@mantine/")) return `mantine/${name}`;
+  if (allFrom(chunk, "pdfmake/")) return `pdfmake/${name}`;
+  return name;
 }
 
 const CODEMIRROR = /^codemirror(?:[-_](.+))?$/;
 
 const ICON = /^Icon(.+)$/;
 
-function isMantine(chunk: Rolldown.PreRenderedChunk): boolean {
-  return chunk.moduleIds.length > 0 && chunk.moduleIds.every((id) => id.includes("/node_modules/@mantine/"));
+function allFrom(chunk: Rolldown.PreRenderedChunk, path: string): boolean {
+  return chunk.moduleIds.length > 0 && chunk.moduleIds.every((id) => id.includes(`/node_modules/${path}`));
 }
 
 function assetFileNames(asset: Rolldown.PreRenderedAsset): string {
