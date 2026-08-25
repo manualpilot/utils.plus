@@ -27,7 +27,7 @@ function placeCaret(page: Page, lineNumber: number, column: number) {
   }, { lineNumber, column });
 }
 
-function decodeHash(url: string): { value?: string; indentSize?: string } {
+function decodeHash(url: string): { value?: string; indentSize?: string; showCounts?: boolean } {
   let b64 = new URL(url).hash.slice(1).replace(/-/g, "+").replace(/_/g, "/");
   if (!b64) return {};
   while (b64.length % 4) b64 += "=";
@@ -212,4 +212,117 @@ test("share link captures text typed into the editor", async ({ page, context })
   await expect
     .poll(async () => (await page.evaluate(readEditor)).value)
     .toContain("\"typed\": 1,");
+});
+
+const COUNTS = ".cm-container-count";
+
+const setDocument = (page: Page, text: string) =>
+  page.evaluate((text) => {
+    editorView.dispatch({ changes: { from: 0, to: editorView.state.doc.length, insert: text } });
+  }, text);
+
+const countsShown = (page: Page) =>
+  page.locator(COUNTS).evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-count")));
+
+test("the document shows what every container holds", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "{\n  \"a\": [\n    1,\n    2,\n    3\n  ],\n  \"b\": {\n    \"c\": 1\n  }\n}");
+
+  await expect.poll(() => countsShown(page)).toEqual(["2 keys", "3 elements", "1 key"]);
+
+  await setDocument(page, "[\n  {\n    \"x\": 1,\n    \"y\": 2\n  }\n]");
+  await expect.poll(() => countsShown(page)).toEqual(["1 element", "2 keys"]);
+
+  await setDocument(page, "{ \"a\": 1, \"b\": 2 }");
+  await expect.poll(() => countsShown(page)).toEqual(["2 keys"]);
+});
+
+test("a container closed on its own line is labelled before the comma after it", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "{\n  \"a\": [1, 2],\n  \"b\": 3\n}");
+  await expect.poll(() => countsShown(page)).toEqual(["2 keys", "2 elements"]);
+
+  const line = await page.evaluate(() =>
+    [...document.querySelectorAll(".cm-line")[1].childNodes].map((node) => {
+      const element = node instanceof HTMLElement ? node : null;
+      if (element?.classList.contains("cm-container-count")) return `«${element.dataset.count}»`;
+      return node.textContent ?? "";
+    }).join("")
+  );
+
+  expect(line).toBe("  \"a\": [1, 2]«2 elements»,");
+});
+
+test("the pill sits just past the brace, on the same line", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "[\n  1,\n  2\n]");
+
+  const drawn = await page.evaluate(() => {
+    const pill = document.querySelector(".cm-container-count")!;
+    const style = getComputedStyle(pill);
+    const line = document.querySelectorAll(".cm-line")[0].getBoundingClientRect();
+    return {
+      box: pill.getBoundingClientRect(),
+      line: { left: line.left, top: line.top, bottom: line.bottom, height: line.height },
+      radius: parseFloat(style.borderTopLeftRadius),
+      background: style.backgroundColor,
+    };
+  });
+
+  expect(drawn.box.left).toBeGreaterThan(drawn.line.left);
+  expect(drawn.box.top).toBeGreaterThanOrEqual(drawn.line.top);
+  expect(drawn.box.bottom).toBeLessThanOrEqual(drawn.line.bottom);
+
+  expect(drawn.radius).toBeGreaterThanOrEqual(drawn.box.height / 2);
+  expect(drawn.background).not.toBe("rgba(0, 0, 0, 0)");
+});
+
+test("the count cannot be selected or copied with the text", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await openJson(page);
+
+  const text = "[\n  7,\n  8,\n  9\n]";
+  await setDocument(page, text);
+  await expect.poll(() => countsShown(page)).toEqual(["3 elements"]);
+
+  await page.locator(".cm-content").click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("ControlOrMeta+c");
+
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(text);
+  expect(await page.evaluate(() => window.getSelection()?.toString())).not.toContain("element");
+});
+
+test("the Show Counts box turns the pills off and on", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "[\n  1,\n  2\n]");
+  await expect.poll(() => countsShown(page)).toEqual(["2 elements"]);
+
+  const box = page.getByRole("checkbox", { name: "Show Counts" });
+  await expect(box).toBeChecked();
+
+  await box.uncheck();
+  await expect.poll(() => countsShown(page)).toEqual([]);
+  expect((await page.evaluate(readEditor)).value).toBe("[\n  1,\n  2\n]");
+
+  await box.check();
+  await expect.poll(() => countsShown(page)).toEqual(["2 elements"]);
+});
+
+test("the Show Counts box travels in the share link", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await openJson(page);
+  await page.getByRole("checkbox", { name: "Show Counts" }).uncheck();
+
+  await expect.poll(async () => decodeHash(page.url()).showCounts).toBe(false);
+
+  await page.locator("header button").last().click();
+  const url = await page.evaluate(() => navigator.clipboard.readText());
+
+  await page.goto(url);
+  await expect(page.locator(".cm-editor").first()).toBeVisible();
+  await page.waitForFunction(() => (window as any).editorView !== undefined);
+
+  await expect(page.getByRole("checkbox", { name: "Show Counts" })).not.toBeChecked();
+  await expect.poll(() => countsShown(page)).toEqual([]);
 });

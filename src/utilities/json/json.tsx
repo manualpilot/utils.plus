@@ -1,4 +1,4 @@
-import { Box, Button, Card, Group, Paper, Select, Stack } from "@mantine/core";
+import { Box, Button, Card, Checkbox, Group, Paper, Select, Stack } from "@mantine/core";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EDITOR_STYLE } from "../../common/editor-theme";
@@ -6,12 +6,13 @@ import { useInitialHashState, useRegisterShareState } from "../../common/share-s
 import { UtilityTitle } from "../../common/utility-title";
 import { IconBrackets, IconCode, IconIndentDecrease, IconMinimize, IconSortAscendingLetters } from "../../icons";
 import { sortKeys } from "./document";
-import { EDITOR_EXTENSIONS } from "./editor";
+import { editorExtensions } from "./editor";
 
 export default function Json() {
   const initialState = useInitialHashState<{
     value?: string;
     indentSize?: string;
+    showCounts?: boolean;
   }>();
 
   const [initialValue] = useState(() => initialState?.value ?? "{\n  \"hello\": \"world\"\n}");
@@ -19,8 +20,9 @@ export default function Json() {
   const viewRef = useRef<EditorView | null>(null);
 
   const [indentSize, setIndentSize] = useState(initialState?.indentSize ?? "2");
+  const [showCounts, setShowCounts] = useState(initialState?.showCounts ?? true);
 
-  const syncShareState = useRegisterShareState(() => ({ value: valueRef.current, indentSize }));
+  const syncShareState = useRegisterShareState(() => ({ value: valueRef.current, indentSize, showCounts }));
 
   useEffect(() => () => {
     self.editorView = undefined;
@@ -120,6 +122,14 @@ export default function Json() {
               Unescape
             </Button>
           </Group>
+
+          <Box pb={8}>
+            <Checkbox
+              label="Show Counts"
+              checked={showCounts}
+              onChange={(event) => setShowCounts(event.currentTarget.checked)}
+            />
+          </Box>
         </Group>
       </Card>
 
@@ -130,7 +140,7 @@ export default function Json() {
             height="100%"
             style={EDITOR_STYLE}
             theme="dark"
-            extensions={EDITOR_EXTENSIONS}
+            extensions={editorExtensions(showCounts)}
             onCreateEditor={(view) => {
               viewRef.current = view;
               self.editorView = view;
