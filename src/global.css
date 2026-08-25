@@ -510,6 +510,75 @@ svg.country-map {
   height: auto;
 }
 
+.colour-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(4.5rem * var(--mantine-scale)), 1fr));
+  gap: var(--mantine-spacing-xs);
+}
+
+.colour-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  text-align: center;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.colour-swatch:hover,
+.colour-swatch:focus-visible {
+  outline: 1px solid var(--mantine-color-default-border);
+  outline-offset: 2px;
+}
+
+.colour-swatch[data-base] > .mantine-ColorSwatch-root {
+  outline: 2px solid var(--mantine-color-bright);
+  outline-offset: 2px;
+}
+
+.contrast-preview {
+  padding: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-sm);
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.contrast-ratio {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: calc(2rem * var(--mantine-scale));
+  line-height: 1.2;
+}
+
+.contrast-large {
+  font-size: calc(1.5rem * var(--mantine-scale));
+  margin-top: var(--mantine-spacing-xs);
+}
+
+.contrast-body {
+  font-size: calc(1rem * var(--mantine-scale));
+  margin-top: 4px;
+}
+
+.colour-visions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(9rem * var(--mantine-scale)), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+
+.colour-vision-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(4.5rem * var(--mantine-scale));
+  border-radius: var(--mantine-radius-sm);
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.colour-vision-mark {
+  width: 55%;
+  height: 55%;
+  border-radius: var(--mantine-radius-sm);
+}
+
 .absolute-error {
   position: absolute !important;
   top: calc(100% + var(--mantine-spacing-xs) / 2);

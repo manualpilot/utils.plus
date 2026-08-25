@@ -40,6 +40,17 @@ test("routing off the welcome page takes its list of utilities with it", async (
   await expect(graph).toHaveCount(0);
 });
 
+test("every document tells Dark Reader to leave it alone", async ({ page }) => {
+  for (const path of ["/", "/colour"]) {
+    const html = await (await page.request.get(path)).text();
+    expect(html, path).toContain("<meta name=\"darkreader-lock\" />");
+  }
+
+  await page.goto("/codec");
+  await page.locator("nav a[href=\"/colour\"]").click();
+  await expect(page.locator("head meta[name=\"darkreader-lock\"]")).toHaveCount(1);
+});
+
 test("the sitemap and robots.txt are served", async ({ page }) => {
   expect(await (await page.request.get("/sitemap.xml")).text()).toBe(sitemapXml());
   expect(await (await page.request.get("/robots.txt")).text()).toBe(robotsTxt());

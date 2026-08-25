@@ -125,3 +125,143 @@ test("a swatch and the sliders write to the boxes", async ({ page }) => {
   await page.keyboard.press("ArrowRight");
   await expect(box(page, "HSL")).toHaveValue("hsl(18, 94%, 65%)");
 });
+
+test("reads the pair against WCAG, and says which levels it misses", async ({ page }) => {
+  await openColour(page);
+
+  await expect(box(page, "Background")).toHaveValue("#ffffff");
+  await expect(page.locator("[data-contrast]")).toHaveAttribute("data-contrast", "2.74:1");
+  for (const level of ["aa", "aa-large", "aaa", "aaa-large", "non-text"]) {
+    await expect(page.locator(`[data-level="${level}"]`)).toHaveAttribute("data-passes", "false");
+  }
+  await expect(page.getByText("Fails every level.", { exact: false })).toBeVisible();
+
+  await box(page, "Background").fill("black");
+  await expect(page.locator("[data-contrast]")).toHaveAttribute("data-contrast", "7.65:1");
+  for (const level of ["aa", "aa-large", "aaa", "aaa-large", "non-text"]) {
+    await expect(page.locator(`[data-level="${level}"]`)).toHaveAttribute("data-passes", "true");
+  }
+});
+
+test("the background box takes every notation too, and rides the link", async ({ page }) => {
+  await openColour(page);
+
+  await box(page, "Background").fill("oklch(62.59% 0.1641 250.29)");
+  await expect(box(page, "Background")).toHaveValue("oklch(62.59% 0.1641 250.29)");
+  await box(page, "Background").blur();
+  await expect(box(page, "Background")).toHaveValue("#228be6");
+  await expect(box(page, "Hex")).toHaveValue("#ff7043");
+
+  await expect(page).toHaveURL(/#/);
+  await page.reload();
+  await expect(box(page, "Background")).toHaveValue("#228be6");
+  await expect(box(page, "Hex")).toHaveValue("#ff7043");
+});
+
+test("the swap reads the pair the other way round", async ({ page }) => {
+  await openColour(page);
+
+  await page.getByRole("button", { name: "Swap the colour and the background" }).click();
+  await expect(box(page, "Hex")).toHaveValue("#ffffff");
+  await expect(box(page, "Background")).toHaveValue("#ff7043");
+  await expect(page.locator("[data-contrast]")).toHaveAttribute("data-contrast", "2.74:1");
+});
+
+test("a palette swatch is a colour to take, and every row is rebuilt around it", async ({ page }) => {
+  await openColour(page);
+
+  const complement = page.locator("[data-palette=\"complementary\"]");
+  await expect(complement.getByRole("button")).toHaveCount(2);
+  await expect(complement.getByRole("button", { name: "Take #00b5d7 as the colour" })).toBeVisible();
+
+  await complement.getByRole("button", { name: "Take #00b5d7 as the colour" }).click();
+  await expect(box(page, "Hex")).toHaveValue("#00b5d7");
+  await expect(complement.locator("[data-base]")).toHaveAttribute("aria-label", "Take #00b5d7 as the colour");
+  await expect(complement.getByRole("button", { name: "Take #e68466 as the colour" })).toBeVisible();
+});
+
+test("the ramp steps evenly through the colour and marks where it sits", async ({ page }) => {
+  await openColour(page);
+
+  const ramp = page.locator("[data-palette=\"tones\"]");
+  await expect(ramp.getByRole("button")).toHaveCount(9);
+  await expect(ramp.locator("[data-base]")).toHaveCount(1);
+  await expect(ramp.locator("[data-base]")).toHaveAttribute("aria-label", "Take #ff8762 as the colour");
+});
+
+test("shows the pair through each kind of colour vision", async ({ page }) => {
+  await openColour(page);
+
+  await expect(page.locator("[data-vision]")).toHaveCount(5);
+  await expect(page.locator("[data-vision=\"typical\"]")).toContainText("#ff7043");
+  await expect(page.locator("[data-vision=\"protanopia\"]")).toContainText("#97883d");
+  await expect(page.locator("[data-vision=\"deuteranopia\"]")).toContainText("#bba83f");
+  await expect(page.locator("[data-vision=\"tritanopia\"]")).toContainText("#ff5066");
+  await expect(page.locator("[data-vision=\"achromatopsia\"]")).toContainText("#9c9c9c");
+
+  await box(page, "Background").fill("#228be6");
+  await box(page, "Background").blur();
+  const chip = page.locator("[data-vision=\"achromatopsia\"] .colour-vision-chip");
+  await expect(chip).toHaveCSS("background-color", "rgb(136, 136, 136)");
+});
+
+test("says so when something between the page and the screen is repainting it", async ({ page }) => {
+  await page.clock.install();
+  await openColour(page);
+
+  const banner = page.locator("[data-interference]");
+  await expect(banner).toBeHidden();
+
+  await page.addStyleTag({ content: ".contrast-preview { background-color: rgb(24, 26, 27) !important; }" });
+
+  await page.clock.runFor(9_000);
+  await expect(banner).toBeHidden();
+
+  await page.clock.runFor(2_000);
+  await expect(banner).toHaveAttribute("data-interference", "repaint");
+  await expect(banner).toContainText("Dark Reader");
+  await expect(box(page, "Hex")).toHaveValue("#ff7043");
+});
+
+test("catches a filter over the page, and takes the banner off when it goes", async ({ page }) => {
+  await page.clock.install();
+  await openColour(page);
+
+  await page.evaluate(() => document.documentElement.style.setProperty("filter", "invert(1) hue-rotate(180deg)"));
+  await page.clock.runFor(11_000);
+  await expect(page.locator("[data-interference]")).toHaveAttribute("data-interference", "filter");
+
+  await page.evaluate(() => document.documentElement.style.removeProperty("filter"));
+  await page.clock.runFor(60_000);
+  await expect(page.locator("[data-interference]")).toBeHidden();
+});
+
+test("checks nothing while the tab is in the background, and checks on the way back", async ({ page }) => {
+  await page.clock.install();
+  await openColour(page);
+
+  const filter = (value: string | null) =>
+    page.evaluate((rule) => {
+      if (rule) document.documentElement.style.setProperty("filter", rule);
+      else document.documentElement.style.removeProperty("filter");
+    }, value);
+
+  const visibility = (state: "hidden" | "visible") =>
+    page.evaluate((value) => {
+      Object.defineProperty(document, "visibilityState", { value, configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    }, state);
+
+  await filter("invert(1)");
+  await page.clock.runFor(11_000);
+  await expect(page.locator("[data-interference]")).toBeVisible();
+
+  await visibility("hidden");
+  await filter(null);
+  await page.clock.runFor(120_000);
+  await expect(page.locator("[data-interference]")).toBeVisible();
+
+  await visibility("visible");
+  await page.clock.runFor(1);
+  await expect(page.locator("[data-interference]")).toBeHidden();
+});

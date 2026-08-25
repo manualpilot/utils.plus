@@ -11,6 +11,10 @@ export interface FormatSpec {
 
 export const DEFAULT_COLOUR: Rgba = { r: 255, g: 112, b: 67, a: 1 };
 
+export const DEFAULT_BACKGROUND: Rgba = { r: 255, g: 255, b: 255, a: 1 };
+
+export const BACKGROUND_FIELD: FormatSpec = { id: "background", label: "Background", write: writeHex };
+
 export const SWATCHES = Object.values(DEFAULT_THEME.colors).map((shades) => shades[6]);
 
 export const FORMAT_ROWS: FormatSpec[][] = [

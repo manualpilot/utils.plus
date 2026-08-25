@@ -160,6 +160,14 @@ describe("headHtml", () => {
     expect(INDEX_HTML).toContain("<script type=\"module\" vite-ignore src=\"/utils-metadata.ts\"></script>");
     expect(withHead(INDEX_HTML, "/keygen")).toContain("src=\"/utils-metadata.ts\"");
   });
+
+  it("carries the Dark Reader lock into every document written from it", () => {
+    expect(INDEX_HTML).toContain("<meta name=\"darkreader-lock\" />");
+
+    const documents = Object.values(pageDocuments(withHead(INDEX_HTML, HOME_PATH)));
+    expect(documents.length).toBeGreaterThan(0);
+    for (const document of documents) expect(document).toContain("<meta name=\"darkreader-lock\" />");
+  });
 });
 
 describe("pageDocuments", () => {

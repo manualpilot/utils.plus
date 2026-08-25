@@ -63,9 +63,9 @@ export const PAGE_META = {
     ],
   },
   "/colour": {
-    title: "Hex, RGB, HSL & OKLCH Colour Converter",
+    title: "Colour Converter, Contrast & Palette",
     description:
-      "Pick a colour and read it back as hex, RGB, HSL, HSV, CMYK, LAB, LCH, OKLAB, OKLCH or a CSS name — or type any of those into any box to convert it.",
+      "Convert between hex, RGB, HSL, CMYK, LAB and OKLCH, check WCAG contrast, build a palette in OKLCH, and see any of it through colour blindness.",
     keywords: [
       "colour converter",
       "color converter",
@@ -77,6 +77,11 @@ export const PAGE_META = {
       "cmyk converter",
       "css color names",
       "colour picker",
+      "wcag contrast checker",
+      "contrast ratio",
+      "colour palette generator",
+      "complementary colours",
+      "colour blindness simulator",
     ],
   },
   "/converter": {
