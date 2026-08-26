@@ -1,5 +1,6 @@
 import type { Fact } from "../../common/fact-table";
-import { graphemes, splitLines } from "./lines";
+import { graphemes } from "../../common/graphemes";
+import { splitLines } from "./lines";
 
 export function counts(text: string): Fact[] {
   const characters = [...text].length;

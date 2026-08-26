@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { RELEASE as SHAPES_RELEASE } from "./generate-country-shapes.ts";
 import { RELEASE as PHONE_RELEASE } from "./generate-phone-geo.ts";
+import { RELEASE as UNICODE_RELEASE } from "./generate-unicode.ts";
 
 const TITLES: Record<string, string | undefined> = {
   dependencies: "Outdated dependencies",
@@ -10,23 +11,33 @@ const ORDER = Object.keys(TITLES);
 
 interface Pinned {
   title: string;
-  repository: string;
+  source: string;
   pinned: string;
   generator: string;
+  latest: () => Promise<string | undefined>;
 }
 
 const PINNED: Pinned[] = [
   {
     title: "phone number maps",
-    repository: "google/libphonenumber",
+    source: "google/libphonenumber",
     pinned: PHONE_RELEASE,
     generator: "scripts/generate-phone-geo.ts",
+    latest: () => githubRelease("google/libphonenumber"),
   },
   {
     title: "country boundaries",
-    repository: "nvkelso/natural-earth-vector",
+    source: "nvkelso/natural-earth-vector",
     pinned: SHAPES_RELEASE,
     generator: "scripts/generate-country-shapes.ts",
+    latest: () => githubRelease("nvkelso/natural-earth-vector"),
+  },
+  {
+    title: "character database",
+    source: "unicode.org",
+    pinned: UNICODE_RELEASE,
+    generator: "scripts/generate-unicode.ts",
+    latest: unicodeVersion,
   },
 ];
 
@@ -68,21 +79,32 @@ for (const [kind, found] of [...groups].sort(([a], [b]) => rank(a) - rank(b))) {
 
 if (behind.length > 0) warn(`Outdated pinned releases (${behind.length})`, behind);
 
-async function pinnedRelease({ title, repository, pinned, generator }: Pinned): Promise<string | undefined> {
+async function pinnedRelease({ title, source, pinned, generator, latest }: Pinned): Promise<string | undefined> {
+  const failed = `${title[0].toUpperCase()}${title.slice(1)} check failed`;
+  let published: string | undefined;
+  try {
+    published = await latest();
+  } catch (cause) {
+    fail(failed, cause instanceof Error ? cause.message : String(cause));
+  }
+  if (!published) fail(failed, `${source} named no release`);
+  return published === pinned ? undefined : `${source} ${pinned} → ${published} (RELEASE in ${generator})`;
+}
+
+async function githubRelease(repository: string): Promise<string | undefined> {
   const url = `https://api.github.com/repos/${repository}/releases/latest`;
   const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
-  const failed = `${title[0].toUpperCase()}${title.slice(1)} check failed`;
-  let latest: string | undefined;
-  try {
-    const headers = { Accept: "application/vnd.github+json", ...token ? { Authorization: `Bearer ${token}` } : {} };
-    const response = await fetch(url, { headers });
-    if (!response.ok) fail(failed, `${url} answered ${response.status}`);
-    latest = (await response.json() as { tag_name?: string }).tag_name;
-  } catch (cause) {
-    fail(failed, `${url}: ${cause instanceof Error ? cause.message : String(cause)}`);
-  }
-  if (!latest) fail(failed, `${url} named no release`);
-  return latest === pinned ? undefined : `${repository} ${pinned} → ${latest} (RELEASE in ${generator})`;
+  const headers = { Accept: "application/vnd.github+json", ...token ? { Authorization: `Bearer ${token}` } : {} };
+  const response = await fetch(url, { headers });
+  if (!response.ok) throw new Error(`${url} answered ${response.status}`);
+  return (await response.json() as { tag_name?: string }).tag_name;
+}
+
+async function unicodeVersion(): Promise<string | undefined> {
+  const url = "https://www.unicode.org/Public/UCD/latest/ReadMe.txt";
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url} answered ${response.status}`);
+  return /Version (\d+\.\d+\.\d+) of the Unicode Standard/.exec(await response.text())?.[1];
 }
 
 function outdated(): Report {

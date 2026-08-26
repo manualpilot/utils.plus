@@ -1,9 +1,10 @@
 import { ActionIcon, Badge, Box, Button, Card, CopyButton, Group, Input, SegmentedControl, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ALWAYS, keepFocus, type RovingItemProps, useRovingFocus } from "../../common/roving-focus";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconTrash, IconX } from "../../icons";
-import { ALWAYS, BITS_PER_ROW, chunk, keepFocus, type RovingItemProps, useRovingFocus } from "./grid";
+import { BITS_PER_ROW, chunk } from "./grid";
 import { BASE_NAMES, FLASH_MS, isRefused, type KeyDefinition, OTHER_BASES, PROGRAMMER_FUNCTIONS, PROGRAMMER_NUMBERS, SCIENTIFIC_NUMBERS, scientificFunctions, shortcutMap, shortcutName, TONE_COLOURS, TONE_VARIANTS } from "./keys";
 import { type Base, BASES, bitPattern, type Bits, type CalculatorShare, characterOf, clearHistory, display, dropHistoryEntry, expressionText, fromShare, hasMemory, type HistoryEntry, type Key, type Machine, type Mode, press, readout, setBase, setBits, setMode, toggleBit, toShare, WORD_SIZES, writeInBase } from "./machine";
 

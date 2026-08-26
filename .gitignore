@@ -9,3 +9,5 @@ src/utilities/countries/views
 src/utilities/countries/world.json
 src/utilities/phone-number/maps
 src/utilities/phone-number/short-numbers.json
+src/utilities/unicode/names
+src/utilities/unicode/tables

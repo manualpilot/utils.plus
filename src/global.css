@@ -887,3 +887,112 @@ svg.country-map {
   max-width: 100%;
   width: fit-content;
 }
+
+.character-row {
+  cursor: pointer;
+}
+
+.character-row[data-selected] {
+  background-color: var(--mantine-color-dark-5);
+}
+
+.keyboard-panes {
+  display: flex;
+  flex-direction: row;
+  gap: var(--mantine-spacing-md);
+  height: calc(22rem * var(--mantine-scale));
+}
+
+.keyboard-menu {
+  flex: 0 0 calc(12rem * var(--mantine-scale));
+  min-width: 0;
+  padding-right: var(--mantine-spacing-xs);
+  border-right: 1px solid var(--mantine-color-dark-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.keyboard-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: calc(0.25rem * var(--mantine-scale));
+  background-color: var(--mantine-color-dark-6);
+}
+
+.keyboard-section {
+  padding: calc(0.4rem * var(--mantine-scale)) var(--mantine-spacing-xs) calc(0.15rem * var(--mantine-scale));
+}
+
+.keyboard-option {
+  padding: calc(0.2rem * var(--mantine-scale)) var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  scroll-margin-top: calc(2.75rem * var(--mantine-scale));
+}
+
+.keyboard-option .mantine-NavLink-label {
+  line-height: 1.35;
+}
+
+.keyboard-keys {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+@container main (max-width: $mantine-breakpoint-sm) {
+  .keyboard-panes {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .keyboard-menu {
+    flex: none;
+    max-height: calc(14rem * var(--mantine-scale));
+    padding-right: 0;
+    padding-bottom: var(--mantine-spacing-xs);
+    border-right: none;
+    border-bottom: 1px solid var(--mantine-color-dark-4);
+  }
+
+  .keyboard-keys {
+    flex: none;
+  }
+
+  .character-keys {
+    max-height: calc(18rem * var(--mantine-scale));
+  }
+}
+
+.character-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(2.75rem * var(--mantine-scale)), 1fr));
+  gap: var(--mantine-spacing-xs);
+  align-content: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.character-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(2.25rem * var(--mantine-scale));
+  padding: 0 calc(0.25rem * var(--mantine-scale));
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-lg);
+  line-height: 1.1;
+  overflow: hidden;
+}
+
+.character-key:hover {
+  background-color: var(--mantine-color-dark-5);
+}
+
+.character-key[data-invisible] {
+  font-size: var(--mantine-font-size-xs);
+  font-family: var(--mantine-font-family-monospace);
+  color: var(--mantine-color-dimmed);
+}

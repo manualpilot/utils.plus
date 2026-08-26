@@ -20,7 +20,9 @@ export default defineConfig({
     sourcemap: true,
     minify: true,
     assetsInlineLimit: (file) =>
-      PHONE_GEO.test(file) || COUNTRY_VIEW.test(file) || LICENCE.test(file) ? false : undefined,
+      PHONE_GEO.test(file) || COUNTRY_VIEW.test(file) || UNICODE_NAME.test(file) || LICENCE.test(file)
+        ? false
+        : undefined,
     rolldownOptions: {
       input: {
         index: join(import.meta.dirname, "src/index.html"),
@@ -86,6 +88,7 @@ function assetDirectory(asset: Rolldown.PreRenderedAsset): string {
   if (FONT.test(asset.names[0] ?? "")) return "assets/fonts";
   const original = asset.originalFileNames[0] ?? "";
   if (PHONE_GEO.test(original)) return "assets/phone-geo";
+  if (UNICODE_NAME.test(original)) return "assets/unicode-names";
   if (LICENCE.test(original)) return "assets/license";
   return COUNTRY_VIEW.test(original) ? "assets/country-views" : "assets";
 }
@@ -95,6 +98,8 @@ const FONT = /\.(?:woff2?|ttf|otf|eot)$/;
 const PHONE_GEO = /\/phone-number\/maps\/[^/]+\.json$/;
 
 const COUNTRY_VIEW = /\/countries\/views\/[^/]+\.json$/;
+
+const UNICODE_NAME = /\/unicode\/names\/[^/]+\.json$/;
 
 const LICENCE = /\/attribution\/(?:license|canonical)\/[^/]+\.txt$/;
 

@@ -4,6 +4,7 @@ import attributions from "../attribution/attributions.json";
 import gplUrl from "../attribution/canonical/GPL-3.0.txt?url";
 import postgresUrl from "../attribution/canonical/PostgreSQL.txt?url";
 import pythonUrl from "../attribution/canonical/Python-2.0.txt?url";
+import unicodeUrl from "../attribution/canonical/Unicode-3.0.txt?url";
 import { shuffle } from "./common/random";
 import { IconSearch } from "./icons";
 
@@ -245,6 +246,32 @@ export default function Attributions() {
             </Text>
           </Box>
           <Box>
+            <Title order={4}>The Unicode Character Database</Title>
+            <Text size="sm" mt={4}>
+              Everything <Anchor href="/unicode" inherit>Unicode</Anchor> says about a character is read out of the{" "}
+              <Anchor
+                href="https://www.unicode.org/Public/UCD/latest/"
+                target="_blank"
+                rel="noopener noreferrer"
+                inherit
+              >
+                Unicode Character Database
+              </Anchor>{" "}
+              , the confusables table published beside it for{" "}
+              <Anchor href="https://www.unicode.org/reports/tr39/" target="_blank" rel="noopener noreferrer" inherit>
+                UTS #39
+              </Anchor>{" "}
+              and the emoji list published for{" "}
+              <Anchor href="https://www.unicode.org/reports/tr51/" target="_blank" rel="noopener noreferrer" inherit>
+                UTS #51
+              </Anchor>, all under the{" "}
+              <strong>Unicode License v3</strong>, whose text is at the bottom of this page. The names, categories,
+              scripts, blocks, versions and emoji are taken at build time from one pinned version and served here as
+              files of their own, rewritten into the shape that page reads them in rather than copied across, which is
+              why no package above names them.
+            </Text>
+          </Box>
+          <Box>
             <Title order={4}>libphonenumber</Title>
             <Text size="sm" mt={4}>
               Everything <Anchor href="/phone-number" inherit>Phone Number</Anchor> reads comes out of Google's{" "}
@@ -306,6 +333,16 @@ export default function Attributions() {
             licence here that arrives inside a package rather than as one. It does not govern utils+ itself.
           </Text>
           <Licence url={pythonUrl} />
+        </Stack>
+      </Card>
+      <Card withBorder shadow="sm" radius="md">
+        <Stack gap="sm">
+          <Title order={4}>Unicode License v3</Title>
+          <Text size="sm" c="dimmed">
+            Reproduced because the character database it covers is served from this site, and it asks for this notice to
+            appear with any copy of the data. It does not govern utils+ itself.
+          </Text>
+          <Licence url={unicodeUrl} />
         </Stack>
       </Card>
       <Card withBorder shadow="sm" radius="md">

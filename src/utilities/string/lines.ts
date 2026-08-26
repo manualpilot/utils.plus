@@ -1,3 +1,4 @@
+import { graphemes } from "../../common/graphemes";
 import { shuffle } from "../../common/random";
 
 export function splitLines(text: string): string[] {
@@ -58,10 +59,3 @@ export function shuffleLines(text: string): string {
 
 const ALPHABETICAL = new Intl.Collator("en", { sensitivity: "variant" });
 const NATURAL = new Intl.Collator("en", { numeric: true, sensitivity: "variant" });
-
-const SEGMENTER = typeof Intl.Segmenter === "function" ? new Intl.Segmenter() : undefined;
-
-export function graphemes(text: string): string[] {
-  if (!SEGMENTER) return [...text];
-  return Array.from(SEGMENTER.segment(text), (segment) => segment.segment);
-}

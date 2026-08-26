@@ -580,6 +580,27 @@ export const PAGE_META = {
       "world clock",
     ],
   },
+  "/unicode": {
+    title: "Unicode Character & Code Point Inspector",
+    description:
+      "Names, categories, scripts, UTF-8, UTF-16 and UTF-32 bytes, every escape form, NFC/NFD/NFKC/NFKD, and the invisible, bidi and lookalike characters hiding in a text.",
+    keywords: [
+      "unicode inspector",
+      "code point lookup",
+      "character name lookup",
+      "utf-8 bytes",
+      "unicode escape",
+      "unicode normalization",
+      "nfc nfd nfkc nfkd",
+      "invisible characters",
+      "zero width space detector",
+      "homoglyph detector",
+      "trojan source",
+      "special character picker",
+      "insert special characters",
+      "emoji picker",
+    ],
+  },
   "/unique-id": {
     title: "UUID, ULID & NanoID Generator",
     description:

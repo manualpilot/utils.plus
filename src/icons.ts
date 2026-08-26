@@ -24,6 +24,7 @@ export { default as IconCertificate } from "@tabler/icons-react/dist/esm/icons/I
 export { default as IconCheck } from "@tabler/icons-react/dist/esm/icons/IconCheck.mjs";
 export { default as IconChevronDown } from "@tabler/icons-react/dist/esm/icons/IconChevronDown.mjs";
 export { default as IconChevronRight } from "@tabler/icons-react/dist/esm/icons/IconChevronRight.mjs";
+export { default as IconChevronUp } from "@tabler/icons-react/dist/esm/icons/IconChevronUp.mjs";
 export { default as IconClock } from "@tabler/icons-react/dist/esm/icons/IconClock.mjs";
 export { default as IconCode } from "@tabler/icons-react/dist/esm/icons/IconCode.mjs";
 export { default as IconColumns2 } from "@tabler/icons-react/dist/esm/icons/IconColumns2.mjs";
@@ -53,6 +54,7 @@ export { default as IconId } from "@tabler/icons-react/dist/esm/icons/IconId.mjs
 export { default as IconIndentDecrease } from "@tabler/icons-react/dist/esm/icons/IconIndentDecrease.mjs";
 export { default as IconItalic } from "@tabler/icons-react/dist/esm/icons/IconItalic.mjs";
 export { default as IconKey } from "@tabler/icons-react/dist/esm/icons/IconKey.mjs";
+export { default as IconLanguage } from "@tabler/icons-react/dist/esm/icons/IconLanguage.mjs";
 export { default as IconLayoutRows } from "@tabler/icons-react/dist/esm/icons/IconLayoutRows.mjs";
 export { default as IconLetterCase } from "@tabler/icons-react/dist/esm/icons/IconLetterCase.mjs";
 export { default as IconLink } from "@tabler/icons-react/dist/esm/icons/IconLink.mjs";
