@@ -1,22 +1,31 @@
-import { ActionIcon, Badge, Box, Button, Card, CopyButton, Group, Input, SegmentedControl, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
+import { ActionIcon, Badge, Box, Button, Card, CopyButton, Group, Input, SegmentedControl, Stack, Text, TextInput, Tooltip, UnstyledButton } from "@mantine/core";
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FactTable } from "../../common/fact-table";
 import { ALWAYS, keepFocus, type RovingItemProps, useRovingFocus } from "../../common/roving-focus";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
-import { IconCheck, IconCopy, IconTrash, IconX } from "../../icons";
+import { IconCheck, IconChevronDown, IconChevronUp, IconCopy, IconTrash, IconX } from "../../icons";
+import { FIELD_NAMES, FLOAT_FIELDS, floatFacts, floatField, type FloatFormat, floatFormat, parseFloatText, readFloat, shortestDecimal, stepFloat } from "./float";
 import { BITS_PER_ROW, chunk } from "./grid";
 import { BASE_NAMES, FLASH_MS, isRefused, type KeyDefinition, OTHER_BASES, PROGRAMMER_FUNCTIONS, PROGRAMMER_NUMBERS, SCIENTIFIC_NUMBERS, scientificFunctions, shortcutMap, shortcutName, TONE_COLOURS, TONE_VARIANTS } from "./keys";
-import { type Base, BASES, bitPattern, type Bits, type CalculatorShare, characterOf, clearHistory, display, dropHistoryEntry, expressionText, fromShare, hasMemory, type HistoryEntry, type Key, type Machine, type Mode, press, readout, setBase, setBits, setMode, toggleBit, toShare, WORD_SIZES, writeInBase } from "./machine";
+import { type Base, BASES, bitPattern, type Bits, type CalculatorShare, characterOf, clearHistory, display, dropHistoryEntry, expressionText, fromShare, hasMemory, type HistoryEntry, type Key, type Machine, type Mode, press, readout, setBase, setBits, setMode, setPattern, toggleBit, toShare, WORD_SIZES, writeInBase } from "./machine";
 
 export default function Calculator() {
   const initialState = useInitialHashState<CalculatorShare>();
   const [machine, setMachine] = useState<Machine>(() => fromShare(initialState));
+  const [draft, setDraft] = useState<string | null>(null);
 
   useRegisterShareState(() => toShare(machine));
 
-  const type = useCallback((key: Key) => setMachine((current) => press(current, key)), []);
+  const move = useCallback((change: (current: Machine) => Machine) => {
+    setDraft(null);
+    setMachine(change);
+  }, []);
+
+  const type = useCallback((key: Key) => move((current) => press(current, key)), [move]);
 
   const programmer = machine.mode === "programmer";
+  const format = programmer ? floatFormat(machine.bits) : null;
   const functionKeys = useMemo(
     () => programmer ? PROGRAMMER_FUNCTIONS : scientificFunctions(machine),
     [programmer, machine.second, machine.angle],
@@ -57,6 +66,18 @@ export default function Calculator() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [shortcuts, type]);
 
+  const typeFloat = (text: string) => {
+    setDraft(text);
+    const bits = format && parseFloatText(text, format);
+    if (bits != null) setMachine((current) => setPattern(current, bits));
+  };
+
+  const stepFloatTo = (up: boolean) =>
+    move((current) => {
+      const stepping = floatFormat(current.bits);
+      return stepping === null ? current : setPattern(current, stepFloat(bitPattern(current), stepping, up));
+    });
+
   const shown = display(machine);
   const expression = expressionText(machine);
   const character = programmer ? characterOf(machine) : null;
@@ -68,7 +89,7 @@ export default function Calculator() {
         control={
           <SegmentedControl
             value={machine.mode}
-            onChange={(value) => setMachine((current) => setMode(current, value as Mode))}
+            onChange={(value) => move((current) => setMode(current, value as Mode))}
             data={[{ value: "programmer", label: "Programmer" }, { value: "scientific", label: "Scientific" }]}
           />
         }
@@ -137,7 +158,7 @@ export default function Calculator() {
                 <SegmentedControl
                   fullWidth
                   value={String(machine.base)}
-                  onChange={(value) => setMachine((current) => setBase(current, Number(value) as Base))}
+                  onChange={(value) => move((current) => setBase(current, Number(value) as Base))}
                   data={BASES.map((base) => ({ value: String(base), label: BASE_NAMES[base] }))}
                 />
               </Input.Wrapper>
@@ -145,13 +166,17 @@ export default function Calculator() {
                 <SegmentedControl
                   fullWidth
                   value={String(machine.bits)}
-                  onChange={(value) => setMachine((current) => setBits(current, Number(value) as Bits))}
+                  onChange={(value) => move((current) => setBits(current, Number(value) as Bits))}
                   data={WORD_SIZES.map((bits) => ({ value: String(bits), label: `${bits}-bit` }))}
                 />
               </Input.Wrapper>
             </Box>
             <Input.Wrapper label="Bits" description="Click a bit to flip it, or Tab here and use the arrow keys">
-              <BitGrid machine={machine} onToggle={(index) => setMachine((current) => toggleBit(current, index))} />
+              <BitGrid
+                machine={machine}
+                format={format}
+                onToggle={(index) => move((current) => toggleBit(current, index))}
+              />
             </Input.Wrapper>
           </Stack>
         </Card>
@@ -183,6 +208,16 @@ export default function Calculator() {
           </Text>
         </Stack>
       </Card>
+
+      {format && (
+        <FloatCard
+          pattern={bitPattern(machine)}
+          format={format}
+          draft={draft}
+          onType={typeFloat}
+          onStep={stepFloatTo}
+        />
+      )}
 
       {machine.history.length > 0 && (
         <HistoryCard
@@ -270,7 +305,7 @@ interface KeyButtonProps extends RovingItemProps {
   onPress: (key: Key) => void;
 }
 
-function BitGrid({ machine, onToggle }: { machine: Machine; onToggle: (index: number) => void }) {
+function BitGrid({ machine, format, onToggle }: BitGridProps) {
   const bits = bitPattern(machine);
   const rows: number[][] = [];
   for (let high = machine.bits - 1; high >= 0; high -= BITS_PER_ROW) {
@@ -295,6 +330,7 @@ function BitGrid({ machine, onToggle }: { machine: Machine; onToggle: (index: nu
                         key={index}
                         className="bit-key"
                         data-set={set === 1n}
+                        data-bit-field={format ? floatField(index, format) : undefined}
                         aria-label={`Bit ${index}`}
                         aria-pressed={set === 1n}
                         onClick={() => onToggle(index)}
@@ -317,6 +353,88 @@ function BitGrid({ machine, onToggle }: { machine: Machine; onToggle: (index: nu
       </Stack>
     </Box>
   );
+}
+
+interface BitGridProps {
+  machine: Machine;
+  format: FloatFormat | null;
+  onToggle: (index: number) => void;
+}
+
+function FloatCard({ pattern, format, draft, onType, onStep }: FloatCardProps) {
+  const reading = readFloat(pattern, format);
+  const unreadable = draft !== null && draft.trim() !== "" && parseFloatText(draft, format) === null;
+
+  return (
+    <Card withBorder shadow="sm" radius="md">
+      <Stack gap="sm">
+        <Group justify="space-between" align="center" gap="sm">
+          <Group gap="xs" align="center" wrap="nowrap">
+            <Text fw={500}>Float</Text>
+            <Badge size="sm" variant="light" color="gray">{format.name} · {format.nickname}</Badge>
+          </Group>
+          <Group gap="sm" wrap="wrap" justify="flex-end">
+            {FLOAT_FIELDS.map((field) => (
+              <Group key={field} gap={6} wrap="nowrap">
+                <Box className="bit-field-swatch" data-bit-field={field} />
+                <Text size="xs" c="dimmed">{FIELD_NAMES[field]}</Text>
+              </Group>
+            ))}
+          </Group>
+        </Group>
+
+        <TextInput
+          label="Value"
+          description="Type a number to load its bits, in decimal or as a hexadecimal float"
+          value={draft ?? shortestDecimal(reading)}
+          onChange={(event) => onType(event.currentTarget.value)}
+          error={unreadable ? "Cannot read that as a number" : null}
+          spellCheck={false}
+          styles={{ input: { fontFamily: "monospace" } }}
+          rightSectionWidth={64}
+          rightSectionPointerEvents="all"
+          rightSection={
+            <Group gap={2} wrap="nowrap">
+              <Tooltip label="Next float down" withArrow position="top">
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  aria-label="Next float down"
+                  onClick={() => onStep(false)}
+                  onMouseDown={keepFocus}
+                >
+                  <IconChevronDown size="1rem" />
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label="Next float up" withArrow position="top">
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  aria-label="Next float up"
+                  onClick={() => onStep(true)}
+                  onMouseDown={keepFocus}
+                >
+                  <IconChevronUp size="1rem" />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          }
+        />
+
+        <FactTable rows={floatFacts(reading)} />
+      </Stack>
+    </Card>
+  );
+}
+
+interface FloatCardProps {
+  pattern: bigint;
+  format: FloatFormat;
+  draft: string | null;
+  onType: (text: string) => void;
+  onStep: (up: boolean) => void;
 }
 
 function HistoryCard({ entries, onRemove, onClear }: HistoryCardProps) {

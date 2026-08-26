@@ -535,8 +535,12 @@ export function setMode(m: Machine, mode: Mode): Machine {
 
 export function toggleBit(m: Machine, index: number): Machine {
   if (m.mode !== "programmer" || index < 0 || index >= m.bits) return m;
-  const flipped = pattern(safeCurrent(m), m.bits) ^ (1n << BigInt(index));
-  return settled(m, signedOf(flipped, m.bits));
+  return setPattern(m, pattern(safeCurrent(m), m.bits) ^ (1n << BigInt(index)));
+}
+
+export function setPattern(m: Machine, bits: bigint): Machine {
+  if (m.mode !== "programmer") return m;
+  return settled(m, signedOf(bits & maskOf(m.bits), m.bits));
 }
 
 export function bitPattern(m: Machine): bigint {
@@ -717,7 +721,7 @@ function num(value: Value): number {
   return typeof value === "number" ? value : Number(value);
 }
 
-function maskOf(bits: number): bigint {
+export function maskOf(bits: number): bigint {
   return (1n << BigInt(bits)) - 1n;
 }
 

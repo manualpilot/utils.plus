@@ -22,7 +22,7 @@ export const PAGE_META = {
   "/calculator": {
     title: "Programmer & Scientific Calculator",
     description:
-      "Add, shift, rotate and mask 8- to 64-bit words in hex, octal or decimal, with every bit on screen — or switch to powers, roots, logs and trigonometry.",
+      "Add, shift, rotate and mask 8- to 64-bit words in hex, octal or decimal, with every bit on screen and read as an IEEE 754 float — or switch to trigonometry.",
     keywords: [
       "programmer calculator",
       "hex calculator",
@@ -30,6 +30,9 @@ export const PAGE_META = {
       "bitwise calculator",
       "two's complement",
       "bit shift calculator",
+      "ieee 754 converter",
+      "float to hex",
+      "double precision bits",
       "scientific calculator",
       "trigonometry calculator",
       "hex to decimal",

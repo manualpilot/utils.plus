@@ -302,6 +302,48 @@ test("a dialog over the page owns the keys pressed inside it", async ({ page }) 
   await expect(display(page)).toHaveText("42");
 });
 
+test("reads the word beside it as a float, and takes a number typed at it", async ({ page }) => {
+  await openCalculator(page);
+
+  const value = page.getByLabel("Value", { exact: true });
+  await expect(value).toHaveValue("0");
+
+  await value.fill("0.1");
+  await expect(display(page)).toHaveText("3FB9 9999 9999 999A");
+  await expect(page.locator("[data-fact=\"Exact\"]")).toContainText(
+    "0.1000000000000000055511151231257827021181583404541015625",
+  );
+  await expect(page.locator("[data-fact=\"Hex float\"]")).toContainText("0x1.999999999999Ap-4");
+
+  await key(page, "Bit 63").click();
+  await expect(value).toHaveValue("-0.1");
+
+  await page.getByRole("button", { name: "Next float up" }).click();
+  await expect(display(page)).toHaveText("BFB9 9999 9999 9999");
+
+  await value.fill("nonsense");
+  await expect(page.getByText("Cannot read that as a number")).toBeVisible();
+  await expect(display(page)).toHaveText("BFB9 9999 9999 9999");
+});
+
+test("follows the word size, and says nothing at the one size the standard names no format for", async ({ page }) => {
+  await openCalculator(page);
+
+  await expect(page.getByText("binary64 · double")).toBeVisible();
+  await expect(key(page, "Bit 63")).toHaveAttribute("data-bit-field", "sign");
+  await expect(key(page, "Bit 62")).toHaveAttribute("data-bit-field", "exponent");
+  await expect(key(page, "Bit 51")).toHaveAttribute("data-bit-field", "significand");
+
+  await choose(page, "32-bit");
+  await expect(page.getByText("binary32 · single")).toBeVisible();
+  await expect(key(page, "Bit 30")).toHaveAttribute("data-bit-field", "exponent");
+  await expect(key(page, "Bit 22")).toHaveAttribute("data-bit-field", "significand");
+
+  await choose(page, "8-bit");
+  await expect(page.getByLabel("Value", { exact: true })).toBeHidden();
+  await expect(key(page, "Bit 7")).not.toHaveAttribute("data-bit-field");
+});
+
 test("keeps a record of what equals answered, and lets one entry or all of them go", async ({ page }) => {
   await openCalculator(page);
   await choose(page, "DEC");

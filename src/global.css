@@ -329,8 +329,32 @@
   color: var(--mantine-color-orange-6);
 }
 
+[data-bit-field="sign"] {
+  --bit-field: var(--mantine-color-grape-9);
+}
+
+[data-bit-field="exponent"] {
+  --bit-field: var(--mantine-color-blue-9);
+}
+
+[data-bit-field="significand"] {
+  --bit-field: transparent;
+}
+
+.bit-key[data-bit-field] {
+  background-color: var(--bit-field);
+}
+
 .bit-key:hover {
   background-color: var(--mantine-color-default-hover);
+}
+
+.bit-field-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: var(--mantine-radius-sm);
+  border: 1px solid var(--mantine-color-dark-4);
+  background-color: var(--bit-field);
 }
 
 @container main (max-width: $mantine-breakpoint-sm) {

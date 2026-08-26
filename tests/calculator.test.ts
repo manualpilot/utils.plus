@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { bitPattern, characterOf, clearHistory, current, display, dropHistoryEntry, expressionText, fromShare, type Key, type Machine, newMachine, press, readout, setBase, setBits, setMode, toggleBit, toShare, writeInBase } from "../src/utilities/calculator/machine";
+import { exactDecimal, floatFacts, floatField, type FloatFormat, floatFormat, hexLiteral, parseFloatText, readFloat, shortestDecimal, stepFloat } from "../src/utilities/calculator/float";
+import { bitPattern, characterOf, clearHistory, current, display, dropHistoryEntry, expressionText, fromShare, type Key, type Machine, newMachine, press, readout, setBase, setBits, setMode, setPattern, toggleBit, toShare, writeInBase } from "../src/utilities/calculator/machine";
 
 function type(machine: Machine, ...keys: Key[]): Machine {
   return keys.reduce(press, machine);
@@ -372,6 +373,139 @@ describe("the history", () => {
     expect(machine.history[0].expression).toBe("1 + 0");
     expect(machine.history[99].expression).toBe("1 + 1");
     expect(new Set(machine.history.map((entry) => entry.id)).size).toBe(100);
+  });
+});
+
+describe("the word read as a float", () => {
+  const f16 = floatFormat(16) as FloatFormat;
+  const f32 = floatFormat(32) as FloatFormat;
+  const f64 = floatFormat(64) as FloatFormat;
+
+  const facts = (bits: bigint, format: FloatFormat): Record<string, string> =>
+    Object.fromEntries(
+      floatFacts(readFloat(bits, format)).filter((row) => row.value !== "").map((row) => [row.label, row.value]),
+    );
+
+  const spelt = (bits: bigint, format: FloatFormat) => shortestDecimal(readFloat(bits, format));
+
+  it("has a format for every word size but the one the standard names none for", () => {
+    expect(floatFormat(8)).toBeNull();
+    expect([16, 32, 64].map((bits) => floatFormat(bits as 16 | 32 | 64)?.name)).toEqual([
+      "binary16",
+      "binary32",
+      "binary64",
+    ]);
+  });
+
+  it("reads the bits of a double the way anything else holding one reads them", () => {
+    expect(spelt(0x3FB999999999999An, f64)).toBe("0.1");
+    expect(facts(0x3FB999999999999An, f64)).toMatchObject({
+      "Class": "Normal",
+      "Sign": "0 (positive)",
+      "Exponent": "-4",
+      "Exponent field": "1019",
+      "Significand field": "0x999999999999A",
+      "Hex float": "0x1.999999999999Ap-4",
+    });
+  });
+
+  it("spells a narrow format the way something reading that format would, and not the way a double prints", () => {
+    expect(spelt(0x3DCCCCCDn, f32)).toBe("0.1");
+    expect(readFloat(0x3DCCCCCDn, f32).value).toBe(0.10000000149011612);
+    expect(spelt(0x2E66n, f16)).toBe("0.1");
+  });
+
+  it("says the value exactly, which is the whole of why the row is drawn", () => {
+    expect(facts(0x3FB999999999999An, f64).Exact).toBe("0.1000000000000000055511151231257827021181583404541015625");
+    expect(facts(0x2E66n, f16).Exact).toBe("0.0999755859375");
+    expect(facts(0x3FE0000000000000n, f64).Exact).toBeUndefined();
+  });
+
+  it("tells the classes apart, the two NaNs among them", () => {
+    expect([spelt(0n, f64), facts(0n, f64).Class]).toEqual(["0", "Zero"]);
+    expect(spelt(1n << 63n, f64)).toBe("-0");
+    expect(facts(1n << 63n, f64)).toMatchObject({ Class: "Zero", "Hex float": "-0x0p+0" });
+    expect(spelt(1n, f64)).toBe("5e-324");
+    expect(facts(1n, f64)).toMatchObject({ Class: "Subnormal", "Hex float": "0x0.0000000000001p-1022" });
+    expect(spelt(0x7FF0000000000000n, f64)).toBe("Infinity");
+    expect(facts(0x7FF0000000000000n, f64)).toMatchObject({ Class: "Infinity", "Hex float": "inf" });
+    expect(facts(0x7FF0000000000000n, f64)["Significand field"]).toBeUndefined();
+    expect(facts(0x7FF8000000000000n, f64)).toMatchObject({ Class: "Quiet NaN", Payload: "0x8000000000000" });
+    expect(facts(0x7FF0000000000001n, f64)).toMatchObject({ Class: "Signalling NaN", Payload: "0x1" });
+  });
+
+  it("says how far it is to the value next door", () => {
+    expect(facts(0x3FB999999999999An, f64).Step).toBe("1.3877787807814457e-17");
+    expect(facts(0x2E66n, f16).Step).toBe("0.00006103515625");
+  });
+
+  it("steps to that value, through zero and no further than infinity", () => {
+    expect(stepFloat(0x3FF0000000000000n, f64, true)).toBe(0x3FF0000000000001n);
+    expect(stepFloat(0x3FF0000000000000n, f64, false)).toBe(0x3FEFFFFFFFFFFFFFn);
+    expect(stepFloat(1n << 63n, f64, true)).toBe(1n);
+    expect(stepFloat(0n, f64, false)).toBe((1n << 63n) | 1n);
+    expect(stepFloat(0x7FF0000000000000n, f64, true)).toBe(0x7FF0000000000000n);
+    expect(stepFloat(0x7FF0000000000000n, f64, false)).toBe(0x7FEFFFFFFFFFFFFFn);
+    expect(stepFloat(0x7FF8000000000000n, f64, true)).toBe(0x7FF8000000000000n);
+  });
+
+  it("takes a number typed at it, in decimal, in C's hexadecimal, or by name", () => {
+    expect(parseFloatText("0.1", f64)).toBe(0x3FB999999999999An);
+    expect(parseFloatText("-1.5e3", f64)).toBe(0xC097700000000000n);
+    expect(parseFloatText("0x1.999999999999Ap-4", f64)).toBe(0x3FB999999999999An);
+    expect(parseFloatText("Infinity", f32)).toBe(0x7F800000n);
+    expect(parseFloatText("-inf", f32)).toBe(0xFF800000n);
+    expect(parseFloatText("nan", f32)).toBe(0x7FC00000n);
+    expect(parseFloatText("-0", f64)).toBe(1n << 63n);
+    expect(parseFloatText("1e400", f64)).toBe(0x7FF0000000000000n);
+    expect(parseFloatText("-1e-400", f64)).toBe(1n << 63n);
+  });
+
+  it("says nothing about a box nobody has finished filling in", () => {
+    for (const text of ["", "abc", "1e", ".", "0x", "1.2.3", "--1"]) {
+      expect([text, parseFloatText(text, f64)]).toEqual([text, null]);
+    }
+  });
+
+  it("rounds a decimal once, twice being once too many", () => {
+    expect(parseFloatText("0.50000002980232239", f32)).toBe(0x3F000001n);
+    expect(Math.fround(Number("0.50000002980232239"))).toBe(0.5);
+  });
+
+  it("writes every half float there is in a way that comes back to the same bits", () => {
+    const broken: string[] = [];
+
+    for (let bits = 0n; bits < 65536n; bits++) {
+      const reading = readFloat(bits, f16);
+      if (reading.kind === "nan") continue;
+      const spellings = [shortestDecimal(reading), hexLiteral(reading)];
+      if (reading.kind !== "infinity") spellings.push(exactDecimal(reading));
+      for (const spelling of spellings) {
+        if (parseFloatText(spelling, f16) !== bits) broken.push(`${bits.toString(16)} as ${spelling}`);
+      }
+    }
+
+    expect(broken).toEqual([]);
+  });
+
+  it("splits the word into the three fields the format reads it in", () => {
+    expect([63, 62, 52, 51, 0].map((index) => floatField(index, f64))).toEqual([
+      "sign",
+      "exponent",
+      "exponent",
+      "significand",
+      "significand",
+    ]);
+    expect([15, 10, 9].map((index) => floatField(index, f16))).toEqual(["sign", "exponent", "significand"]);
+  });
+
+  it("writes the bits outright, wrapped to the word like every other result", () => {
+    const machine = setPattern(newMachine(), 0x3FB999999999999An);
+
+    expect(readout(machine)).toBe("3FB999999999999A");
+    expect(bitPattern(machine)).toBe(0x3FB999999999999An);
+    expect(bitPattern(setPattern(setBits(newMachine(), 8), 0x1FFn))).toBe(0xFFn);
+    expect(setPattern(newMachine("scientific"), 1n).value).toBe(0);
   });
 });
 
