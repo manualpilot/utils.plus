@@ -8,13 +8,13 @@ test("the footer link reaches the page from anywhere", async ({ page }) => {
   await page.locator(`footer a[href="${ATTRIBUTIONS_PATH}"]`).click();
 
   await expect(page).toHaveURL(new RegExp(`${ATTRIBUTIONS_PATH}$`));
-  await expect(page.getByRole("heading", { name: "Attributions", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attributions", level: 1 })).toBeVisible();
 });
 
 test("the page is not a utility, so it offers no share or reset", async ({ page }) => {
   await page.goto(ATTRIBUTIONS_PATH);
 
-  await expect(page.getByRole("heading", { name: "Attributions", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attributions", level: 1 })).toBeVisible();
   await expect(page.getByLabel("Reset state")).toHaveCount(0);
 });
 
@@ -52,7 +52,7 @@ test("a licence is read when its row is opened and not before", async ({ page })
   });
 
   await page.goto(ATTRIBUTIONS_PATH);
-  await expect(page.getByRole("heading", { name: "Attributions", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attributions", level: 1 })).toBeVisible();
   expect(read.filter((url) => url.includes("openpgp"))).toEqual([]);
 
   await page.getByPlaceholder("Filter by name or licence").fill("openpgp");
@@ -120,7 +120,7 @@ test("nothing on the page reaches another host", async ({ page }) => {
   });
 
   await page.goto(ATTRIBUTIONS_PATH);
-  await expect(page.getByRole("heading", { name: "Attributions", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attributions", level: 1 })).toBeVisible();
 
   expect(offsite).toEqual([]);
 });

@@ -5,7 +5,7 @@ import { dirname, extname, join } from "node:path";
 import type { Plugin, Rolldown } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { defineConfig } from "vitest/config";
-import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, robotsTxt, sitemapXml, withHead } from "./src/page-meta.ts";
+import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, robotsTxt, sitemapXml, withBody, withHead } from "./src/page-meta.ts";
 
 const METADATA_NAME = "utils-metadata";
 const METADATA_SRC = `/${METADATA_NAME}.ts`;
@@ -119,7 +119,7 @@ function pageMetaFiles(): Plugin {
     name: "page-meta-files",
     transformIndexHtml: {
       order: "pre",
-      handler: (html) => withHead(html, HOME_PATH),
+      handler: (html) => withBody(withHead(html, HOME_PATH), HOME_PATH),
     },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {

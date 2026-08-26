@@ -7,7 +7,7 @@ export function UtilityTitle({ directory, control, children }: UtilityTitleProps
   return (
     <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
       <Group gap={4} align="center" wrap="nowrap">
-        <Title order={2} lh={1.15}>{children}</Title>
+        <Title order={1} size="h2" lh={1.15}>{children}</Title>
         <Tooltip label="View source on GitHub" withArrow>
           <ActionIcon
             component="a"

@@ -10,6 +10,21 @@ test("the welcome page's head is in the document it was served", async ({ page }
   expect(html).toContain(PAGE_META["/"].description);
 });
 
+test("the document says what the page is before any script has run", async ({ page }) => {
+  const html = await (await page.request.get("/")).text();
+
+  expect(html).toContain(`<h1>${PAGE_META["/"].title}</h1>`);
+  expect(html).toContain(`<p>${PAGE_META["/"].description}</p>`);
+});
+
+test("the application clears the fallback and leaves the page one heading", async ({ page }) => {
+  await page.goto("/codec");
+
+  await expect(page.locator(".page-fallback")).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Codec");
+});
+
 test("the welcome page says what each utility is", async ({ page }) => {
   await page.goto("/");
   const script = page.locator("head script[type=\"application/ld+json\"]");

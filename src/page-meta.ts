@@ -783,11 +783,26 @@ const HEAD_CLOSE = "<!--/page-head-->";
 
 const HEAD_BLOCK = /<!--page-head-->(?:[\s\S]*?<!--\/page-head-->)?/;
 
+export function bodyHtml(path: string): string {
+  const meta = pageMeta(path);
+
+  return `<div class="page-fallback"><h1>${escapeHtml(meta.title)}</h1><p>${escapeHtml(meta.description)}</p></div>`;
+}
+
+export function withBody(html: string, path: string): string {
+  return html.replace(BODY_BLOCK, () => `${BODY_OPEN}${bodyHtml(path)}${BODY_CLOSE}`);
+}
+
+const BODY_OPEN = "<!--page-body-->";
+const BODY_CLOSE = "<!--/page-body-->";
+
+const BODY_BLOCK = /<!--page-body-->(?:[\s\S]*?<!--\/page-body-->)?/;
+
 export function pageDocuments(index: string): Record<string, string> {
   const paths = (Object.keys(PAGE_META) as PagePath[]).filter((path) => path !== HOME_PATH);
   const documents: Record<string, string> = {};
 
-  for (const path of paths) documents[documentFileName(path)] = withHead(index, path);
+  for (const path of paths) documents[documentFileName(path)] = withBody(withHead(index, path), path);
 
   return documents;
 }

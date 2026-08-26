@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyDocumentHead } from "../src/common/document-head";
-import { canonicalUrl, documentFileName, documentTitle, headHtml, HOME_PATH, indexablePaths, PAGE_META, pageDocuments, pageMeta, type PagePath, robotsTxt, SITE_ORIGIN, sitemapXml, structuredData, utilityPaths, withHead } from "../src/page-meta";
+import { bodyHtml, canonicalUrl, documentFileName, documentTitle, headHtml, HOME_PATH, indexablePaths, PAGE_META, pageDocuments, pageMeta, type PagePath, robotsTxt, SITE_ORIGIN, sitemapXml, structuredData, utilityPaths, withBody, withHead } from "../src/page-meta";
 import { utilities } from "../src/utility-registry";
 
 const DESCRIPTION_RANGE = { min: 80, max: 170 };
@@ -170,11 +170,40 @@ describe("headHtml", () => {
   });
 });
 
+describe("bodyHtml", () => {
+  it("says what the page is called and what it does", () => {
+    const html = bodyHtml("/python");
+
+    expect(html).toContain(`<h1>${PAGE_META["/python"].title}</h1>`);
+    expect(html).toContain(`<p>${PAGE_META["/python"].description}</p>`);
+  });
+
+  it("escapes what the browser would otherwise read as markup", () => {
+    expect(bodyHtml("/codec")).toContain("<h1>Base64, Base32, Hex, Gzip, Morse &amp; ROT13 Codec</h1>");
+    for (const path of indexablePaths()) {
+      expect(bodyHtml(path)).not.toMatch(/&(?!amp;|lt;|gt;|quot;)/);
+    }
+  });
+
+  it("is what index.html leaves room for", () => {
+    expect(INDEX_HTML).toContain("<div id=\"root\"><!--page-body--></div>");
+    expect(INDEX_HTML).not.toContain("<h1>");
+  });
+
+  it("rewrites the block the last write left rather than adding another", () => {
+    const codec = withBody(withBody(INDEX_HTML, HOME_PATH), "/codec");
+
+    expect(codec.match(/<h1>/g)).toHaveLength(1);
+    expect(codec).toContain(`<h1>${escaped(PAGE_META["/codec"].title)}</h1>`);
+  });
+});
+
 describe("pageDocuments", () => {
   const INDEX = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <!--page-head-->\n</head>\n"
-    + "<body><div id=\"root\"></div><script type=\"module\" src=\"/assets/index-abc123.js\"></script></body>\n</html>\n";
+    + "<body><div id=\"root\"><!--page-body--></div>"
+    + "<script type=\"module\" src=\"/assets/index-abc123.js\"></script></body>\n</html>\n";
 
-  const documents = pageDocuments(withHead(INDEX, HOME_PATH));
+  const documents = pageDocuments(withBody(withHead(INDEX, HOME_PATH), HOME_PATH));
 
   it("writes one beside index.html for every page but the welcome one", () => {
     const expected = (Object.keys(PAGE_META) as PagePath[]).filter((path) => path !== HOME_PATH);
@@ -195,6 +224,15 @@ describe("pageDocuments", () => {
       expect(html).toContain(`<title>${escaped(documentTitle(PAGE_META[path]))}</title>`);
       expect(html).toContain(`<link rel="canonical" href="${canonicalUrl(path)}" />`);
       expect(html).toContain("/assets/index-abc123.js");
+    }
+  });
+
+  it("gives each a heading of its own before any script has run", () => {
+    for (const path of (Object.keys(PAGE_META) as PagePath[]).filter((page) => page !== HOME_PATH)) {
+      const html = documents[documentFileName(path)];
+
+      expect(html.match(/<h1>/g)).toHaveLength(1);
+      expect(html).toContain(`<h1>${escaped(PAGE_META[path].title)}</h1>`);
     }
   });
 

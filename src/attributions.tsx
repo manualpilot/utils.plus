@@ -20,7 +20,7 @@ export default function Attributions() {
 
   return (
     <Stack gap="md">
-      <Title order={2} lh={1.15}>Attributions</Title>
+      <Title order={1} size="h2" lh={1.15}>Attributions</Title>
 
       <Card withBorder shadow="sm" radius="md">
         <Stack gap="sm">
