@@ -65,7 +65,9 @@ export function zoneClock(date: Date, timeZone: string): ZoneClock {
 const DAY_MS = 86400000;
 
 export function zoneInstant(wall: WallClock, timeZone: string): number {
-  const guess = Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute, wall.second);
+  const start = utcDate(wall.year, wall.month, wall.day);
+  start.setUTCHours(wall.hour, wall.minute, wall.second, 0);
+  const guess = start.getTime();
   const early = guess - zoneOffsetMs(new Date(guess - DAY_MS), timeZone);
   const late = guess - zoneOffsetMs(new Date(guess + DAY_MS), timeZone);
   if (readsAs(early, wall, timeZone)) return early;

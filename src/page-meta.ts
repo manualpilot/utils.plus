@@ -590,9 +590,9 @@ export const PAGE_META = {
     ],
   },
   "/time": {
-    title: "Timestamp & Time Zone Converter",
+    title: "Timestamp, Duration & Time Zone Converter",
     description:
-      "Convert a Unix timestamp or a date across time zones and read it as ISO 8601, RFC 2822, RFC 1123, week date or ordinal date, with a live clock for each zone.",
+      "Convert a Unix timestamp across time zones and read it as ISO 8601 or RFC 2822, parse a duration like 1h 30m or PT1H30M, and count the days between two dates.",
     keywords: [
       "unix timestamp converter",
       "epoch converter",
@@ -602,6 +602,11 @@ export const PAGE_META = {
       "rfc 2822",
       "utc converter",
       "world clock",
+      "duration parser",
+      "iso 8601 duration",
+      "date calculator",
+      "days between dates",
+      "add time to date",
     ],
   },
   "/unicode": {

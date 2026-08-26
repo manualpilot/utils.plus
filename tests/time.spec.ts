@@ -7,6 +7,14 @@ test.use({ timezoneId: "Europe/Berlin" });
 const input = (page: Page) => page.getByLabel("Timestamp or epoch");
 const zoneCards = (page: Page) => page.getByRole("heading", { level: 4 });
 const row = (page: Page, label: string) => page.getByRole("row").filter({ hasText: label }).first();
+const card = (page: Page, name: string) =>
+  page.locator(".mantine-Card-root").filter({ has: page.getByRole("heading", { name, exact: true }) });
+const fact = (page: Page, name: string, label: string) => card(page, name).locator(`[data-fact="${label}"] td`).last();
+
+const box = (page: Page, name: string) => page.getByRole("textbox", { name, exact: true });
+
+const chooseMode = (page: Page, mode: string) =>
+  page.locator(".mantine-SegmentedControl-label", { hasText: mode }).click();
 
 async function openTime(page: Page) {
   await page.goto(`${BASE}/time`);
@@ -196,4 +204,93 @@ test("nothing on the page reaches for another host", async ({ page }) => {
   await expect(row(page, "Unix seconds")).toContainText("1770726896");
 
   expect(foreign).toEqual([]);
+});
+
+test("a duration is read whichever way it was written", async ({ page }) => {
+  await openTime(page);
+  await chooseMode(page, "Duration");
+
+  await expect(page.getByRole("heading", { name: "Duration", exact: true }).first()).toBeVisible();
+  await expect(box(page, "Duration")).toHaveValue("1h 30m");
+  await expect(fact(page, "Duration", "ISO 8601")).toHaveText("PT1H30M");
+  await expect(fact(page, "Duration", "Spoken")).toHaveText("1 hour and 30 minutes");
+  await expect(fact(page, "Duration", "Clock")).toHaveText("01:30:00");
+  await expect(fact(page, "Totals", "Minutes")).toHaveText("90");
+
+  for (const written of ["PT1H30M", "01:30:00", "90:00", "5400"]) {
+    await box(page, "Duration").fill(written);
+    await expect(fact(page, "Duration", "Compact")).toHaveText("1h 30m");
+  }
+});
+
+test("a day is the day the calendar had, and twenty-four hours is twenty-four hours", async ({ page }) => {
+  await openTime(page);
+  await chooseMode(page, "Duration");
+  await box(page, "Instant").fill("2026-03-28T12:00:00+01:00");
+
+  await box(page, "Duration").fill("1d");
+  await expect(fact(page, "After", "ISO 8601")).toHaveText("2026-03-29T12:00:00+02:00");
+  await expect(fact(page, "Before", "ISO 8601")).toHaveText("2026-03-27T12:00:00+01:00");
+  await expect(fact(page, "Totals", "Hours")).toHaveText("23");
+
+  await box(page, "Duration").fill("24h");
+  await expect(fact(page, "After", "ISO 8601")).toHaveText("2026-03-29T13:00:00+02:00");
+  await expect(fact(page, "Totals", "Hours")).toHaveText("24");
+
+  await box(page, "Instant").fill("2026-01-31T12:00:00+01:00");
+  await box(page, "Duration").fill("1mo");
+  await expect(fact(page, "After", "ISO 8601")).toHaveText("2026-02-28T12:00:00+01:00");
+  await expect(card(page, "Totals")).toContainText("Counted from the instant");
+});
+
+test("a duration nothing can be made of says so and takes the times away", async ({ page }) => {
+  await openTime(page);
+  await chooseMode(page, "Duration");
+  await box(page, "Duration").fill("half an hour");
+
+  await expect(page.getByText("That is not a duration this page can read")).toBeVisible();
+  await expect(page.locator(".absolute-error")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "After" })).toHaveCount(0);
+
+  await box(page, "Duration").fill("1 fortnight");
+  await expect(page.getByText("There is no unit of time called fortnight")).toBeVisible();
+});
+
+test("the gap between two instants is counted in months and days before hours", async ({ page }) => {
+  await openTime(page);
+  await chooseMode(page, "Between");
+
+  await expect(page.getByRole("heading", { name: "Time Between" })).toBeVisible();
+  await box(page, "From").fill("2026-01-31T00:00:00+01:00");
+  await box(page, "To").fill("2026-03-01T00:00:00+01:00");
+
+  await expect(fact(page, "Duration", "Compact")).toHaveText("1mo 1d");
+  await expect(fact(page, "Duration", "Spoken")).toHaveText("1 month and 1 day");
+  await expect(fact(page, "Duration", "ISO 8601")).toHaveText("P1M1D");
+  await expect(fact(page, "Totals", "Days")).toHaveText("29");
+  await expect(fact(page, "Endpoints", "From")).toHaveText("2026-01-31T00:00:00+01:00");
+
+  await box(page, "From").fill("2026-03-01T00:00:00+01:00");
+  await box(page, "To").fill("2026-01-31T00:00:00+01:00");
+  await expect(fact(page, "Duration", "Compact")).toHaveText("-1mo 1d");
+  await expect(fact(page, "Duration", "Clock")).toHaveText("-696:00:00");
+});
+
+test("the link carries the mode it was shared from, and the instant across the three", async ({ browser, page }) => {
+  await openTime(page);
+  await input(page).fill("1770726896789");
+  await chooseMode(page, "Duration");
+
+  await box(page, "Duration").fill("2mo 3d");
+  await expect(box(page, "Instant")).toHaveValue("1770726896789");
+  await expect.poll(() => new URL(page.url()).hash).not.toBe("");
+
+  const elsewhere = await browser.newContext({ timezoneId: "Australia/Sydney" });
+  const other = await elsewhere.newPage();
+  await other.goto(page.url());
+  await expect(box(other, "Duration")).toHaveValue("2mo 3d");
+  await expect(box(other, "Instant")).toHaveValue("1770726896789");
+  await expect(other.locator("[data-fact=\"Compact\"] td").last()).toHaveText("2mo 3d");
+  await expect(other.getByRole("combobox", { name: "Zone" })).toHaveValue("Europe/Berlin");
+  await elsewhere.close();
 });

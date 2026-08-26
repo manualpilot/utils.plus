@@ -6,9 +6,10 @@ import { LOCAL_ZONE, wallDate } from "./zone-clock";
 
 import "@mantine/dates/styles.css";
 
-export function InstantPicker({ instant, live, onPick, onPin, onClear }: InstantPickerProps) {
+export function InstantPicker({ instant, live, field, onPick, onPin, onClear }: InstantPickerProps) {
   const [picking, setPicking] = useState(false);
   const [openedAt, setOpenedAt] = useState<Date | null>(null);
+  const of = field ? ` for ${field}` : "";
 
   const pickInstant = (wall: string | null) => {
     const date = wall && wallDate(wall, LOCAL_ZONE);
@@ -23,7 +24,7 @@ export function InstantPicker({ instant, live, onPick, onPin, onClear }: Instant
   return (
     <Group gap={2} wrap="nowrap">
       <Popover opened={picking} onChange={setPicking} position="bottom-end" shadow="md" trapFocus>
-        <Tooltip label="Pick a date and time" withArrow position="left">
+        <Tooltip label={`Pick a date and time${of}`} withArrow position="left">
           <Popover.Target>
             <ActionIcon
               variant="subtle"
@@ -32,7 +33,7 @@ export function InstantPicker({ instant, live, onPick, onPin, onClear }: Instant
                 setOpenedAt(instant);
                 setPicking((open) => !open);
               }}
-              aria-label="Pick a date and time"
+              aria-label={`Pick a date and time${of}`}
             >
               <IconCalendarClock size="1.1rem" />
             </ActionIcon>
@@ -51,24 +52,24 @@ export function InstantPicker({ instant, live, onPick, onPin, onClear }: Instant
       </Popover>
       {live
         ? (
-          <Tooltip label="Pin the current time" withArrow position="left">
+          <Tooltip label={`Pin the current time${of}`} withArrow position="left">
             <ActionIcon
               variant="subtle"
               color="gray"
               onClick={onPin}
-              aria-label="Pin the current time"
+              aria-label={`Pin the current time${of}`}
             >
               <IconClock size="1.1rem" />
             </ActionIcon>
           </Tooltip>
         )
         : (
-          <Tooltip label="Follow the clock" withArrow position="left">
+          <Tooltip label={`Follow the clock${of}`} withArrow position="left">
             <ActionIcon
               variant="subtle"
               color="gray"
               onClick={onClear}
-              aria-label="Follow the clock"
+              aria-label={`Follow the clock${of}`}
             >
               <IconX size="1.1rem" />
             </ActionIcon>
@@ -81,6 +82,7 @@ export function InstantPicker({ instant, live, onPick, onPin, onClear }: Instant
 export interface InstantPickerProps {
   instant: Date | null;
   live: boolean;
+  field?: string;
   onPick: (instant: Date) => void;
   onPin: () => void;
   onClear: () => void;

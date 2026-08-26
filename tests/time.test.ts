@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { TIME_ZONES, wallDate, zoneClock } from "../src/common/zone-clock";
+import { betweenInstants, elapsedMs, shiftInstant } from "../src/utilities/time/arithmetic";
+import { clockDuration, compactDuration, isoDuration, readDuration, signedCompact, spelledDuration, unitTotals } from "../src/utilities/time/duration";
 import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, relativeTime, rfc2822 } from "../src/utilities/time/formats";
 import { readTimestamp } from "../src/utilities/time/read";
 
@@ -243,5 +245,204 @@ describe("relativeTime", () => {
 
   it("counts forwards as readily as back", () => {
     expect(relativeTime(now + 2 * 3600 * 1000, now)).toBe("in 2 hours");
+  });
+});
+
+describe("readDuration", () => {
+  const span = (text: string) => readDuration(text);
+  const of = (text: string) => span(text).duration;
+
+  it("has nothing to read in a blank box, and says so without calling it wrong", () => {
+    expect(span("  ")).toEqual({ duration: null, source: "", error: "" });
+  });
+
+  it.each([
+    ["1h 30m", "Units"],
+    ["PT1H30M", "ISO 8601 duration"],
+    ["01:30:00", "Clock, h:mm:ss"],
+    ["90:00", "Clock, mm:ss"],
+    ["5400", "Seconds"],
+  ])("reads %s as %s", (text, source) => {
+    expect(span(text)).toMatchObject({ source, error: "" });
+    expect(of(text)).toEqual({ years: 0, months: 0, days: 0, ms: 5400000, negative: false });
+  });
+
+  it("takes two colons as hours and one as minutes", () => {
+    expect(of("1:30")).toMatchObject({ ms: 90000 });
+    expect(of("1:30:00")).toMatchObject({ ms: 5400000 });
+  });
+
+  it("keeps the calendar units apart from the fixed ones", () => {
+    expect(of("P1Y2M3DT4H5M6S")).toEqual({ years: 1, months: 2, days: 3, ms: 14706000, negative: false });
+    expect(of("1y 2mo 3d 4h 5m 6s")).toEqual(of("P1Y2M3DT4H5M6S"));
+  });
+
+  it("counts a week as seven days and carries twelve months into a year", () => {
+    expect(of("P3W")).toMatchObject({ days: 21, months: 0 });
+    expect(of("18mo")).toMatchObject({ years: 1, months: 6 });
+  });
+
+  it("reads a fraction of a year as months and of a day as hours", () => {
+    expect(of("0.5y")).toMatchObject({ years: 0, months: 6 });
+    expect(of("1.5d")).toMatchObject({ days: 1, ms: 43200000 });
+    expect(of("PT1.5H")).toMatchObject({ ms: 5400000 });
+  });
+
+  it("reads the units a log is written in, down to the nanosecond", () => {
+    expect(of("250ms")).toMatchObject({ ms: 250 });
+    expect(of("1500ns")).toMatchObject({ ms: 0.0015 });
+    expect(of("36h")).toEqual({ years: 0, months: 0, days: 0, ms: 129600000, negative: false });
+  });
+
+  it("takes a sign in front of the whole of it, and only there", () => {
+    expect(of("-PT1H")).toEqual({ years: 0, months: 0, days: 0, ms: 3600000, negative: true });
+    expect(of("-1h 30m")).toMatchObject({ ms: 5400000, negative: true });
+    expect(of("+90s")).toMatchObject({ ms: 90000, negative: false });
+  });
+
+  it("takes the words somebody writes between the units", () => {
+    expect(of("3 days and 4 hours")).toEqual(of("P3DT4H"));
+    expect(of("1 hour, 30 minutes")).toEqual(of("PT1H30M"));
+  });
+
+  it.each([
+    ["half an hour", "That is not a duration this page can read"],
+    ["1h and then some", "That is not a duration this page can read"],
+    ["P", "That is not a duration this page can read"],
+    ["1 fortnight", "There is no unit of time called fortnight"],
+    ["1.1mo", "A fraction of a month is not a length this page can read"],
+    ["100000y", "That is longer than the years this page can show"],
+  ])("refuses %s", (text, error) => {
+    expect(span(text)).toEqual({ duration: null, source: "", error });
+  });
+});
+
+describe("the duration forms", () => {
+  const of = (text: string) => readDuration(text).duration!;
+
+  it("writes back every ISO 8601 duration it read", () => {
+    expect(isoDuration(of("P1Y2M3DT4H5M6S"))).toBe("P1Y2M3DT4H5M6S");
+    expect(isoDuration(of("250ms"))).toBe("PT0.25S");
+    expect(isoDuration(of("-1h"))).toBe("-PT1H");
+    expect(isoDuration(of("0s"))).toBe("PT0S");
+  });
+
+  it("writes the compact form in the letters somebody would have typed", () => {
+    expect(compactDuration(of("P1Y2M3DT4H5M6S"))).toBe("1y 2mo 3d 4h 5m 6s");
+    expect(compactDuration(of("1500ns"))).toBe("0.0015ms");
+    expect(compactDuration(of("0s"))).toBe("0s");
+  });
+
+  it("spells the units out", () => {
+    expect(spelledDuration(of("PT1H30M"))).toBe("1 hour and 30 minutes");
+    expect(spelledDuration(of("PT0S"))).toBe("0 seconds");
+  });
+
+  it("writes the clock past twenty-four hours and under a second", () => {
+    expect(clockDuration(5400000)).toBe("01:30:00");
+    expect(clockDuration(-5400000)).toBe("-01:30:00");
+    expect(clockDuration(90061001)).toBe("25:01:01.001");
+    expect(clockDuration(0)).toBe("00:00:00");
+  });
+
+  it("counts the whole of a span in every unit it fills", () => {
+    expect(unitTotals(5400000)).toEqual([
+      { label: "Weeks", value: "0.008928571" },
+      { label: "Days", value: "0.0625" },
+      { label: "Hours", value: "1.5" },
+      { label: "Minutes", value: "90" },
+      { label: "Seconds", value: "5400" },
+      { label: "Milliseconds", value: "5400000" },
+    ]);
+  });
+
+  it("says which way a shift goes, whichever way the duration was written", () => {
+    expect(signedCompact(of("1h 30m"), 1)).toBe("+1h 30m");
+    expect(signedCompact(of("1h 30m"), -1)).toBe("-1h 30m");
+    expect(signedCompact(of("-1h 30m"), 1)).toBe("-1h 30m");
+    expect(signedCompact(of("-1h 30m"), -1)).toBe("+1h 30m");
+  });
+});
+
+describe("shiftInstant", () => {
+  const of = (text: string) => readDuration(text).duration!;
+  const shift = (iso: string, text: string, sign: number, zone: string) => {
+    const landed = shiftInstant(new Date(iso), of(text), sign, zone);
+    return landed && isoExtended(zoneClock(landed, zone));
+  };
+
+  it("keeps the wall clock a day later, whatever the day turned out to be worth", () => {
+    expect(shift("2026-03-28T11:00:00Z", "1d", 1, "Europe/Berlin")).toBe("2026-03-29T12:00:00+02:00");
+    expect(elapsedMs(of("1d"), new Date("2026-03-28T11:00:00Z"), "Europe/Berlin")).toBe(82800000);
+  });
+
+  it("adds twenty-four hours as twenty-four hours", () => {
+    expect(shift("2026-03-28T11:00:00Z", "24h", 1, "Europe/Berlin")).toBe("2026-03-29T13:00:00+02:00");
+    expect(elapsedMs(of("24h"), new Date("2026-03-28T11:00:00Z"), "Europe/Berlin")).toBe(86400000);
+  });
+
+  it("carries a wall clock a spring-forward took away through to the hour that replaced it", () => {
+    expect(shift("2026-03-28T02:30:00+01:00", "1d", 1, "Europe/Berlin")).toBe("2026-03-29T03:30:00+02:00");
+  });
+
+  it("lands on the last day of a month with no thirty-first of its own", () => {
+    expect(shift("2026-01-31T12:00:00Z", "1mo", 1, "UTC")).toBe("2026-02-28T12:00:00Z");
+    expect(shift("2026-03-31T12:00:00Z", "1mo", -1, "UTC")).toBe("2026-02-28T12:00:00Z");
+    expect(shift("2024-02-29T12:00:00Z", "1y", 1, "UTC")).toBe("2025-02-28T12:00:00Z");
+  });
+
+  it("takes a duration written backwards backwards", () => {
+    expect(shift("2026-02-10T12:00:00Z", "-P1D", 1, "UTC")).toBe("2026-02-09T12:00:00Z");
+    expect(shift("2026-02-10T12:00:00Z", "-P1D", -1, "UTC")).toBe("2026-02-11T12:00:00Z");
+  });
+
+  it("keeps the milliseconds a calendar knows nothing about", () => {
+    expect(shift("2026-02-10T12:00:00.789Z", "1mo", 1, "UTC")).toBe("2026-03-10T12:00:00.789Z");
+  });
+
+  it("has nothing to show for a shift past the years this page holds", () => {
+    expect(shift("9999-12-31T00:00:00Z", "1y", 1, "UTC")).toBeNull();
+    expect(shift("0001-01-01T00:00:00Z", "1d", -1, "UTC")).toBeNull();
+  });
+});
+
+describe("betweenInstants", () => {
+  const gap = (from: string, to: string, zone: string) => betweenInstants(new Date(from), new Date(to), zone);
+
+  it("counts whole months first and whole days after them", () => {
+    expect(gap("2026-01-31T00:00:00Z", "2026-03-01T00:00:00Z", "UTC"))
+      .toEqual({ years: 0, months: 1, days: 1, ms: 0, negative: false });
+  });
+
+  it("counts a leap day to the last day of February a year on as a year", () => {
+    expect(gap("2024-02-29T00:00:00Z", "2025-02-28T00:00:00Z", "UTC"))
+      .toMatchObject({ years: 1, months: 0, days: 0 });
+  });
+
+  it("counts the days a zone had, not the hours they came to", () => {
+    expect(gap("2026-03-27T23:00:00Z", "2026-03-29T22:00:00Z", "Europe/Berlin")).toMatchObject({ days: 2, ms: 0 });
+    expect(gap("2026-03-27T23:00:00Z", "2026-03-29T22:00:00Z", "UTC")).toMatchObject({ days: 1, ms: 82800000 });
+  });
+
+  it("says which way round the two instants were", () => {
+    expect(gap("2026-03-01T00:00:00Z", "2026-01-31T00:00:00Z", "UTC"))
+      .toEqual({ years: 0, months: 1, days: 1, ms: 0, negative: true });
+    expect(gap("2026-03-01T00:00:00Z", "2026-03-01T00:00:00Z", "UTC"))
+      .toEqual({ years: 0, months: 0, days: 0, ms: 0, negative: false });
+  });
+
+  it("leaves the hours a whole day could not take", () => {
+    expect(gap("2020-01-01T00:00:00Z", "2026-08-26T15:30:45Z", "UTC"))
+      .toEqual({ years: 6, months: 7, days: 25, ms: 55845000, negative: false });
+  });
+
+  it.each([
+    ["2026-01-31T00:00:00Z", "2026-03-01T00:00:00Z", "UTC"],
+    ["2026-03-27T23:00:00Z", "2026-03-29T22:00:00Z", "Europe/Berlin"],
+    ["2020-01-01T00:00:00.123Z", "2026-08-26T15:30:45.456Z", "Asia/Kolkata"],
+    ["1970-01-01T00:00:00Z", "2026-02-10T12:34:56.789Z", "America/New_York"],
+  ])("counts %s to %s and back again", (from, to, zone) => {
+    const landed = shiftInstant(new Date(from), betweenInstants(new Date(from), new Date(to), zone), 1, zone);
+    expect(landed?.toISOString()).toBe(new Date(to).toISOString());
   });
 });
