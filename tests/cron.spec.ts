@@ -76,12 +76,13 @@ test("the runs are worked out in the zone the reader picked, not just written in
   await expression(page).fill("0 0 1 1 *");
 
   const firstRun = page.getByRole("row").first();
-  await expect(page.getByText("Europe/Berlin")).toBeVisible();
+  await expect(page.getByText("Europe/Berlin")).toBeHidden();
   await expect(firstRun).toContainText("Jan 01");
   await expect(firstRun).toContainText("00:00:00");
 
-  await page.getByText("UTC", { exact: true }).click();
+  await page.getByText("Local", { exact: true }).click();
 
+  await expect(page.getByText("Europe/Berlin")).toBeVisible();
   await expect(firstRun).toContainText("Jan 01");
   await expect(firstRun).toContainText("00:00:00");
 });

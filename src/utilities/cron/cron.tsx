@@ -19,7 +19,7 @@ export default function Cron() {
   const initialFlavour = pickFlavour(initialState?.flavour);
   const [flavour, setFlavour] = useState(initialFlavour);
   const [expression, setExpression] = useState(() => pickExpression(initialState?.expression, initialFlavour));
-  const [zone, setZone] = useState<Zone>(initialState?.zone === "utc" ? "utc" : "local");
+  const [zone, setZone] = useState<Zone>(initialState?.zone === "local" ? "local" : "utc");
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
