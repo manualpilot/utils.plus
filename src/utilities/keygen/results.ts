@@ -1,6 +1,6 @@
 import { WEB_CRYPTO_CURVES } from "./algorithms";
 import { toBase64 } from "./encoding";
-import type { Certificate, Jwk, JwkSet, KeyPair, KeyResult } from "./types";
+import type { Jwk, JwkSet, KeyPair, KeyResult } from "./types";
 import { generateWireguardConfigs } from "./wireguard";
 
 export async function wireguardResult(serverPrivateKey: string): Promise<KeyResult> {
@@ -26,16 +26,6 @@ export function jwkResult({ privateKeys, publicKeys, thumbprint }: JwkSet): KeyR
 
 export function writeJwks(keys: Jwk[]): string {
   return JSON.stringify(keys.length === 1 ? keys[0] : { keys }, null, 2);
-}
-
-export function certificateResult(certificate: Certificate): KeyResult {
-  return {
-    outputs: [
-      { label: "Private key", value: certificate.privateKey, rows: 6 },
-      { label: "Certificate", value: certificate.certificate, rows: 6 },
-    ],
-    fingerprint: certificate.fingerprint,
-  };
 }
 
 export function pairResult(kind: string, pair: KeyPair): KeyResult {

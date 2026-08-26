@@ -5,14 +5,13 @@ import { EMAIL_PATTERN } from "../../common/email";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconRefresh } from "../../icons";
-import { algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_DAYS, DEFAULT_SECRET_BYTES, FORMAT_OPTIONS, KEY_ID_OPTIONS, KIND_LABELS, KIND_OPTIONS, MAX_DAYS, MAX_JWK_KEYS, MAX_SECRET_BYTES, pickAlgorithm, pickFormat, pickKeyIdSource, pickKind, pickText, pickVariant } from "./algorithms";
-import { generateCertificate, splitAltNames } from "./certificate";
+import { algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_SECRET_BYTES, FORMAT_OPTIONS, KEY_ID_OPTIONS, KIND_LABELS, KIND_OPTIONS, MAX_JWK_KEYS, MAX_SECRET_BYTES, pickAlgorithm, pickFormat, pickKeyIdSource, pickKind, pickText, pickVariant } from "./algorithms";
 import { formatSecret } from "./encoding";
 import { generateJwkSet } from "./jwk";
 import { generatePgpKey, generateSshKey } from "./keys";
-import { certificateResult, jwkResult, pairResult, wireguardResult } from "./results";
+import { jwkResult, pairResult, wireguardResult } from "./results";
 import type { Generated, Output } from "./types";
-import { clampWhole, expiryLabel, isHostOrAddress, message, parseWhole } from "./validate";
+import { clampWhole, message, parseWhole } from "./validate";
 import { parseWireguardKey } from "./wireguard";
 
 export default function Keygen() {
@@ -23,9 +22,6 @@ export default function Keygen() {
     comment?: string;
     name?: string;
     email?: string;
-    commonName?: string;
-    altNames?: string;
-    days?: number;
     keyId?: string;
     count?: number;
     size?: number;
@@ -43,9 +39,6 @@ export default function Keygen() {
   const [email, setEmail] = useState(() => pickText(initialState?.email, ""));
   const [passphrase, setPassphrase] = useState("");
   const [serverKey, setServerKey] = useState("");
-  const [commonName, setCommonName] = useState(() => pickText(initialState?.commonName, ""));
-  const [altNames, setAltNames] = useState(() => pickText(initialState?.altNames, ""));
-  const [days, setDays] = useState<number | string>(() => clampWhole(initialState?.days, DEFAULT_DAYS, MAX_DAYS));
   const [keyIdSource, setKeyIdSource] = useState(() => pickKeyIdSource(initialState?.keyId));
   const [count, setCount] = useState<number | string>(() => clampWhole(initialState?.count, 1, MAX_JWK_KEYS));
   const [size, setSize] = useState<number | string>(() =>
@@ -69,9 +62,6 @@ export default function Keygen() {
     comment: kind === "ssh" && comment ? comment : undefined,
     name: kind === "pgp" && name ? name : undefined,
     email: kind === "pgp" && email ? email : undefined,
-    commonName: kind === "tls" && commonName ? commonName : undefined,
-    altNames: kind === "tls" && altNames ? altNames : undefined,
-    days: kind === "tls" ? days : undefined,
     keyId: kind === "jwk" ? keyIdSource : undefined,
     count: kind === "jwk" ? count : undefined,
     size: kind === "secret" ? size : undefined,
@@ -89,26 +79,12 @@ export default function Keygen() {
   const serverKeyError = kind === "wireguard" && serverKey.trim() !== "" && parseWireguardKey(serverKey) === null
     ? "Enter a 44-character base64 key"
     : null;
-  const missingCommonName = kind === "tls" && commonName.trim() === "";
-  const namedWrong = kind === "tls" && !missingCommonName && !isHostOrAddress(commonName.trim());
-  const commonNameError = missingCommonName && asked
-    ? "Required"
-    : namedWrong
-    ? "Enter a host name or IP address"
-    : null;
-  const altNamesError = kind === "tls" && splitAltNames(altNames).some((entry) => !isHostOrAddress(entry))
-    ? "Enter host names or IP addresses"
-    : null;
-  const parsedDays = parseWhole(days, MAX_DAYS);
-  const daysError = kind === "tls" && parsedDays === null ? `Enter a validity of 1 to ${MAX_DAYS} days` : null;
   const parsedCount = parseWhole(count, MAX_JWK_KEYS);
   const countError = kind === "jwk" && parsedCount === null ? `Enter a count of 1 to ${MAX_JWK_KEYS}` : null;
   const settled = kind === "ssh"
     ? !commentError
     : kind === "wireguard"
     ? !serverKeyError
-    : kind === "tls"
-    ? !missingCommonName && !namedWrong && !altNamesError && !daysError
     : kind === "jwk"
     ? !countError
     : !missingName && !emailError;
@@ -122,26 +98,9 @@ export default function Keygen() {
     email,
     passphrase,
     serverKey,
-    commonName,
-    altNames,
-    days,
     keyIdSource,
     count,
-  }), [
-    kind,
-    algorithm,
-    variant,
-    comment,
-    name,
-    email,
-    passphrase,
-    serverKey,
-    commonName,
-    altNames,
-    days,
-    keyIdSource,
-    count,
-  ]);
+  }), [kind, algorithm, variant, comment, name, email, passphrase, serverKey, keyIdSource, count]);
   const stale = generated === null || generated.request !== request;
   const result = stale || generated === null ? null : generated.result;
   const error = stale || generated === null ? "" : generated.error;
@@ -158,17 +117,6 @@ export default function Keygen() {
         : kind === "jwk"
         ? jwkResult(
           await generateJwkSet({ algorithm, variant, keyId: keyIdSource, count: parsedCount ?? 1 }),
-        )
-        : kind === "tls"
-        ? certificateResult(
-          await generateCertificate({
-            algorithm,
-            variant,
-            commonName,
-            altNames,
-            days: parsedDays ?? DEFAULT_DAYS,
-            passphrase,
-          }),
         )
         : pairResult(kind, kind === "pgp" ? await generatePgpKey(settings) : await generateSshKey(settings));
       if (runIdRef.current === runId) setGenerated({ request, result: built, error: "" });
@@ -187,9 +135,6 @@ export default function Keygen() {
     email,
     passphrase,
     serverKey,
-    commonName,
-    altNames,
-    parsedDays,
     keyIdSource,
     parsedCount,
     request,
@@ -318,58 +263,6 @@ export default function Keygen() {
                 styles={{ input: { fontFamily: "monospace" } }}
               />
             </Box>
-          )}
-
-          {kind === "tls" && (
-            <>
-              <Box
-                className={commonNameError || altNamesError ? "settings-row has-error" : "settings-row"}
-                mb={commonNameError || altNamesError ? "md" : 0}
-              >
-                <TextInput
-                  label="Common name"
-                  description="The host the certificate is issued to"
-                  placeholder="localhost"
-                  value={commonName}
-                  onChange={(event) => setCommonName(event.currentTarget.value)}
-                  error={commonNameError}
-                  spellCheck={false}
-                  classNames={{ root: "relative-root", error: "absolute-error" }}
-                />
-                <TextInput
-                  label="Subject alternative names"
-                  description="The common name when blank"
-                  placeholder="localhost, 127.0.0.1"
-                  value={altNames}
-                  onChange={(event) => setAltNames(event.currentTarget.value)}
-                  error={altNamesError}
-                  spellCheck={false}
-                  classNames={{ root: "relative-root", error: "absolute-error" }}
-                />
-              </Box>
-              <Box className={daysError ? "settings-row has-error" : "settings-row"} mb={daysError ? "md" : 0}>
-                <NumberInput
-                  label="Validity"
-                  description={parsedDays === null ? "In days" : expiryLabel(parsedDays)}
-                  value={days}
-                  onChange={setDays}
-                  min={1}
-                  max={MAX_DAYS}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  stepHoldDelay={500}
-                  stepHoldInterval={(t) => Math.max(1000 / t ** 2, 75)}
-                  error={daysError}
-                  classNames={{ root: "relative-root", error: "absolute-error" }}
-                />
-                <PasswordInput
-                  label="Passphrase"
-                  description="Left unencrypted when blank"
-                  value={passphrase}
-                  onChange={(event) => setPassphrase(event.currentTarget.value)}
-                />
-              </Box>
-            </>
           )}
 
           {kind === "jwk" && (

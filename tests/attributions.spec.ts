@@ -24,7 +24,7 @@ test("every shipped package is listed with its version and licence", async ({ pa
   const items = page.locator(".mantine-Accordion-item");
   await expect(items).toHaveCount(attributions.packages.length);
 
-  for (const name of ["react", "openpgp", "node-forge", "@mantine/core"]) {
+  for (const name of ["react", "openpgp", "sshpk", "@mantine/core"]) {
     const pkg = attributions.packages.find((entry) => entry.name === name)!;
     const row = items.filter({ has: page.getByText(pkg.name, { exact: true }) });
     await expect(row).toContainText(pkg.version);

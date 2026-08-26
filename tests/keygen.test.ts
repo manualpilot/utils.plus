@@ -2,15 +2,13 @@ import { x25519 } from "@noble/curves/ed25519.js";
 import { createRequire } from "node:module";
 import sshpk from "sshpk";
 import { describe, expect, it } from "vitest";
-import { generateCertificate, unsignedBytes } from "../src/utilities/keygen/certificate";
 import { formatSecret } from "../src/utilities/keygen/encoding";
 import { generateJwkSet } from "../src/utilities/keygen/jwk";
 import { generateSshKey } from "../src/utilities/keygen/keys";
 import type { Jwk } from "../src/utilities/keygen/types";
-import { isHostOrAddress } from "../src/utilities/keygen/validate";
 import { generateWireguardConfigs } from "../src/utilities/keygen/wireguard";
 
-const { createHash, createPrivateKey, createPublicKey, X509Certificate } = createRequire(import.meta.url)(
+const { createHash, createPrivateKey, createPublicKey } = createRequire(import.meta.url)(
   "node:crypto",
 ) as typeof import("node:crypto");
 
@@ -143,129 +141,6 @@ describe("WireGuard configurations", () => {
   const field = (config: string, name: string) => config.match(new RegExp(`^${name} = (.+)$`, "m"))?.[1] ?? "";
   const decode = (base64: string) => Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
   const publicOf = (base64: string) => btoa(String.fromCharCode(...x25519.getPublicKey(decode(base64))));
-});
-
-describe("TLS certificates", () => {
-  const CERTIFICATE = {
-    algorithm: "rsa",
-    variant: "2048",
-    commonName: "localhost",
-    altNames: "",
-    days: 365,
-    passphrase: "",
-  };
-
-  it("writes a certificate signed for itself, by the key that comes with it", { timeout: SLOW }, async () => {
-    const result = await generateCertificate(CERTIFICATE);
-
-    expect(result.privateKey).toMatch(/^-----BEGIN PRIVATE KEY-----\n/);
-    expect(result.certificate).toMatch(/^-----BEGIN CERTIFICATE-----\n/);
-
-    const certificate = new X509Certificate(result.certificate);
-    expect(certificate.subject).toBe("CN=localhost");
-    expect(certificate.issuer).toBe(certificate.subject);
-    expect(certificate.verify(certificate.publicKey)).toBe(true);
-    expect(certificate.checkPrivateKey(createPrivateKey(result.privateKey))).toBe(true);
-    expect(certificate.fingerprint256).toBe(result.fingerprint);
-  });
-
-  it.each([
-    ["ecdsa", "nistp256"],
-    ["ecdsa", "nistp384"],
-    ["ecdsa", "nistp521"],
-    ["rsa", "3072"],
-  ])(
-    "signs a %s certificate on %s that verifies against its own key",
-    { timeout: SLOW },
-    async (algorithm, variant) => {
-      const result = await generateCertificate({ ...CERTIFICATE, algorithm, variant });
-
-      const certificate = new X509Certificate(result.certificate);
-      expect(certificate.verify(certificate.publicKey)).toBe(true);
-      expect(certificate.checkPrivateKey(createPrivateKey(result.privateKey))).toBe(true);
-    },
-  );
-
-  it("is a server certificate and not an authority", { timeout: SLOW }, async () => {
-    const certificate = new X509Certificate((await generateCertificate(CERTIFICATE)).certificate);
-
-    expect(certificate.ca).toBe(false);
-    expect(certificate.keyUsage).toEqual(["1.3.6.1.5.5.7.3.1", "1.3.6.1.5.5.7.3.2"]);
-  });
-
-  it("falls back to the common name when no alternative names are given", { timeout: SLOW }, async () => {
-    const certificate = new X509Certificate((await generateCertificate(CERTIFICATE)).certificate);
-
-    expect(certificate.subjectAltName).toBe("DNS:localhost");
-    expect(certificate.checkHost("localhost")).toBe("localhost");
-  });
-
-  it("tells host names and addresses apart in the list it is given", { timeout: SLOW }, async () => {
-    const result = await generateCertificate({
-      ...CERTIFICATE,
-      altNames: "example.test, *.example.test 127.0.0.1 ::1",
-    });
-
-    const certificate = new X509Certificate(result.certificate);
-    expect(certificate.subjectAltName).toBe(
-      "DNS:example.test, DNS:*.example.test, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1",
-    );
-    expect(certificate.checkHost("www.example.test")).toBe("*.example.test");
-    expect(certificate.checkIP("127.0.0.1")).toBe("127.0.0.1");
-  });
-
-  it("runs from now to the day it is given", { timeout: SLOW }, async () => {
-    const certificate = new X509Certificate((await generateCertificate({ ...CERTIFICATE, days: 30 })).certificate);
-
-    const days = (Date.parse(certificate.validTo) - Date.parse(certificate.validFrom)) / 86400000;
-    expect(days).toBeCloseTo(30, 3);
-    expect(Date.parse(certificate.validFrom)).toBeLessThanOrEqual(Date.now());
-  });
-
-  it("encrypts the private half once a passphrase is given", { timeout: SLOW }, async () => {
-    const result = await generateCertificate({ ...CERTIFICATE, passphrase: "hunter2" });
-
-    expect(result.privateKey).toMatch(/^-----BEGIN ENCRYPTED PRIVATE KEY-----\n/);
-    expect(() => createPrivateKey(result.privateKey)).toThrow();
-    const opened = createPrivateKey({ key: result.privateKey, passphrase: "hunter2" });
-    expect(new X509Certificate(result.certificate).checkPrivateKey(opened)).toBe(true);
-  });
-
-  it("gives a different certificate every time it is asked", { timeout: SLOW }, async () => {
-    const [first, second] = await Promise.all([generateCertificate(CERTIFICATE), generateCertificate(CERTIFICATE)]);
-
-    expect(first.fingerprint).not.toBe(second.fingerprint);
-    expect(new X509Certificate(first.certificate).serialNumber)
-      .not.toBe(new X509Certificate(second.certificate).serialNumber);
-  });
-
-  describe("unsigned integers", () => {
-    const bytes = (...values: number[]) => Array.from(unsignedBytes(new Uint8Array(values)));
-
-    it("leaves a value alone when the top bit is already clear", () => {
-      expect(bytes(0x7f, 0x00, 0x2a)).toEqual([0x7f, 0x00, 0x2a]);
-    });
-
-    it("clears the sign with one zero byte and no more", () => {
-      expect(bytes(0x80, 0x2a)).toEqual([0x00, 0x80, 0x2a]);
-      expect(bytes(0xff)).toEqual([0x00, 0xff]);
-    });
-
-    it("takes off every leading zero the value does not need, not just the first", () => {
-      expect(bytes(0x00, 0x2a)).toEqual([0x2a]);
-      expect(bytes(0x00, 0x00, 0x2a)).toEqual([0x2a]);
-      expect(bytes(0x00, 0x00, 0x00, 0x00, 0x01)).toEqual([0x01]);
-    });
-
-    it("keeps the one zero a value that needs the sign cleared is left with", () => {
-      expect(bytes(0x00, 0x00, 0x80)).toEqual([0x00, 0x80]);
-    });
-
-    it("writes zero itself as the one byte rather than nothing at all", () => {
-      expect(bytes(0x00)).toEqual([0x00]);
-      expect(bytes(0x00, 0x00, 0x00)).toEqual([0x00]);
-    });
-  });
 });
 
 describe("JSON Web Keys", () => {
@@ -426,38 +301,4 @@ describe("JSON Web Keys", () => {
     Object.fromEntries(Object.entries(jwk).filter(([name]) => name !== member));
   const sha256Thumbprint = ({ crv, kty, x }: Jwk) =>
     createHash("sha256").update(JSON.stringify({ crv, kty, x })).digest("base64url");
-});
-
-describe("certificate host names", () => {
-  it.each([
-    "localhost",
-    "example.test",
-    "*.example.test",
-    "xn--80ak6aa92e.test",
-    "a-b.c-d.test",
-    "127.0.0.1",
-    "255.255.255.255",
-    "::1",
-    "2001:db8::1",
-    "2001:0db8:0000:0000:0000:0000:0000:0001",
-  ])("takes %s", (value) => {
-    expect(isHostOrAddress(value)).toBe(true);
-  });
-
-  it.each([
-    "",
-    "not a host",
-    "-leading.test",
-    "trailing-.test",
-    "double..dot",
-    "*",
-    "*.*.example.test",
-    "256.0.0.1",
-    "1.2.3",
-    "2001:db8::1::2",
-    "2001:db8:zzzz::1",
-    "12345::1",
-  ])("refuses %s", (value) => {
-    expect(isHostOrAddress(value)).toBe(false);
-  });
 });

@@ -35,6 +35,25 @@ export const PAGE_META = {
       "hex to decimal",
     ],
   },
+  "/certificate": {
+    title: "X.509 Certificate Decoder & Generator",
+    description:
+      "Decode a certificate, a signing request or an SSH key — names, expiry, fingerprints, chain order — or generate a self-signed one, a root CA, or one signed by it.",
+    keywords: [
+      "certificate decoder",
+      "x509 decoder",
+      "ssl certificate viewer",
+      "csr decoder",
+      "pem decoder",
+      "certificate fingerprint",
+      "certificate expiry checker",
+      "certificate chain order",
+      "ssh public key fingerprint",
+      "does key match certificate",
+      "self-signed certificate generator",
+      "create root ca",
+    ],
+  },
   "/codec": {
     title: "Base64, Base32, Hex, Gzip, Morse & ROT13 Codec",
     description:
@@ -347,14 +366,12 @@ export const PAGE_META = {
     ],
   },
   "/keygen": {
-    title: "SSH, PGP, TLS & JWK Key Generator",
+    title: "SSH, PGP & JSON Web Key Generator",
     description:
-      "Generate SSH keys, PGP keys, self-signed TLS certificates, JSON Web Keys, WireGuard keypairs and random secrets. The private half is built here and never sent anywhere.",
+      "Generate SSH keys, PGP keys, JSON Web Keys, WireGuard keypairs and random secrets, in your browser. The private half is built here and never sent anywhere.",
     keywords: [
       "ssh key generator",
       "pgp key generator",
-      "self-signed certificate",
-      "tls certificate generator",
       "json web key",
       "jwk generator",
       "wireguard keys",

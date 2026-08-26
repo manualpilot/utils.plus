@@ -146,18 +146,6 @@ export default function Attributions() {
           </Box>
 
           <Box>
-            <Title order={4}>node-forge</Title>
-            <Text size="sm" mt={4}>
-              The X.509 certificates on <Anchor href="/keygen" inherit>Keygen</Anchor> are built with{" "}
-              <Anchor href="https://github.com/digitalbazaar/forge" target="_blank" rel="noopener noreferrer" inherit>
-                node-forge
-              </Anchor>, which its authors offer under either the BSD-3-Clause licence or version 2 of the GNU General
-              Public License. utils+ takes it under{" "}
-              <strong>BSD-3-Clause</strong>; no GPL term attaches to this site through it.
-            </Text>
-          </Box>
-
-          <Box>
             <Title order={4}>DOMPurify</Title>
             <Text size="sm" mt={4}>
               The preview on <Anchor href="/markdown" inherit>Markdown</Anchor> is sanitised with{" "}

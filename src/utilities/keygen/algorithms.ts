@@ -3,7 +3,6 @@ import type { AlgorithmSpec } from "./types";
 export const KIND_OPTIONS = [
   { value: "ssh", label: "SSH key" },
   { value: "pgp", label: "PGP key" },
-  { value: "tls", label: "TLS certificate" },
   { value: "jwk", label: "JSON Web Key" },
   { value: "wireguard", label: "WireGuard keys" },
   { value: "secret", label: "Random secret" },
@@ -12,7 +11,6 @@ export const KIND_OPTIONS = [
 export const KIND_LABELS: Record<string, string> = {
   ssh: "SSH key pair",
   pgp: "PGP key pair",
-  tls: "TLS certificate",
   jwk: "JSON Web Key",
   wireguard: "WireGuard configuration",
   secret: "Random secret",
@@ -64,10 +62,6 @@ export const ALGORITHMS: Record<string, AlgorithmSpec[]> = {
       ],
     },
     { value: "rsa", label: "RSA", variantLabel: "Key size", variants: RSA_SIZES },
-  ],
-  tls: [
-    { value: "rsa", label: "RSA", variantLabel: "Key size", variants: RSA_SIZES },
-    { value: "ecdsa", label: "ECDSA", variantLabel: "Curve", variants: NIST_CURVES },
   ],
   jwk: [
     { group: SIGNATURE, value: "EdDSA", label: "EdDSA (Ed25519)" },
@@ -123,12 +117,6 @@ export const FORMAT_OPTIONS = [
 export const MAX_SECRET_BYTES = 512;
 export const DEFAULT_SECRET_BYTES = 32;
 
-export const HOST_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
-
-export const MAX_DAYS = 3650;
-export const DEFAULT_DAYS = 365;
-export const DAY_MS = 24 * 60 * 60 * 1000;
-
 export const MAX_JWK_KEYS = 8;
 
 export const JWK_CURVES: Record<string, string> = { ES256: "P-256", ES384: "P-384", ES512: "P-521" };
@@ -158,12 +146,6 @@ export const WEB_CRYPTO_CURVES: Record<string, string> = {
   nistp256: "P-256",
   nistp384: "P-384",
   nistp521: "P-521",
-};
-
-export const ECDSA_SIGNATURES: Record<string, { oid: string; hash: string }> = {
-  nistp256: { oid: "1.2.840.10045.4.3.2", hash: "SHA-256" },
-  nistp384: { oid: "1.2.840.10045.4.3.3", hash: "SHA-384" },
-  nistp521: { oid: "1.2.840.10045.4.3.4", hash: "SHA-512" },
 };
 
 export function algorithmSpec(kind: string, algorithm: string): AlgorithmSpec | undefined {

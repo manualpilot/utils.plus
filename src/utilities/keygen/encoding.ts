@@ -31,12 +31,6 @@ export function toBinary(bytes: Uint8Array): string {
   return binary;
 }
 
-export function fromBinary(binary: string): Uint8Array<ArrayBuffer> {
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-  return bytes;
-}
-
 function bytesToBigInt(bytes: Uint8Array): bigint {
   let value = 0n;
   for (const byte of bytes) value = (value << 8n) | BigInt(byte);

@@ -10,7 +10,6 @@ const SLOW = 60000;
 const privateBox = (page: Page) => page.getByRole("textbox", { name: "Private key" });
 const publicBox = (page: Page) => page.getByRole("textbox", { name: "Public key" });
 const secretBox = (page: Page) => page.getByRole("textbox", { name: "Secret" });
-const certificateBox = (page: Page) => page.getByRole("textbox", { name: "Certificate", exact: true });
 const serverBox = (page: Page) => page.getByRole("textbox", { name: "Server configuration" });
 const clientBox = (page: Page) => page.getByRole("textbox", { name: "Client configuration" });
 
@@ -107,41 +106,6 @@ test("a PGP key needs a name, and carries it once given", { tag: "@slow" }, asyn
   expect(key.userIDs).toEqual(["Ada Lovelace <ada@example.com>"]);
   await expect(page.getByText(key.fingerprint)).toBeVisible();
 });
-
-test(
-  "a TLS certificate needs a host to be issued to, and carries it once given",
-  { tag: "@slow" },
-  async ({ page }) => {
-    await openKeygen(page);
-    await choose(page, "Key kind", "TLS certificate");
-
-    await expect(page.getByText("Required")).toHaveCount(0);
-    await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.getByText("Required")).toBeVisible();
-
-    await page.getByLabel("Common name").fill("not a host");
-    await expect(page.getByText("Enter a host name or IP address")).toBeVisible();
-    await page.getByRole("button", { name: "Generate" }).click();
-    await expect(certificateBox(page)).toHaveCount(0);
-
-    await page.getByLabel("Common name").fill("localhost");
-    await page.getByLabel("Subject alternative names").fill("localhost, -bad.test");
-    await expect(page.getByText("Enter host names or IP addresses")).toBeVisible();
-    await page.getByRole("button", { name: "Generate" }).click();
-    await expect(certificateBox(page)).toHaveCount(0);
-
-    await page.getByLabel("Subject alternative names").fill("localhost, 127.0.0.1");
-    await page.getByRole("button", { name: "Generate" }).click();
-    await expect(privateBox(page)).toHaveValue(/^-----BEGIN PRIVATE KEY-----\n/, { timeout: SLOW });
-    await expect(certificateBox(page)).toHaveValue(/^-----BEGIN CERTIFICATE-----\n/);
-    await expect(page.getByText(/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/)).toBeVisible();
-
-    await choose(page, "Algorithm", "ECDSA");
-    await expect(certificateBox(page)).toHaveCount(0);
-    await page.getByRole("button", { name: "Generate" }).click();
-    await expect(certificateBox(page)).toHaveValue(/^-----BEGIN CERTIFICATE-----\n/, { timeout: SLOW });
-  },
-);
 
 test("a JWK arrives on its own, and as a set once more than one is asked for", async ({ page }) => {
   await openKeygen(page);
@@ -276,11 +240,6 @@ test("every algorithm works with third-party requests blocked", { tag: "@slow" }
   await page.getByLabel("Name").fill("Ada Lovelace");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(publicBox(page)).toHaveValue(/^-----BEGIN PGP PUBLIC KEY BLOCK-----/, { timeout: SLOW });
-
-  await choose(page, "Key kind", "TLS certificate");
-  await page.getByLabel("Common name").fill("localhost");
-  await page.getByRole("button", { name: "Generate" }).click();
-  await expect(certificateBox(page)).toHaveValue(/^-----BEGIN CERTIFICATE-----\n/, { timeout: SLOW });
 
   await choose(page, "Key kind", "JSON Web Key");
   await page.getByRole("button", { name: "Generate" }).click();

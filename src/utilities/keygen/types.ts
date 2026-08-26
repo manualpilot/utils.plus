@@ -13,21 +13,6 @@ export interface KeyPair {
   fingerprint: string;
 }
 
-export interface CertificateSettings {
-  algorithm: string;
-  variant: string;
-  commonName: string;
-  altNames: string;
-  days: number;
-  passphrase: string;
-}
-
-export interface Certificate {
-  privateKey: string;
-  certificate: string;
-  fingerprint: string;
-}
-
 export interface JwkSettings {
   algorithm: string;
   variant: string;
