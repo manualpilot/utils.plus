@@ -76,10 +76,12 @@
     "quickjs-emscripten-core": "^0.32.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "smol-toml": "^1.8.0",
     "sshpk": "^1.18.0",
     "sucrase": "^3.35.1",
     "world-countries": "^5.1.0",
-    "wouter": "^3.10.0"
+    "wouter": "^3.10.0",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@dprint/json": "^0.23.0",

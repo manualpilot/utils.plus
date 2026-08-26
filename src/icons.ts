@@ -36,6 +36,7 @@ export { default as IconEraser } from "@tabler/icons-react/dist/esm/icons/IconEr
 export { default as IconEye } from "@tabler/icons-react/dist/esm/icons/IconEye.mjs";
 export { default as IconFileCertificate } from "@tabler/icons-react/dist/esm/icons/IconFileCertificate.mjs";
 export { default as IconFileDigit } from "@tabler/icons-react/dist/esm/icons/IconFileDigit.mjs";
+export { default as IconFileSettings } from "@tabler/icons-react/dist/esm/icons/IconFileSettings.mjs";
 export { default as IconFileTypeCsv } from "@tabler/icons-react/dist/esm/icons/IconFileTypeCsv.mjs";
 export { default as IconFileTypeHtml } from "@tabler/icons-react/dist/esm/icons/IconFileTypeHtml.mjs";
 export { default as IconFileTypePdf } from "@tabler/icons-react/dist/esm/icons/IconFileTypePdf.mjs";

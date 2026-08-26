@@ -103,6 +103,21 @@ export const PAGE_META = {
       "colour blindness simulator",
     ],
   },
+  "/config": {
+    title: "YAML, JSON, TOML & .env Converter",
+    description:
+      "Convert a configuration between YAML, JSON, TOML, .env and Java properties, keeping every value's type across the flat formats that have none.",
+    keywords: [
+      "yaml to json",
+      "json to yaml",
+      "yaml to toml",
+      "toml to json",
+      "json to env",
+      "dotenv converter",
+      "properties to yaml",
+      "config file converter",
+    ],
+  },
   "/converter": {
     title: "Unit Converter for Length, Mass & Data",
     description:

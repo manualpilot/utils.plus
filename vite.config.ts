@@ -18,6 +18,7 @@ export default defineConfig({
     outDir: "../dist",
     emptyOutDir: true,
     sourcemap: true,
+    minify: true,
     assetsInlineLimit: (file) =>
       PHONE_GEO.test(file) || COUNTRY_VIEW.test(file) || LICENCE.test(file) ? false : undefined,
     rolldownOptions: {

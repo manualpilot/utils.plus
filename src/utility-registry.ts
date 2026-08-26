@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconArrowsExchange, IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileCertificate, IconFileDigit, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconLock, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
+import { IconArrowsExchange, IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileCertificate, IconFileDigit, IconFileSettings, IconFileTypeCsv, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLetterCase, IconLock, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type PagePath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -29,6 +29,12 @@ const routes: UtilityRoute[] = [
     label: "Colour",
     Icon: IconPalette,
     Component: lazy(() => import("./utilities/colour/colour")),
+  },
+  {
+    path: "/config",
+    label: "Config",
+    Icon: IconFileSettings,
+    Component: lazy(() => import("./utilities/config/config")),
   },
   {
     path: "/converter",
