@@ -2,14 +2,14 @@ import { Alert, Box, Button, Card, Code, Group, Modal, Paper, ScrollArea, Segmen
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { type CSSProperties, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EDITOR_STYLE } from "../../common/editor-theme";
+import type { ReadResult } from "../../common/schema/ir";
+import { isLanguage, LANGUAGE_OPTIONS, type LanguageId, LANGUAGES } from "../../common/schema/languages";
+import { type ParsedJson, parseJson } from "../../common/schema/locate";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconAlertTriangle, IconArrowsLeftRight, IconCheck, IconSparkles, IconTransform } from "../../icons";
 import { type Mark, PAYLOAD_EXTENSIONS, replaceDoc, schemaExtensions, setMarks } from "./editor";
 import { inferSchema } from "./infer";
-import type { ReadResult } from "./ir";
-import { isLanguage, LANGUAGE_OPTIONS, type LanguageId, LANGUAGES } from "./languages";
-import { type ParsedJson, parseJson } from "./locate";
 import { samplePayload } from "./sample";
 import { SAMPLE_JSON_SCHEMA, SAMPLE_PAYLOAD, SAMPLE_PYDANTIC, SAMPLE_ZOD } from "./samples";
 import type { Problem } from "./validate";

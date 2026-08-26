@@ -1,6 +1,6 @@
-import { checkFormat, formatNamed } from "./formats";
-import { describe, type JsonValue, type Schema, type SchemaDocument, typeOf } from "./ir";
-import { pointerOf } from "./locate";
+import { checkFormat, formatNamed } from "../../common/schema/formats";
+import { describe, type JsonValue, type Schema, type SchemaDocument, typeOf } from "../../common/schema/ir";
+import { pointerOf } from "../../common/schema/locate";
 
 export interface Problem {
   pointer: string;

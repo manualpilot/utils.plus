@@ -414,6 +414,27 @@ export const PAGE_META = {
       "markdown viewer",
     ],
   },
+  "/mock": {
+    title: "Mock Data Generator from a JSON Schema",
+    description:
+      "Generate seeded rows of sample data from a JSON Schema, Zod or Pydantic model — names, emails, addresses, Luhn-valid cards, IBANs, ISBNs — as JSON, CSV or SQL.",
+    keywords: [
+      "mock data generator",
+      "fake data generator",
+      "test data generator",
+      "sample data from json schema",
+      "json schema to sample data",
+      "zod mock data",
+      "pydantic fake data",
+      "seeded random data",
+      "csv test data",
+      "sql seed data generator",
+      "luhn valid test card numbers",
+      "iban generator",
+      "isbn check digit",
+      "luhn checker",
+    ],
+  },
   "/otp": {
     title: "TOTP, HOTP & OCRA One-Time Password Calculator",
     description:

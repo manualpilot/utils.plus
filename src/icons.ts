@@ -25,6 +25,8 @@ export { default as IconCheck } from "@tabler/icons-react/dist/esm/icons/IconChe
 export { default as IconChevronDown } from "@tabler/icons-react/dist/esm/icons/IconChevronDown.mjs";
 export { default as IconChevronRight } from "@tabler/icons-react/dist/esm/icons/IconChevronRight.mjs";
 export { default as IconChevronUp } from "@tabler/icons-react/dist/esm/icons/IconChevronUp.mjs";
+export { default as IconCircleCheck } from "@tabler/icons-react/dist/esm/icons/IconCircleCheck.mjs";
+export { default as IconCircleX } from "@tabler/icons-react/dist/esm/icons/IconCircleX.mjs";
 export { default as IconClock } from "@tabler/icons-react/dist/esm/icons/IconClock.mjs";
 export { default as IconCode } from "@tabler/icons-react/dist/esm/icons/IconCode.mjs";
 export { default as IconColumns2 } from "@tabler/icons-react/dist/esm/icons/IconColumns2.mjs";
@@ -32,6 +34,7 @@ export { default as IconCopy } from "@tabler/icons-react/dist/esm/icons/IconCopy
 export { default as IconCrop } from "@tabler/icons-react/dist/esm/icons/IconCrop.mjs";
 export { default as IconDatabase } from "@tabler/icons-react/dist/esm/icons/IconDatabase.mjs";
 export { default as IconDatabaseImport } from "@tabler/icons-react/dist/esm/icons/IconDatabaseImport.mjs";
+export { default as IconDice5 } from "@tabler/icons-react/dist/esm/icons/IconDice5.mjs";
 export { default as IconDownload } from "@tabler/icons-react/dist/esm/icons/IconDownload.mjs";
 export { default as IconEraser } from "@tabler/icons-react/dist/esm/icons/IconEraser.mjs";
 export { default as IconEye } from "@tabler/icons-react/dist/esm/icons/IconEye.mjs";
@@ -92,6 +95,7 @@ export { default as IconStrikethrough } from "@tabler/icons-react/dist/esm/icons
 export { default as IconTable } from "@tabler/icons-react/dist/esm/icons/IconTable.mjs";
 export { default as IconTags } from "@tabler/icons-react/dist/esm/icons/IconTags.mjs";
 export { default as IconTerminal2 } from "@tabler/icons-react/dist/esm/icons/IconTerminal2.mjs";
+export { default as IconTestPipe } from "@tabler/icons-react/dist/esm/icons/IconTestPipe.mjs";
 export { default as IconTransform } from "@tabler/icons-react/dist/esm/icons/IconTransform.mjs";
 export { default as IconTrash } from "@tabler/icons-react/dist/esm/icons/IconTrash.mjs";
 export { default as IconUpload } from "@tabler/icons-react/dist/esm/icons/IconUpload.mjs";

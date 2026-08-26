@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { JsonValue, SchemaDocument } from "../src/common/schema/ir";
+import { writeJsonSchema } from "../src/common/schema/json-schema";
+import { type LanguageId, LANGUAGES } from "../src/common/schema/languages";
+import { parseJson, pointerOf } from "../src/common/schema/locate";
 import { inferSchema } from "../src/utilities/schema/infer";
-import type { JsonValue, SchemaDocument } from "../src/utilities/schema/ir";
-import { writeJsonSchema } from "../src/utilities/schema/json-schema";
-import { type LanguageId, LANGUAGES } from "../src/utilities/schema/languages";
-import { parseJson, pointerOf } from "../src/utilities/schema/locate";
 import { samplePayload } from "../src/utilities/schema/sample";
 import { validate } from "../src/utilities/schema/validate";
 

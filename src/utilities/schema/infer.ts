@@ -1,5 +1,5 @@
-import { detectFormat } from "./formats";
-import { type JsonValue, type Property, same, type Schema, type SchemaDocument, union } from "./ir";
+import { detectFormat } from "../../common/schema/formats";
+import { type JsonValue, type Property, same, type Schema, type SchemaDocument, union } from "../../common/schema/ir";
 
 export function inferSchema(value: JsonValue, name = "Root"): SchemaDocument {
   return { root: { ...infer(value), title: name }, defs: [] };

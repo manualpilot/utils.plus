@@ -3,7 +3,7 @@ import { json as jsonLanguage } from "@codemirror/lang-json";
 import { python } from "@codemirror/lang-python";
 import { Decoration, type DecorationSet, EditorView, type Extension, type Range, StateEffect, StateField } from "@uiw/react-codemirror";
 import { EDITOR_SURFACE } from "../../common/editor-theme";
-import type { LanguageId } from "./languages";
+import type { LanguageId } from "../../common/schema/languages";
 
 export interface Mark {
   from: number;

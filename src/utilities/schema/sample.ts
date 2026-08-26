@@ -1,4 +1,4 @@
-import { type JsonValue, type Schema, type SchemaDocument } from "./ir";
+import { type JsonValue, type Schema, type SchemaDocument } from "../../common/schema/ir";
 
 export function samplePayload(doc: SchemaDocument): JsonValue {
   return build(doc.root, doc, new Set());
