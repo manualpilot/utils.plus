@@ -1,4 +1,4 @@
-import { ALGORITHMS, DEFAULT_LIFETIME } from "./algorithms";
+import { ALGORITHMS, DEFAULT_ALGORITHM, DEFAULT_ENCRYPTION, DEFAULT_LIFETIME, ENCRYPTIONS, KEY_ALGORITHMS } from "./algorithms";
 import type { Field, Form, TokenReading } from "./types";
 
 let nextFieldId = 0;
@@ -52,6 +52,7 @@ export function starterForm(): Form {
   return {
     headers: [newField("typ", "JWT")],
     claims: [
+      newField("iss", "utils.plus"),
       newField("sub", crypto.randomUUID()),
       newField("iat", String(issued)),
       newField("exp", String(issued + DEFAULT_LIFETIME)),
@@ -59,15 +60,20 @@ export function starterForm(): Form {
   };
 }
 
-export function formFromReading(reading: TokenReading): { form: Form; alg: string | null } {
+const COMPUTED = new Set(["alg", "enc", "epk", "iv", "tag", "p2s", "p2c"]);
+
+export function formFromReading(
+  reading: TokenReading,
+  payload: Record<string, unknown>,
+): { form: Form; alg: string | null; enc: string | null } {
   const header = reading.header ?? {};
-  const payload = reading.payload ?? {};
   return {
     form: {
-      headers: Object.entries(header).filter(([name]) => name !== "alg").map(toField),
+      headers: Object.entries(header).filter(([name]) => !COMPUTED.has(name)).map(toField),
       claims: Object.entries(payload).map(toField),
     },
-    alg: typeof header.alg === "string" && ALGORITHMS.has(header.alg) ? header.alg : null,
+    alg: typeof header.alg === "string" && known(header.alg) ? header.alg : null,
+    enc: typeof header.enc === "string" && ENCRYPTIONS.has(header.enc) ? header.enc : null,
   };
 }
 
@@ -94,7 +100,15 @@ export function pickPairs(value: unknown): Field[] | null {
 }
 
 export function pickAlgorithm(value: unknown): string {
-  return ALGORITHMS.has(value as string) ? value as string : "EdDSA";
+  return known(value as string) ? value as string : DEFAULT_ALGORITHM;
+}
+
+export function pickEncryption(value: unknown): string {
+  return ENCRYPTIONS.has(value as string) ? value as string : DEFAULT_ENCRYPTION;
+}
+
+function known(alg: string): boolean {
+  return ALGORITHMS.has(alg) || KEY_ALGORITHMS.has(alg);
 }
 
 export function pickText(value: unknown): string {

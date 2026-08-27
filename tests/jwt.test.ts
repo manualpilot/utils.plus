@@ -1,9 +1,12 @@
 // @vitest-environment node
 import { exportPKCS8, exportSPKI, generateKeyPair } from "jose";
 import { describe, expect, it } from "vitest";
-import { parseFieldValue, writeFieldValue } from "../src/utilities/jwt/fields";
-import { generateSigningKey, signToken, verifySignature } from "../src/utilities/jwt/sign";
-import { readToken } from "../src/utilities/jwt/token";
+import { decryptToken, encryptToken, isWrongKey } from "../src/utilities/jwt/encrypt";
+import { parseFieldValue, starterForm, writeFieldValue } from "../src/utilities/jwt/fields";
+import { generateKey } from "../src/utilities/jwt/keys";
+import { sampleToken } from "../src/utilities/jwt/sample";
+import { signToken, verifySignature } from "../src/utilities/jwt/sign";
+import { readObject, readToken } from "../src/utilities/jwt/token";
 import type { Field } from "../src/utilities/jwt/types";
 
 const HS256_TOKEN =
@@ -28,16 +31,22 @@ describe("reading a token", () => {
   });
 
   it("says nothing about an empty box", () => {
-    expect(readToken("   ")).toEqual({ header: null, payload: null, signature: "", error: null });
+    expect(readToken("   ")).toEqual({ header: null, payload: null, signature: "", encrypted: false, error: null });
   });
 
   it("counts the parts it was given", () => {
-    expect(readToken("one.two").error).toBe("A JWT is three parts separated by dots; this has 2");
-    expect(readToken("a.b.c.d").error).toBe("A JWT is three parts separated by dots; this has 4");
+    const complaint = "A JWT is three parts separated by dots, or five when encrypted; this has";
+    expect(readToken("one.two").error).toBe(`${complaint} 2`);
+    expect(readToken("a.b.c.d").error).toBe(`${complaint} 4`);
+    expect(readToken("a.b.c.d.e.f").error).toBe(`${complaint} 6`);
   });
 
-  it("names a JWE rather than count its parts", () => {
-    expect(readToken("a.b.c.d.e").error).toBe("That is an encrypted JWE; this page reads signed tokens");
+  it("reads a five-part token as a JWE, header in the clear and claims not", () => {
+    const reading = readToken("eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..aXY.Y3Q.dGFn");
+    expect(reading.error).toBeNull();
+    expect(reading.encrypted).toBe(true);
+    expect(reading.header).toEqual({ alg: "dir", enc: "A256GCM" });
+    expect(reading.payload).toBeNull();
   });
 
   it("says which half it could not read", () => {
@@ -94,21 +103,55 @@ describe("a form field and the JSON it stands for", () => {
   });
 });
 
+describe("the form the builder opens on", () => {
+  it("issues in this site's own name", () => {
+    const claims = starterForm().claims;
+    expect(claims.map((claim) => claim.name)).toEqual(["iss", "sub", "iat", "exp"]);
+    expect(claims[0].value).toBe("utils.plus");
+  });
+
+  it("dates itself now and expires an hour out", () => {
+    const claims = starterForm().claims;
+    const issued = Number(claims[2].value);
+    expect(Math.abs(issued - Math.floor(Date.now() / 1000))).toBeLessThan(5);
+    expect(Number(claims[3].value) - issued).toBe(3600);
+  });
+});
+
+describe("the sample a page opens on", () => {
+  it("is that form, signed with a key of its own", async () => {
+    const { form, secret, signed } = await sampleToken("EdDSA");
+
+    expect(secret.startsWith("-----BEGIN PRIVATE KEY-----")).toBe(true);
+    expect(signed.keyError).toBeNull();
+    expect(signed.tokenError).toBeNull();
+    expect(readToken(signed.token).header).toEqual({ alg: "EdDSA", typ: "JWT" });
+    expect(readToken(signed.token).payload?.iss).toBe("utils.plus");
+    expect(form.claims.map((claim) => claim.name)).toEqual(["iss", "sub", "iat", "exp"]);
+    await expect(verifySignature(signed.token, secret, "EdDSA")).resolves.toBe(true);
+  });
+
+  it("draws a different subject every time", async () => {
+    const [one, two] = await Promise.all([sampleToken("EdDSA"), sampleToken("EdDSA")]);
+    expect(one.signed.token).not.toBe(two.signed.token);
+  });
+});
+
 describe("generating a key", () => {
   it("draws an HMAC secret of the size its hash puts out", async () => {
-    const lengths = await Promise.all(["HS256", "HS384", "HS512"].map((alg) => generateSigningKey(alg)));
+    const lengths = await Promise.all(["HS256", "HS384", "HS512"].map((alg) => generateKey(alg)));
     expect(lengths.map((secret) => Math.floor(secret.length * 3 / 4))).toEqual([32, 48, 64]);
     expect(lengths[0]).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 
   it("writes an asymmetric key as a PKCS#8 PEM", async () => {
-    const key = await generateSigningKey("EdDSA");
+    const key = await generateKey("EdDSA");
     expect(key.startsWith("-----BEGIN PRIVATE KEY-----")).toBe(true);
     expect(key.trimEnd().endsWith("-----END PRIVATE KEY-----")).toBe(true);
   });
 
   it("draws a different secret every time", async () => {
-    expect(await generateSigningKey("HS256")).not.toBe(await generateSigningKey("HS256"));
+    expect(await generateKey("HS256")).not.toBe(await generateKey("HS256"));
   });
 });
 
@@ -116,7 +159,7 @@ describe("signing and checking", () => {
   const claims = [field("sub", "John Doe"), field("iat", "1516239022")];
 
   it.each(["EdDSA", "HS256", "HS512", "ES256", "RS256", "PS256"])("round trips %s", async (alg) => {
-    const secret = await generateSigningKey(alg);
+    const secret = await generateKey(alg);
     const result = await signToken({ alg, headers: [field("typ", "JWT")], claims, secret });
 
     expect(result.keyError).toBeNull();
@@ -127,7 +170,7 @@ describe("signing and checking", () => {
   }, 30000);
 
   it("sends a claim as the JSON its box reads as, and as text when it reads as none", async () => {
-    const secret = await generateSigningKey("HS256");
+    const secret = await generateKey("HS256");
     const written = [field("sub", "1234567890"), field("quoted", "\"1234567890\""), field("roles", "[\"a\",\"b\"]")];
     const { token } = await signToken({ alg: "HS256", headers: [], claims: written, secret });
 
@@ -147,13 +190,13 @@ describe("signing and checking", () => {
   });
 
   it("checks the signature of a token that expired long ago", async () => {
-    const secret = await generateSigningKey("HS256");
+    const secret = await generateKey("HS256");
     const { token } = await signToken({ alg: "HS256", headers: [], claims: [field("exp", "1")], secret });
     await expect(verifySignature(token, secret, "HS256")).resolves.toBe(true);
   });
 
   it("puts the chosen algorithm in the header, over any row that says otherwise", async () => {
-    const secret = await generateSigningKey("HS256");
+    const secret = await generateKey("HS256");
     const headers = [field("alg", "none"), field("kid", "the-key")];
     const { token } = await signToken({ alg: "HS256", headers, claims, secret });
 
@@ -163,7 +206,7 @@ describe("signing and checking", () => {
   });
 
   it("leaves a row nobody has named yet out of the token", async () => {
-    const secret = await generateSigningKey("HS256");
+    const secret = await generateKey("HS256");
     const { token } = await signToken({
       alg: "HS256",
       headers: [],
@@ -174,7 +217,7 @@ describe("signing and checking", () => {
   });
 
   it("hands back the public half of an asymmetric key", async () => {
-    const secret = await generateSigningKey("ES256");
+    const secret = await generateKey("ES256");
     const { token, publicKey } = await signToken({ alg: "ES256", headers: [], claims, secret });
 
     expect(publicKey.startsWith("-----BEGIN PUBLIC KEY-----")).toBe(true);
@@ -182,12 +225,12 @@ describe("signing and checking", () => {
   });
 
   it("has no public half to hand back for a shared secret", async () => {
-    const secret = await generateSigningKey("HS256");
+    const secret = await generateKey("HS256");
     expect((await signToken({ alg: "HS256", headers: [], claims, secret })).publicKey).toBe("");
   });
 
   it("checks a signature against the private key by deriving the public one", async () => {
-    const secret = await generateSigningKey("EdDSA");
+    const secret = await generateKey("EdDSA");
     const { token } = await signToken({ alg: "EdDSA", headers: [], claims, secret });
     await expect(verifySignature(token, secret, "EdDSA")).resolves.toBe(true);
   });
@@ -217,7 +260,7 @@ describe("signing and checking", () => {
 
   it("says a phrase is not a key for an algorithm that signs with one", async () => {
     const result = await signToken({ alg: "EdDSA", headers: [], claims, secret: "hunter2" });
-    expect(result.keyError).toBe("EdDSA signs with a key, so this needs a PEM or a JWK rather than a phrase");
+    expect(result.keyError).toBe("EdDSA takes a key, so this needs a PEM or a JWK rather than a phrase");
     expect(result.token).toBe("");
   });
 
@@ -228,7 +271,7 @@ describe("signing and checking", () => {
   it("says a public key cannot sign", async () => {
     const { publicKey } = await generateKeyPair("EdDSA", { extractable: true });
     const result = await signToken({ alg: "EdDSA", headers: [], claims, secret: await exportSPKI(publicKey) });
-    expect(result.keyError).toBe("That is a public key; signing needs the private half");
+    expect(result.keyError).toBe("That is a public key, and this needs the private half");
   });
 
   it("points a PKCS#1 key at the conversion it needs", async () => {
@@ -238,7 +281,117 @@ describe("signing and checking", () => {
   });
 
   it("passes on what the key itself could not do", async () => {
-    const secret = await generateSigningKey("ES256");
+    const secret = await generateKey("ES256");
     await expect(verifySignature(HS256_TOKEN, secret, "ES512")).rejects.toThrow();
+  });
+});
+
+describe("encrypting and opening", () => {
+  const claims = [field("iss", "utils.plus"), field("sub", "John Doe")];
+
+  it.each(["dir", "A256KW", "A256GCMKW", "RSA-OAEP-256", "ECDH-ES", "ECDH-ES+A256KW"])(
+    "round trips %s",
+    async (alg) => {
+      const secret = await generateKey(alg, "A256GCM");
+      const result = await encryptToken({ alg, enc: "A256GCM", headers: [field("typ", "JWT")], claims, secret });
+
+      expect(result.keyError).toBeNull();
+      expect(result.tokenError).toBeNull();
+      expect(result.token.split(".")).toHaveLength(5);
+
+      const reading = readToken(result.token);
+      expect(reading.encrypted).toBe(true);
+      expect(reading.header).toMatchObject({ alg, enc: "A256GCM", typ: "JWT" });
+      expect(reading.payload).toBeNull();
+      expect(result.token).not.toContain("utils.plus");
+
+      const opened = await decryptToken(result.token, secret, alg);
+      expect(opened.claims).toEqual({ iss: "utils.plus", sub: "John Doe" });
+    },
+    30000,
+  );
+
+  it.each(["A128GCM", "A256GCM", "A128CBC-HS256", "A256CBC-HS512"])("encrypts the claims under %s", async (enc) => {
+    const secret = await generateKey("dir", enc);
+    const { token } = await encryptToken({ alg: "dir", enc, headers: [], claims, secret });
+
+    expect(readToken(token).header).toEqual({ alg: "dir", enc });
+    expect((await decryptToken(token, secret, "dir")).claims).toEqual({ iss: "utils.plus", sub: "John Doe" });
+  });
+
+  it("puts both chosen algorithms in the header, over any row that says otherwise", async () => {
+    const secret = await generateKey("A256KW");
+    const headers = [field("alg", "dir"), field("enc", "A128GCM"), field("kid", "the-key")];
+    const { token } = await encryptToken({ alg: "A256KW", enc: "A256GCM", headers, claims, secret });
+
+    expect(readToken(token).header).toEqual({ alg: "A256KW", enc: "A256GCM", kid: "the-key" });
+  });
+
+  it("calls a key that will not open it wrong rather than unreadable", async () => {
+    const secret = await generateKey("A256KW");
+    const { token } = await encryptToken({ alg: "A256KW", enc: "A256GCM", headers: [], claims, secret });
+
+    const wrong = await decryptToken(token, await generateKey("A256KW"), "A256KW").catch((e: unknown) => e);
+    expect(isWrongKey(wrong)).toBe(true);
+    const unreadable = await decryptToken(token, "AAAA", "A256KW").catch((e: unknown) => e);
+    expect(isWrongKey(unreadable)).toBe(false);
+  });
+
+  it("encrypts to the public half and opens with the private one", async () => {
+    const secret = await generateKey("ECDH-ES+A256KW");
+    const { token, publicKey } = await encryptToken({
+      alg: "ECDH-ES+A256KW",
+      enc: "A256GCM",
+      headers: [],
+      claims,
+      secret,
+    });
+
+    expect(publicKey.startsWith("-----BEGIN PUBLIC KEY-----")).toBe(true);
+    const sent = await encryptToken({ alg: "ECDH-ES+A256KW", enc: "A256GCM", headers: [], claims, secret: publicKey });
+    expect(sent.tokenError).toBeNull();
+    expect((await decryptToken(sent.token, secret, "ECDH-ES+A256KW")).claims).toEqual(
+      { iss: "utils.plus", sub: "John Doe" },
+    );
+    await expect(decryptToken(token, publicKey, "ECDH-ES+A256KW")).rejects.toThrow(
+      "That is a public key, and this needs the private half",
+    );
+  }, 30000);
+
+  it("has no public half to hand back for a shared secret", async () => {
+    const secret = await generateKey("A256KW");
+    expect((await encryptToken({ alg: "A256KW", enc: "A256GCM", headers: [], claims, secret })).publicKey).toBe("");
+  });
+
+  it("reads an AES key as bytes rather than as a phrase, and says so when it is neither", async () => {
+    const short = await encryptToken({ alg: "A256KW", enc: "A256GCM", headers: [], claims, secret: "AAAA" });
+    expect(short.keyError).toBe("A256KW takes 32 bytes, and this is 3");
+
+    const notBytes = await encryptToken({ alg: "A128KW", enc: "A256GCM", headers: [], claims, secret: "hunter2!!" });
+    expect(notBytes.keyError).toBe("A128KW takes bytes written as base64url, and this is not base64url");
+  });
+
+  it("passes on a content key of the wrong length for the encryption it was picked with", async () => {
+    const secret = await generateKey("dir", "A128GCM");
+    const result = await encryptToken({ alg: "dir", enc: "A256GCM", headers: [], claims, secret });
+    expect(result.tokenError).toContain("Content Encryption Key length");
+  });
+
+  it("hands back whatever was wrapped when that is not a set of claims", async () => {
+    const secret = await generateKey("dir", "A256GCM");
+    const inner = await signToken({ alg: "HS256", headers: [], claims, secret: "your-256-bit-secret" });
+    const { token } = await encryptToken({
+      alg: "dir",
+      enc: "A256GCM",
+      headers: [],
+      claims: [field("nested", JSON.stringify(inner.token))],
+      secret,
+    });
+
+    const opened = await decryptToken(token, secret, "dir");
+    expect(opened.claims).toEqual({ nested: inner.token });
+    expect(readObject("not json at all")).toBeNull();
+    expect(readObject("[1,2]")).toBeNull();
+    expect(readObject("{\"a\":1}")).toEqual({ a: 1 });
   });
 });

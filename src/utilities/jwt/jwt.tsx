@@ -4,12 +4,15 @@ import { useNewRowFocus } from "../../common/new-row-focus";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconPlus, IconRefresh, IconTrash, IconX } from "../../icons";
-import { ALGORITHM_OPTIONS, EMPTY_SIGNATURE, isSymmetric } from "./algorithms";
+import { ALGORITHM_OPTIONS, DEFAULT_ALGORITHM, DEFAULT_KEY_ALGORITHM, EMPTY_RESULT, ENCRYPTION_OPTIONS, isEncryption, isSymmetric, KEY_ALGORITHM_OPTIONS, PROTECTION_OPTIONS } from "./algorithms";
 import { CLAIM_NAMES, CLAIM_SUGGESTIONS, HEADER_NAMES, HEADER_SUGGESTIONS, parameterRows } from "./claims";
-import { duplicateErrors, fieldPairs, formFromReading, message, newField, pickAlgorithm, pickText, sharedForm, starterForm } from "./fields";
-import { generateSigningKey, signToken, verifySignature } from "./sign";
+import { decryptToken, encryptToken, isWrongKey } from "./encrypt";
+import { duplicateErrors, fieldPairs, formFromReading, message, newField, pickAlgorithm, pickEncryption, pickText, sharedForm, starterForm } from "./fields";
+import { generateKey } from "./keys";
+import { sampleToken } from "./sample";
+import { signToken, verifySignature } from "./sign";
 import { readToken } from "./token";
-import type { Check, Field, FieldCardProps, FieldKind, Form, Mode, ParameterRow, SignResult } from "./types";
+import type { BuildResult, Check, Field, FieldCardProps, FieldKind, Form, Mode, Opened, ParameterRow, Protection } from "./types";
 
 export default function Jwt() {
   const initialState = useInitialHashState<{
@@ -17,6 +20,7 @@ export default function Jwt() {
     token?: string;
     secret?: string;
     alg?: string;
+    enc?: string;
     headers?: unknown;
     claims?: unknown;
   }>();
@@ -27,30 +31,59 @@ export default function Jwt() {
   const [token, setToken] = useState(pickText(initialState?.token));
   const [secret, setSecret] = useState(pickText(initialState?.secret));
   const [alg, setAlg] = useState(pickAlgorithm(initialState?.alg));
+  const [enc, setEnc] = useState(pickEncryption(initialState?.enc));
   const [form, setForm] = useState<Form | null>(
     () => sharedForm(initialState) ?? (initialMode === "encode" ? starterForm() : null),
   );
-  const [signed, setSigned] = useState<SignResult | null>(null);
+  const [built, setBuilt] = useState<BuildResult | null>(null);
   const [check, setCheck] = useState<Check | null>(null);
+  const [opened, setOpened] = useState<Opened | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   const source = useRef("");
+  const sample = useRef({ token: "", secret: "" });
+  const showing = useRef({ token, secret });
   const generated = useRef("");
-  const signRun = useRef(0);
+  const buildRun = useRef(0);
   const checkRun = useRef(0);
   const keyRun = useRef(0);
 
+  showing.current = { token, secret };
+
   const reading = useMemo(() => readToken(token), [token]);
   const headerAlg = typeof reading.header?.alg === "string" ? reading.header.alg : null;
+  const protection: Protection = isEncryption(alg) ? "encrypted" : "signed";
+
+  const sampled = mode === "decode" && token === sample.current.token && secret === sample.current.secret;
 
   useRegisterShareState(() => ({
     mode,
-    token: mode === "decode" && token ? token : undefined,
-    secret: secret || undefined,
+    token: mode === "decode" && token && !sampled ? token : undefined,
+    secret: secret && !sampled ? secret : undefined,
     alg: mode === "encode" ? alg : undefined,
+    enc: mode === "encode" && protection === "encrypted" ? enc : undefined,
     headers: mode === "encode" ? fieldPairs(form?.headers) : undefined,
     claims: mode === "encode" ? fieldPairs(form?.claims) : undefined,
   }));
+
+  useEffect(() => {
+    if (initialState) return;
+    const runId = ++buildRun.current;
+    sampleToken(alg)
+      .then(({ form, secret, signed }) => {
+        if (buildRun.current !== runId || !signed.token || showing.current.token || showing.current.secret) return;
+        sample.current = { token: signed.token, secret };
+        source.current = signed.token;
+        generated.current = secret;
+        setForm(form);
+        setBuilt(signed);
+        setSecret(secret);
+        setToken(signed.token);
+      })
+      .catch((e) => {
+        if (buildRun.current === runId) setBuilt({ ...EMPTY_RESULT, tokenError: message(e) });
+      });
+  }, []);
 
   useEffect(() => {
     if (mode !== "decode") return;
@@ -59,75 +92,98 @@ export default function Jwt() {
   }, [mode]);
 
   useEffect(() => {
-    if (mode !== "decode" || !reading.header || !secret.trim() || !headerAlg || headerAlg === "none") {
+    const nothingToAsk = mode !== "decode" || !reading.header || !secret.trim() || !headerAlg
+      || (!reading.encrypted && headerAlg === "none");
+    if (nothingToAsk) {
       setCheck(null);
+      setOpened(null);
       return;
     }
     const runId = ++checkRun.current;
-    verifySignature(token, secret, headerAlg)
-      .then((ok) => {
-        if (checkRun.current === runId) setCheck({ ok, error: null });
+    const asked = reading.encrypted
+      ? decryptToken(token, secret, headerAlg).then((result) => {
+        if (checkRun.current !== runId) return;
+        setOpened(result);
+        setCheck({ ok: true, error: null });
       })
-      .catch((e) => {
-        if (checkRun.current === runId) setCheck({ ok: false, error: message(e) });
+      : verifySignature(token, secret, headerAlg).then((ok) => {
+        if (checkRun.current === runId) setCheck({ ok, error: null });
       });
+    asked.catch((e) => {
+      if (checkRun.current !== runId) return;
+      setOpened(null);
+      setCheck({ ok: false, error: isWrongKey(e) ? null : message(e) });
+    });
   }, [mode, token, secret, reading, headerAlg]);
 
   useEffect(() => {
     if (mode !== "encode" || !form) return;
-    const runId = ++signRun.current;
-    signToken({ alg, headers: form.headers, claims: form.claims, secret })
+    const runId = ++buildRun.current;
+    const request = { alg, headers: form.headers, claims: form.claims, secret };
+    (protection === "encrypted" ? encryptToken({ ...request, enc }) : signToken(request))
       .then((result) => {
-        if (signRun.current !== runId) return;
-        setSigned(result);
+        if (buildRun.current !== runId) return;
+        setBuilt(result);
         if (result.token) source.current = result.token;
       })
       .catch((e) => {
-        if (signRun.current === runId) setSigned({ ...EMPTY_SIGNATURE, tokenError: message(e) });
+        if (buildRun.current === runId) setBuilt({ ...EMPTY_RESULT, tokenError: message(e) });
       });
-  }, [mode, form, alg, secret]);
+  }, [mode, form, alg, enc, protection, secret]);
 
-  const fillKey = useCallback((target: string) => {
+  const fillKey = useCallback((target: string, targetEnc: string) => {
     const runId = ++keyRun.current;
-    generateSigningKey(target)
+    generateKey(target, targetEnc)
       .then((key) => {
         if (keyRun.current !== runId) return;
         generated.current = key;
         setSecret(key);
       })
       .catch((e) => {
-        if (keyRun.current === runId) setSigned({ ...EMPTY_SIGNATURE, keyError: message(e) });
+        if (keyRun.current === runId) setBuilt({ ...EMPTY_RESULT, keyError: message(e) });
       });
   }, []);
 
   const handleMode = (next: Mode) => {
     if (next === mode) return;
     if (next === "encode") enterEncode();
-    else if (signed?.token) {
-      setToken(signed.token);
-      source.current = signed.token;
+    else if (built?.token) {
+      setToken(built.token);
+      source.current = built.token;
     }
     setMode(next);
   };
 
   const enterEncode = () => {
-    const transferred = reading.header && reading.payload && token.trim() !== source.current
-      ? formFromReading(reading)
+    const payload = reading.payload ?? opened?.claims ?? null;
+    const transferred = reading.header && payload && token.trim() !== source.current
+      ? formFromReading(reading, payload)
       : null;
     if (transferred) {
       setForm(transferred.form);
       if (transferred.alg) setAlg(transferred.alg);
+      if (transferred.enc) setEnc(transferred.enc);
     } else if (!form) {
       setForm(starterForm());
     }
     source.current = token.trim();
-    if (!secret.trim()) fillKey(transferred?.alg ?? alg);
+    if (!secret.trim()) fillKey(transferred?.alg ?? alg, transferred?.enc ?? enc);
   };
 
   const handleAlgorithm = (value: string | null) => {
     const next = pickAlgorithm(value);
     setAlg(next);
-    if (!secret.trim() || secret === generated.current) fillKey(next);
+    if (!secret.trim() || secret === generated.current) fillKey(next, enc);
+  };
+
+  const handleProtection = (value: string | null) => {
+    handleAlgorithm(value === "encrypted" ? DEFAULT_KEY_ALGORITHM : DEFAULT_ALGORITHM);
+  };
+
+  const handleEncryption = (value: string | null) => {
+    const next = pickEncryption(value);
+    setEnc(next);
+    if (alg === "dir" && (!secret.trim() || secret === generated.current)) fillKey(alg, next);
   };
 
   const updateField = (kind: FieldKind, id: string, patch: Partial<Field>) => {
@@ -144,7 +200,8 @@ export default function Jwt() {
     setForm((current) => current && { ...current, [kind]: current[kind].filter((field) => field.id !== id) });
   };
 
-  const keyError = mode === "decode" ? check?.error ?? null : signed?.keyError ?? null;
+  const keyError = mode === "decode" ? check?.error ?? null : built?.keyError ?? null;
+  const claims = reading.payload ?? opened?.claims ?? null;
 
   return (
     <Stack gap="md">
@@ -200,20 +257,45 @@ export default function Jwt() {
           {mode === "encode" && (
             <Box className="settings-row" mb="xs">
               <Select
+                label="Protection"
+                description="Claims anybody can read and nobody can alter, or claims only the key can read"
+                data={PROTECTION_OPTIONS}
+                value={protection}
+                onChange={handleProtection}
+                allowDeselect={false}
+              />
+              <Select
                 label="Algorithm"
-                description="What the header will say, and what the key below is generated for"
-                data={ALGORITHM_OPTIONS}
+                description={protection === "encrypted"
+                  ? "How the content key is wrapped, and what the key below is generated for"
+                  : "What the header will say, and what the key below is generated for"}
+                data={protection === "encrypted" ? KEY_ALGORITHM_OPTIONS : ALGORITHM_OPTIONS}
                 value={alg}
                 onChange={handleAlgorithm}
                 allowDeselect={false}
               />
+              {protection === "encrypted" && (
+                <Select
+                  label="Encryption"
+                  description="What the claims themselves are encrypted under"
+                  data={ENCRYPTION_OPTIONS}
+                  value={enc}
+                  onChange={handleEncryption}
+                  allowDeselect={false}
+                />
+              )}
             </Box>
           )}
           <Group justify="space-between" gap="sm" wrap="nowrap">
             <Group gap="sm" align="baseline">
               <Title order={4}>{isSymmetric(mode === "decode" ? headerAlg ?? alg : alg) ? "Secret" : "Key"}</Title>
               {mode === "decode" && (
-                <VerdictBadge check={check} unsigned={headerAlg === "none"} given={!!secret.trim()} />
+                <VerdictBadge
+                  check={check}
+                  encrypted={reading.encrypted}
+                  unsigned={!reading.encrypted && headerAlg === "none"}
+                  given={!!secret.trim()}
+                />
               )}
             </Group>
             <Group gap="xs">
@@ -222,7 +304,7 @@ export default function Jwt() {
                   <ActionIcon
                     variant="subtle"
                     color="gray"
-                    onClick={() => fillKey(alg)}
+                    onClick={() => fillKey(alg, enc)}
                     aria-label="Generate a new key"
                   >
                     <IconRefresh size="1.2rem" />
@@ -248,9 +330,8 @@ export default function Jwt() {
           </Group>
           <Textarea
             value={secret}
-            onChange={(event) =>
-              setSecret(event.currentTarget.value)}
-            placeholder={mode === "decode" ? "Optional: a secret or public key to check the signature with" : ""}
+            onChange={(event) => setSecret(event.currentTarget.value)}
+            placeholder={placeholderFor(mode, reading.encrypted)}
             aria-label="Key"
             error={keyError}
             autosize
@@ -260,11 +341,11 @@ export default function Jwt() {
             autoCapitalize="off"
             styles={{ input: { fontFamily: "monospace" } }}
           />
-          {mode === "encode" && signed?.publicKey && (
+          {mode === "encode" && built?.publicKey && (
             <>
               <Group justify="space-between" gap="sm" wrap="nowrap">
                 <Title order={4}>Public key</Title>
-                <CopyButton value={signed.publicKey} timeout={2000}>
+                <CopyButton value={built.publicKey} timeout={2000}>
                   {({ copied, copy }) => (
                     <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="left">
                       <ActionIcon
@@ -280,7 +361,7 @@ export default function Jwt() {
                 </CopyButton>
               </Group>
               <Textarea
-                value={signed.publicKey}
+                value={built.publicKey}
                 aria-label="Public key"
                 readOnly
                 autosize
@@ -303,11 +384,51 @@ export default function Jwt() {
         </Card>
       )}
 
-      {mode === "decode" && reading.payload && (
+      {mode === "decode" && (claims || (reading.encrypted && !opened)) && (
         <Card withBorder shadow="sm" radius="md">
           <Stack gap="xs">
             <Title order={4}>Claims</Title>
-            <ParameterTable rows={parameterRows(reading.payload, CLAIM_NAMES, now)} empty="This token claims nothing" />
+            <ParameterTable
+              rows={parameterRows(claims ?? {}, CLAIM_NAMES, now)}
+              empty={reading.encrypted
+                ? "The key that opens this token is what reads these"
+                : "This token claims nothing"}
+            />
+          </Stack>
+        </Card>
+      )}
+
+      {mode === "decode" && opened && !opened.claims && (
+        <Card withBorder shadow="sm" radius="md">
+          <Stack gap="xs">
+            <Group justify="space-between" gap="sm" wrap="nowrap">
+              <Title order={4}>Payload</Title>
+              <CopyButton value={opened.text} timeout={2000}>
+                {({ copied, copy }) => (
+                  <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="left">
+                    <ActionIcon
+                      color={copied ? "teal" : "gray"}
+                      variant="subtle"
+                      onClick={copy}
+                      aria-label="Copy payload"
+                    >
+                      {copied ? <IconCheck size="1.2rem" /> : <IconCopy size="1.2rem" />}
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </CopyButton>
+            </Group>
+            <Text size="sm" c="dimmed">This token wraps something other than a set of claims</Text>
+            <Textarea
+              value={opened.text}
+              aria-label="Payload"
+              readOnly
+              autosize
+              minRows={2}
+              maxRows={12}
+              spellCheck={false}
+              styles={{ input: { fontFamily: "monospace" } }}
+            />
           </Stack>
         </Card>
       )}
@@ -338,16 +459,16 @@ export default function Jwt() {
               <Group justify="space-between">
                 <Group gap="sm" align="baseline">
                   <Title order={4}>Token</Title>
-                  {signed?.token && <Text size="sm" c="dimmed">{signed.token.length} characters</Text>}
+                  {built?.token && <Text size="sm" c="dimmed">{built.token.length} characters</Text>}
                 </Group>
-                <CopyButton value={signed?.token ?? ""} timeout={2000}>
+                <CopyButton value={built?.token ?? ""} timeout={2000}>
                   {({ copied, copy }) => (
                     <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="left">
                       <ActionIcon
                         color={copied ? "teal" : "gray"}
                         variant="subtle"
                         onClick={copy}
-                        disabled={!signed?.token}
+                        disabled={!built?.token}
                         aria-label="Copy token"
                       >
                         {copied ? <IconCheck size="1.2rem" /> : <IconCopy size="1.2rem" />}
@@ -357,10 +478,10 @@ export default function Jwt() {
                 </CopyButton>
               </Group>
               <Textarea
-                value={signed?.token ?? ""}
+                value={built?.token ?? ""}
                 aria-label="Token"
                 readOnly
-                error={signed?.tokenError}
+                error={built?.tokenError}
                 autosize
                 minRows={3}
                 maxRows={12}
@@ -375,13 +496,34 @@ export default function Jwt() {
   );
 }
 
-function VerdictBadge({ check, unsigned, given }: { check: Check | null; unsigned: boolean; given: boolean }) {
+interface VerdictProps {
+  check: Check | null;
+  encrypted: boolean;
+  unsigned: boolean;
+  given: boolean;
+}
+
+function VerdictBadge({ check, encrypted, unsigned, given }: VerdictProps) {
   if (unsigned) return <Badge color="yellow" variant="light">Unsigned</Badge>;
-  if (!given || check?.error) return <Badge color="gray" variant="light">Signature not checked</Badge>;
-  if (!check) return <Badge color="gray" variant="light">Checking</Badge>;
+  if (!given || check?.error) {
+    return <Badge color="gray" variant="light">{encrypted ? "Not decrypted" : "Signature not checked"}</Badge>;
+  }
+  if (!check) return <Badge color="gray" variant="light">{encrypted ? "Decrypting" : "Checking"}</Badge>;
+  if (encrypted) {
+    return check.ok
+      ? <Badge color="teal" variant="light">Decrypted</Badge>
+      : <Badge color="red" variant="light">Wrong key</Badge>;
+  }
   return check.ok
     ? <Badge color="teal" variant="light">Signature valid</Badge>
     : <Badge color="red" variant="light">Signature invalid</Badge>;
+}
+
+function placeholderFor(mode: Mode, encrypted: boolean): string {
+  if (mode === "encode") return "";
+  return encrypted
+    ? "The secret or private key this token was encrypted to"
+    : "Optional: a secret or public key to check the signature with";
 }
 
 function FieldCard({ title, kind, fields, names, onChange, onAdd, onRemove }: FieldCardProps) {

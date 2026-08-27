@@ -2,6 +2,7 @@ import type { ParameterRow } from "./types";
 
 export const HEADER_NAMES: Record<string, string> = {
   alg: "Algorithm",
+  enc: "Encryption",
   typ: "Type",
   cty: "Content type",
   kid: "Key ID",
@@ -12,6 +13,12 @@ export const HEADER_NAMES: Record<string, string> = {
   x5t: "X.509 thumbprint",
   "x5t#S256": "X.509 thumbprint",
   crit: "Critical",
+  zip: "Compression",
+  epk: "Ephemeral public key",
+  apu: "Agreement party (sender)",
+  apv: "Agreement party (recipient)",
+  iv: "Initialisation vector",
+  tag: "Authentication tag",
 };
 
 export const CLAIM_NAMES: Record<string, string> = {
@@ -30,7 +37,7 @@ export const CLAIM_NAMES: Record<string, string> = {
   sid: "Session ID",
 };
 
-export const HEADER_SUGGESTIONS = Object.keys(HEADER_NAMES).filter((name) => name !== "alg");
+export const HEADER_SUGGESTIONS = Object.keys(HEADER_NAMES).filter((name) => name !== "alg" && name !== "enc");
 export const CLAIM_SUGGESTIONS = Object.keys(CLAIM_NAMES);
 
 export const TIME_CLAIMS = new Set(["exp", "nbf", "iat", "auth_time"]);

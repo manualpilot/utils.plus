@@ -369,13 +369,16 @@ export const PAGE_META = {
   "/jwt": {
     title: "JWT Decoder, Verifier & Builder",
     description:
-      "Read a JSON Web Token's header and claims, check its signature against a secret, PEM, certificate or JWK, or build and sign a new one. The key never leaves the tab.",
+      "Read a JSON Web Token's header and claims, check its signature or decrypt a JWE, and build, sign or encrypt a new one. Every key is made and used in the tab.",
     keywords: [
       "jwt decoder",
       "jwt debugger",
       "json web token",
       "verify jwt signature",
       "jwt generator",
+      "jwe",
+      "decrypt jwe",
+      "encrypt jwt",
       "hs256",
       "rs256",
       "es256",

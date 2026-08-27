@@ -1,5 +1,7 @@
 export type Mode = "decode" | "encode";
+export type Protection = "signed" | "encrypted";
 export type FieldKind = "headers" | "claims";
+export type Half = "private" | "public";
 
 export interface Field {
   id: string;
@@ -39,17 +41,27 @@ export interface TokenReading {
   header: Record<string, unknown> | null;
   payload: Record<string, unknown> | null;
   signature: string;
+  encrypted: boolean;
   error: string | null;
 }
 
-export interface SignRequest {
+export interface Opened {
+  claims: Record<string, unknown> | null;
+  text: string;
+}
+
+export interface BuildRequest {
   alg: string;
   headers: Field[];
   claims: Field[];
   secret: string;
 }
 
-export interface SignResult {
+export interface EncryptRequest extends BuildRequest {
+  enc: string;
+}
+
+export interface BuildResult {
   token: string;
   publicKey: string;
   keyError: string | null;

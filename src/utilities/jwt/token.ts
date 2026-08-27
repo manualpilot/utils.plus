@@ -1,33 +1,30 @@
 import type { TokenReading } from "./types";
 
+const NOTHING: TokenReading = { header: null, payload: null, signature: "", encrypted: false, error: null };
+
 export function readToken(token: string): TokenReading {
   const text = token.trim();
-  if (!text) return { header: null, payload: null, signature: "", error: null };
+  if (!text) return NOTHING;
 
   const parts = text.split(".");
   if (parts.length === 5) {
-    return {
-      header: null,
-      payload: null,
-      signature: "",
-      error: "That is an encrypted JWE; this page reads signed tokens",
-    };
+    const header = readSegment(parts[0], "header");
+    if (typeof header === "string") return { ...NOTHING, error: header };
+    return { ...NOTHING, header, encrypted: true };
   }
   if (parts.length !== 3) {
     return {
-      header: null,
-      payload: null,
-      signature: "",
-      error: `A JWT is three parts separated by dots; this has ${parts.length}`,
+      ...NOTHING,
+      error: `A JWT is three parts separated by dots, or five when encrypted; this has ${parts.length}`,
     };
   }
 
   const header = readSegment(parts[0], "header");
-  if (typeof header === "string") return { header: null, payload: null, signature: "", error: header };
+  if (typeof header === "string") return { ...NOTHING, error: header };
   const payload = readSegment(parts[1], "payload");
-  if (typeof payload === "string") return { header, payload: null, signature: "", error: payload };
+  if (typeof payload === "string") return { ...NOTHING, header, error: payload };
 
-  return { header, payload, signature: parts[2], error: null };
+  return { ...NOTHING, header, payload, signature: parts[2] };
 }
 
 export function readSegment(segment: string, name: string): Record<string, unknown> | string {
@@ -47,15 +44,29 @@ export function readSegment(segment: string, name: string): Record<string, unkno
   return value as Record<string, unknown>;
 }
 
+export function readObject(text: string): Record<string, unknown> | null {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
 export function toBase64Url(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export function fromBase64Url(text: string): string {
+export function bytesFromBase64Url(text: string): Uint8Array {
   const base64 = text.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
-  const binary = atob(padded);
-  return new TextDecoder().decode(Uint8Array.from(binary, (character) => character.charCodeAt(0)));
+  return Uint8Array.from(atob(padded), (character) => character.charCodeAt(0));
+}
+
+export function fromBase64Url(text: string): string {
+  return new TextDecoder().decode(bytesFromBase64Url(text));
 }
