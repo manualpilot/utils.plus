@@ -1,5 +1,7 @@
+import { generateAgeIdentity } from "./age";
 import { WEB_CRYPTO_CURVES } from "./algorithms";
 import { toBase64 } from "./encoding";
+import { generateNaclKeypair } from "./nacl";
 import type { Jwk, JwkSet, KeyPair, KeyResult } from "./types";
 import { generateWireguardConfigs } from "./wireguard";
 
@@ -9,6 +11,28 @@ export async function wireguardResult(serverPrivateKey: string): Promise<KeyResu
     outputs: [
       { label: "Server configuration", value: server, rows: 5 },
       { label: "Client configuration", value: client, rows: 5 },
+    ],
+    fingerprint: "",
+  };
+}
+
+export async function naclResult(format: string): Promise<KeyResult> {
+  const { secretKey, publicKey } = await generateNaclKeypair(format);
+  return {
+    outputs: [
+      { label: "Secret key", value: secretKey, rows: 2 },
+      { label: "Public key", value: publicKey, rows: 2 },
+    ],
+    fingerprint: "",
+  };
+}
+
+export async function ageResult(algorithm: string): Promise<KeyResult> {
+  const { file, recipient } = await generateAgeIdentity(algorithm);
+  return {
+    outputs: [
+      { label: "Identity file", value: file, rows: 3 },
+      { label: "Recipient", value: recipient, rows: 2 },
     ],
     fingerprint: "",
   };

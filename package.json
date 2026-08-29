@@ -60,6 +60,7 @@
     "@uiw/react-codemirror": "^4.25.11",
     "@vvo/tzdb": "^6.198.0",
     "acorn": "^8.18.0",
+    "age-encryption": "^0.3.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "country-flag-emoji-polyfill": "^0.1.10",

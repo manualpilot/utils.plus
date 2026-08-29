@@ -11,6 +11,10 @@ function fromBase64Url(b64url: string): string {
   return decodeURIComponent(escape(atob(b64)));
 }
 
+export function shareLink(path: string, state: Record<string, unknown>): string {
+  return `${path}#${toBase64Url(JSON.stringify(state))}`;
+}
+
 type GetStateFn = () => Record<string, unknown> | null;
 
 interface ShareStateContextValue {

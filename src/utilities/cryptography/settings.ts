@@ -1,3 +1,4 @@
+import { identityRecipients } from "./age";
 import { ALGORITHMS, keyLength } from "./algorithms";
 import { boxKeypair, boxPublicKey } from "./box";
 import { decodeBytes, encodeBytes, type Encoding } from "./encoding";
@@ -39,16 +40,19 @@ export function randomNonce(algorithm: string, encoding: Encoding): string {
   return encodeBytes(randomBytes(ALGORITHMS[algorithm].nonceBytes), encoding);
 }
 
-export function randomPeer(encoding: Encoding): { publicKey: string; secretKey: string } {
-  const pair = boxKeypair();
-  return { publicKey: encodeBytes(pair.publicKey, encoding), secretKey: encodeBytes(pair.secretKey, encoding) };
-}
-
 export function derivedPublicKey(secret: string, encoding: Encoding): string {
   try {
     return encodeBytes(boxPublicKey(decodeBytes(secret, encoding)), encoding);
   } catch {
     return "";
+  }
+}
+
+export async function derivedRecipients(identities: string): Promise<string[]> {
+  try {
+    return await identityRecipients(identities);
+  } catch {
+    return [];
   }
 }
 

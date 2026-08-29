@@ -1,10 +1,13 @@
 import { x25519 } from "@noble/curves/ed25519.js";
+import { identityToRecipient } from "age-encryption";
 import { createRequire } from "node:module";
 import sshpk from "sshpk";
 import { describe, expect, it } from "vitest";
+import { generateAgeIdentity } from "../src/utilities/keygen/age";
 import { formatSecret } from "../src/utilities/keygen/encoding";
 import { generateJwkSet } from "../src/utilities/keygen/jwk";
 import { generateSshKey } from "../src/utilities/keygen/keys";
+import { generateNaclKeypair } from "../src/utilities/keygen/nacl";
 import type { Jwk } from "../src/utilities/keygen/types";
 import { generateWireguardConfigs } from "../src/utilities/keygen/wireguard";
 
@@ -95,6 +98,31 @@ describe("SSH keys", () => {
   });
 });
 
+describe("NaCl box keys", () => {
+  it("writes both halves of one X25519 pair in the encoding it was asked for", async () => {
+    const { secretKey, publicKey } = await generateNaclKeypair("hex");
+
+    expect(secretKey).toMatch(/^[0-9a-f]{64}$/);
+    expect(publicKey).toBe(formatSecret(x25519.getPublicKey(fromHex(secretKey)), "hex"));
+  });
+
+  it("says the same pair the other way when the encoding is the other one", async () => {
+    const { secretKey, publicKey } = await generateNaclKeypair("base64");
+
+    expect(secretKey).toMatch(/^[A-Za-z0-9+/]{43}=$/);
+    expect(publicKey).toBe(formatSecret(x25519.getPublicKey(decodeBase64(secretKey)), "base64"));
+  });
+
+  it("draws a fresh pair every time it is asked", async () => {
+    const [first, second] = await Promise.all([generateNaclKeypair("hex"), generateNaclKeypair("hex")]);
+    expect(first.secretKey).not.toBe(second.secretKey);
+    expect(first.publicKey).not.toBe(second.publicKey);
+  });
+
+  const fromHex = (hex: string) => Uint8Array.from(hex.match(/../g) ?? [], (pair) => parseInt(pair, 16));
+  const decodeBase64 = (text: string) => Uint8Array.from(atob(text), (character) => character.charCodeAt(0));
+});
+
 describe("WireGuard configurations", () => {
   const SERVER_KEY = "AAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAUE=";
   const SERVER_PUBLIC = "pOCSkrZRwni5dyxWn1+puxPZBrRqtoyd+dwrRAn4ogk=";
@@ -141,6 +169,33 @@ describe("WireGuard configurations", () => {
   const field = (config: string, name: string) => config.match(new RegExp(`^${name} = (.+)$`, "m"))?.[1] ?? "";
   const decode = (base64: string) => Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
   const publicOf = (base64: string) => btoa(String.fromCharCode(...x25519.getPublicKey(decode(base64))));
+});
+
+describe("age identities", () => {
+  it.each([
+    ["x25519", /^AGE-SECRET-KEY-1[0-9A-Z]+$/, /^age1[0-9a-z]+$/],
+    ["hybrid", /^AGE-SECRET-KEY-PQ-1[0-9A-Z]+$/, /^age1pq1[0-9a-z]+$/],
+  ])("writes the file age-keygen writes for %s, comment lines and all", async (algorithm, secret, published) => {
+    const { file, recipient } = await generateAgeIdentity(algorithm);
+    const [created, publishedLine, identity, nothing] = file.split("\n");
+
+    expect(created).toMatch(/^# created: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+    expect(publishedLine).toBe(`# public key: ${recipient}`);
+    expect(identity).toMatch(secret);
+    expect(recipient).toMatch(published);
+    expect(nothing).toBe("");
+    expect(await identityToRecipient(identity)).toBe(recipient);
+  });
+
+  it("hands out a recipient two kilobytes long for the post-quantum kind, and 62 characters for the curve", async () => {
+    expect((await generateAgeIdentity("x25519")).recipient).toHaveLength(62);
+    expect((await generateAgeIdentity("hybrid")).recipient.length).toBeGreaterThan(1900);
+  });
+
+  it("gives a different identity every time it is asked", async () => {
+    const [first, second] = await Promise.all([generateAgeIdentity("x25519"), generateAgeIdentity("x25519")]);
+    expect(first.recipient).not.toBe(second.recipient);
+  });
 });
 
 describe("JSON Web Keys", () => {

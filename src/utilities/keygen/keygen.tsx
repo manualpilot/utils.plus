@@ -9,7 +9,7 @@ import { algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_SECRET_BYTES, FORMAT_
 import { formatSecret } from "./encoding";
 import { generateJwkSet } from "./jwk";
 import { generatePgpKey, generateSshKey } from "./keys";
-import { jwkResult, pairResult, wireguardResult } from "./results";
+import { ageResult, jwkResult, naclResult, pairResult, wireguardResult } from "./results";
 import type { Generated, Output } from "./types";
 import { clampWhole, message, parseWhole } from "./validate";
 import { parseWireguardKey } from "./wireguard";
@@ -65,7 +65,7 @@ export default function Keygen() {
     keyId: kind === "jwk" ? keyIdSource : undefined,
     count: kind === "jwk" ? count : undefined,
     size: kind === "secret" ? size : undefined,
-    format: kind === "secret" ? format : undefined,
+    format: kind === "secret" || kind === "nacl" ? format : undefined,
   }));
 
   const parsedSize = parseWhole(size, MAX_SECRET_BYTES);
@@ -100,7 +100,8 @@ export default function Keygen() {
     serverKey,
     keyIdSource,
     count,
-  }), [kind, algorithm, variant, comment, name, email, passphrase, serverKey, keyIdSource, count]);
+    format,
+  }), [kind, algorithm, variant, comment, name, email, passphrase, serverKey, keyIdSource, count, format]);
   const stale = generated === null || generated.request !== request;
   const result = stale || generated === null ? null : generated.result;
   const error = stale || generated === null ? "" : generated.error;
@@ -114,6 +115,10 @@ export default function Keygen() {
       const settings = { algorithm, variant, comment, name, email, passphrase };
       const built = kind === "wireguard"
         ? await wireguardResult(serverKey)
+        : kind === "nacl"
+        ? await naclResult(format)
+        : kind === "age"
+        ? await ageResult(algorithm)
         : kind === "jwk"
         ? jwkResult(
           await generateJwkSet({ algorithm, variant, keyId: keyIdSource, count: parsedCount ?? 1 }),
@@ -137,6 +142,7 @@ export default function Keygen() {
     serverKey,
     keyIdSource,
     parsedCount,
+    format,
     request,
   ]);
 
@@ -200,29 +206,29 @@ export default function Keygen() {
               />
             )}
             {kind === "secret" && (
-              <>
-                <NumberInput
-                  label="Size"
-                  description={parsedSize === null ? "In bytes" : `${parsedSize * 8} bits`}
-                  value={size}
-                  onChange={setSize}
-                  min={1}
-                  max={MAX_SECRET_BYTES}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  stepHoldDelay={500}
-                  stepHoldInterval={(t) => Math.max(1000 / t ** 2, 75)}
-                  error={sizeError}
-                  classNames={{ root: "relative-root", error: "absolute-error" }}
-                />
-                <Select
-                  label="Encoding"
-                  data={FORMAT_OPTIONS}
-                  value={format}
-                  onChange={(value) => value && setFormat(value)}
-                  allowDeselect={false}
-                />
-              </>
+              <NumberInput
+                label="Size"
+                description={parsedSize === null ? "In bytes" : `${parsedSize * 8} bits`}
+                value={size}
+                onChange={setSize}
+                min={1}
+                max={MAX_SECRET_BYTES}
+                allowDecimal={false}
+                allowNegative={false}
+                stepHoldDelay={500}
+                stepHoldInterval={(t) => Math.max(1000 / t ** 2, 75)}
+                error={sizeError}
+                classNames={{ root: "relative-root", error: "absolute-error" }}
+              />
+            )}
+            {(kind === "secret" || kind === "nacl") && (
+              <Select
+                label="Encoding"
+                data={FORMAT_OPTIONS}
+                value={format}
+                onChange={(value) => value && setFormat(value)}
+                allowDeselect={false}
+              />
             )}
           </Box>
 

@@ -28,6 +28,16 @@ export interface JwkSet {
   thumbprint: string;
 }
 
+export interface AgeKeypair {
+  file: string;
+  recipient: string;
+}
+
+export interface NaclKeypair {
+  secretKey: string;
+  publicKey: string;
+}
+
 export interface WireguardConfigs {
   server: string;
   client: string;

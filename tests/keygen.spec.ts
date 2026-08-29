@@ -203,6 +203,40 @@ test("WireGuard writes both ends of one tunnel, around whichever server it is gi
   await expect(serverBox(page)).toHaveCount(0);
 });
 
+test("a NaCl box pair is two halves in the one encoding, and nothing else to pick", async ({ page }) => {
+  await openKeygen(page);
+  await choose(page, "Key kind", "NaCl box keys");
+
+  await expect(page.getByRole("combobox", { name: "Algorithm" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Size" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Secret key")).toHaveValue(/^[0-9a-f]{64}$/);
+  await expect(box(page, "Public key")).toHaveValue(/^[0-9a-f]{64}$/);
+
+  await choose(page, "Encoding", "Base64");
+  await expect(box(page, "Secret key")).toHaveCount(0);
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Secret key")).toHaveValue(/^[A-Za-z0-9+/]{43}=$/);
+  await expect(box(page, "Public key")).toHaveValue(/^[A-Za-z0-9+/]{43}=$/);
+});
+
+test("an age identity arrives as the file age-keygen writes, recipient and all", async ({ page }) => {
+  await openKeygen(page);
+  await choose(page, "Key kind", "age identity");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Identity file")).toHaveValue(
+    /^# created: \S+\n# public key: age1[a-z0-9]+\nAGE-SECRET-KEY-1[A-Z0-9]+\n$/,
+  );
+
+  const recipient = await box(page, "Recipient").inputValue();
+  expect(await box(page, "Identity file").inputValue()).toContain(`# public key: ${recipient}`);
+
+  await choose(page, "Algorithm", "ML-KEM-768 + X25519 (post-quantum)");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Identity file")).toHaveValue(/\nAGE-SECRET-KEY-PQ-1[A-Z0-9]+\n$/);
+  await expect(box(page, "Recipient")).toHaveValue(/^age1pq1[a-z0-9]{1900,}$/);
+});
+
 test("a random secret is there without being asked for, and follows its settings", async ({ page }) => {
   await openKeygen(page);
   await choose(page, "Key kind", "Random secret");
@@ -248,6 +282,14 @@ test("every algorithm works with third-party requests blocked", { tag: "@slow" }
   await choose(page, "Key kind", "WireGuard keys");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(serverBox(page)).toHaveValue(/^\[Interface\]\n/, { timeout: SLOW });
+
+  await choose(page, "Key kind", "age identity");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Recipient")).toHaveValue(/^age1/, { timeout: SLOW });
+
+  await choose(page, "Key kind", "NaCl box keys");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Public key")).toHaveValue(/^[0-9a-f]{64}$/, { timeout: SLOW });
 
   expect(blocked).toEqual([]);
 });

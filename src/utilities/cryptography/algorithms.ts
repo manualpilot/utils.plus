@@ -1,4 +1,4 @@
-export type Family = "symmetric" | "box" | "pgp";
+export type Family = "symmetric" | "box" | "pgp" | "age";
 
 export interface Spec {
   label: string;
@@ -113,6 +113,18 @@ export const ALGORITHMS: Record<string, Spec> = {
     aad: false,
     authenticated: true,
     note: "RFC 9580 messages, to a public key or to a password. The packet carries its own session key.",
+  },
+  age: {
+    label: "age",
+    family: "age",
+    group: "age",
+    keyBytes: null,
+    nonceBytes: 0,
+    nonceLabel: "",
+    nonceNoun: "",
+    aad: false,
+    authenticated: true,
+    note: "age-encryption.org/v1 files, to an age1 recipient or to a passphrase. The file carries its own key.",
   },
 };
 

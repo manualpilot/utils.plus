@@ -2,13 +2,14 @@ import { ActionIcon, Box, Button, Card, CopyButton, Group, PasswordInput, Segmen
 import { type ChangeEvent, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { byteSize } from "../../common/byte-size";
 import { download } from "../../common/download";
-import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
+import { shareLink, useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
-import { IconCheck, IconCopy, IconDownload, IconRefresh, IconUpload, IconX } from "../../icons";
+import { IconCertificate, IconCheck, IconCopy, IconDownload, IconRefresh, IconUpload, IconX } from "../../icons";
+import { generateAgeIdentity } from "./age";
 import { ALGORITHM_OPTIONS, ALGORITHMS, keyLength } from "./algorithms";
 import { encodeBytes, type Encoding, ENCODING_OPTIONS, respell, utf8 } from "./encoding";
 import { type Job, type Mode, type Outcome, runJob, type Source } from "./run";
-import { derivedPublicKey, message, pickAlgorithm, pickEncoding, pickKeySize, pickMode, pickRecipient, pickText, randomKey, randomNonce, randomPeer, readField } from "./settings";
+import { derivedPublicKey, derivedRecipients, message, pickAlgorithm, pickEncoding, pickKeySize, pickMode, pickRecipient, pickText, randomKey, randomNonce, readField } from "./settings";
 import { type Loaded, MAX_BYTES, readFileBytes } from "./source";
 
 export default function Cryptography() {
@@ -23,6 +24,8 @@ export default function Cryptography() {
     nonce?: string;
     aad?: string;
     recipient?: string;
+    recipients?: string;
+    identities?: string;
     publicKey?: string;
     privateKey?: string;
     passphrase?: string;
@@ -41,10 +44,12 @@ export default function Cryptography() {
   );
   const [key, setKey] = useState(() => pickText(initialState?.key));
   const [peerKey, setPeerKey] = useState(() => pickText(initialState?.peerKey));
-  const [peerSecret, setPeerSecret] = useState("");
   const [nonce, setNonce] = useState(() => pickText(initialState?.nonce));
   const [aad, setAad] = useState(pickText(initialState?.aad));
   const [recipient, setRecipient] = useState(pickRecipient(initialState?.recipient));
+  const [recipients, setRecipients] = useState(pickText(initialState?.recipients));
+  const [identities, setIdentities] = useState(pickText(initialState?.identities));
+  const [identityHalves, setIdentityHalves] = useState<string[]>([]);
   const [publicKey, setPublicKey] = useState(pickText(initialState?.publicKey));
   const [privateKey, setPrivateKey] = useState(pickText(initialState?.privateKey));
   const [passphrase, setPassphrase] = useState(pickText(initialState?.passphrase));
@@ -60,6 +65,7 @@ export default function Cryptography() {
 
   const spec = ALGORITHMS[algorithm];
   const symmetric = spec.family === "symmetric" || spec.family === "box";
+  const sealed = spec.family === "pgp" || spec.family === "age";
 
   useRegisterShareState(() => ({
     mode,
@@ -71,7 +77,13 @@ export default function Cryptography() {
     peerKey: spec.family === "box" ? peerKey || undefined : undefined,
     nonce: symmetric && mode === "encrypt" ? nonce || undefined : undefined,
     aad: spec.aad ? aad || undefined : undefined,
-    recipient: spec.family === "pgp" ? recipient : undefined,
+    recipient: sealed ? recipient : undefined,
+    recipients: spec.family === "age" && recipient === "key" && mode === "encrypt"
+      ? recipients || undefined
+      : undefined,
+    identities: spec.family === "age" && recipient === "key" && mode === "decrypt"
+      ? identities || undefined
+      : undefined,
     publicKey: spec.family === "pgp" && recipient === "key" && mode === "encrypt" ? publicKey || undefined : undefined,
     privateKey: spec.family === "pgp" && recipient === "key" && mode === "decrypt"
       ? privateKey || undefined
@@ -79,7 +91,7 @@ export default function Cryptography() {
     passphrase: spec.family === "pgp" && recipient === "key" && mode === "decrypt"
       ? passphrase || undefined
       : undefined,
-    password: spec.family === "pgp" && recipient === "password" ? password || undefined : undefined,
+    password: sealed && recipient === "password" ? password || undefined : undefined,
     text: source === "text" ? text || undefined : undefined,
   }));
 
@@ -100,6 +112,23 @@ export default function Cryptography() {
     () => (spec.family === "box" ? derivedPublicKey(key, keyEncoding) : ""),
     [spec.family, key, keyEncoding],
   );
+  const age = useMemo(
+    () => ({ recipient, recipients, identities, password }),
+    [recipient, recipients, identities, password],
+  );
+  useEffect(() => {
+    if (spec.family !== "age" || mode !== "decrypt" || identities.trim() === "") {
+      setIdentityHalves([]);
+      return;
+    }
+    let live = true;
+    void derivedRecipients(identities).then((halves) => {
+      if (live) setIdentityHalves(halves);
+    });
+    return () => {
+      live = false;
+    };
+  }, [spec.family, mode, identities]);
 
   const awaited = useMemo(() => {
     const fields: string[] = [];
@@ -111,11 +140,32 @@ export default function Cryptography() {
       }
       return fields;
     }
+    if (spec.family === "age") {
+      if (recipient === "password") {
+        if (!password) fields.push("the passphrase");
+      } else if (!(mode === "encrypt" ? recipients : identities).trim()) {
+        fields.push(mode === "encrypt" ? "a recipient" : "an identity");
+      }
+      return fields;
+    }
     if (!key.trim()) fields.push(spec.family === "box" ? "your secret key" : "the key");
     if (spec.family === "box" && !peerKey.trim()) fields.push("their public key");
     if (mode === "encrypt" && !nonce.trim()) fields.push(`the ${spec.nonceNoun}`);
     return fields;
-  }, [spec.family, spec.nonceNoun, recipient, password, publicKey, privateKey, mode, key, peerKey, nonce]);
+  }, [
+    spec.family,
+    spec.nonceNoun,
+    recipient,
+    password,
+    publicKey,
+    privateKey,
+    recipients,
+    identities,
+    mode,
+    key,
+    peerKey,
+    nonce,
+  ]);
 
   const job = useMemo<Job | null>(() => {
     const filled = source === "text" ? text !== "" : loaded !== null;
@@ -133,12 +183,17 @@ export default function Cryptography() {
       nonce: nonceField.bytes ?? EMPTY,
       aad: aadBytes,
       pgp,
+      age,
     };
 
     function keysReady(): boolean {
       if (spec.family === "pgp") {
         if (recipient === "password") return password !== "";
         return (mode === "encrypt" ? publicKey : privateKey).trim() !== "";
+      }
+      if (spec.family === "age") {
+        if (recipient === "password") return password !== "";
+        return (mode === "encrypt" ? recipients : identities).trim() !== "";
       }
       if (spec.family === "box" && peerField.bytes === null) return false;
       return keyField.bytes !== null && (mode === "decrypt" || nonceField.bytes !== null);
@@ -155,11 +210,14 @@ export default function Cryptography() {
     nonceField,
     aadBytes,
     pgp,
+    age,
     spec.family,
     recipient,
     password,
     publicKey,
     privateKey,
+    recipients,
+    identities,
   ]);
 
   useEffect(() => {
@@ -191,6 +249,14 @@ export default function Cryptography() {
     };
   }, [job]);
 
+  const generateIdentity = async () => {
+    try {
+      setIdentities(await generateAgeIdentity());
+    } catch (e) {
+      setFailure(message(e, mode));
+    }
+  };
+
   const handleMode = (next: Mode) => {
     setMode(next);
     setText(result?.text ?? "");
@@ -210,7 +276,6 @@ export default function Cryptography() {
     if (next === keyEncoding) return;
     setKey(respell(key, keyEncoding, next));
     setPeerKey(respell(peerKey, keyEncoding, next));
-    setPeerSecret(respell(peerSecret, keyEncoding, next));
     setNonce(respell(nonce, keyEncoding, next));
     setKeyEncoding(next);
   };
@@ -287,10 +352,10 @@ export default function Cryptography() {
                 allowDeselect={false}
               />
             )}
-            {spec.family === "pgp" && (
+            {sealed && (
               <Select
                 label="Encrypted to"
-                data={RECIPIENT_OPTIONS}
+                data={spec.family === "age" ? AGE_RECIPIENT_OPTIONS : RECIPIENT_OPTIONS}
                 value={recipient}
                 onChange={(value) => setRecipient(pickRecipient(value))}
                 allowDeselect={false}
@@ -345,33 +410,17 @@ export default function Cryptography() {
                 label="Their public key"
                 description="Whose message this is, or whose it was"
                 value={peerKey}
-                onChange={(event) => {
-                  setPeerKey(event.currentTarget.value);
-                  setPeerSecret("");
-                }}
-                placeholder="Paste their public key, or generate a keypair"
+                onChange={(event) => setPeerKey(event.currentTarget.value)}
+                placeholder="Paste their public key"
                 error={peerField.error}
                 spellCheck={false}
                 classNames={{ root: "relative-root", error: "absolute-error" }}
                 styles={{ input: { fontFamily: "monospace" } }}
                 rightSection={
-                  <GenerateButton
-                    label="Generate a keypair to try this against"
-                    onClick={() => {
-                      const peer = randomPeer(keyEncoding);
-                      setPeerKey(peer.publicKey);
-                      setPeerSecret(peer.secretKey);
-                    }}
-                  />
+                  <KeygenLink label="Mint a NaCl box pair on Keygen" state={{ kind: "nacl", format: keyEncoding }} />
                 }
               />
             </Box>
-          )}
-
-          {spec.family === "box" && peerSecret !== "" && (
-            <Text size="xs" c="dimmed" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-              Their secret key: {peerSecret}
-            </Text>
           )}
 
           {symmetric && mode === "encrypt" && (
@@ -419,15 +468,62 @@ export default function Cryptography() {
             </Box>
           )}
 
-          {spec.family === "pgp" && recipient === "password" && (
+          {sealed && recipient === "password" && (
             <Box className="settings-row">
               <PasswordInput
-                label="Password"
-                description="The message carries its own salt and derives the session key from this"
+                label={spec.family === "age" ? "Passphrase" : "Password"}
+                description={spec.family === "age"
+                  ? "The file carries its own salt and wraps its key under scrypt over this"
+                  : "The message carries its own salt and derives the session key from this"}
                 value={password}
                 onChange={(event) => setPassword(event.currentTarget.value)}
               />
             </Box>
+          )}
+
+          {spec.family === "age" && recipient === "key" && mode === "encrypt" && (
+            <Textarea
+              label="Recipients"
+              description="One age1 recipient, or several to seal the file to every one of them"
+              value={recipients}
+              onChange={(event) => setRecipients(event.currentTarget.value)}
+              placeholder="age1…"
+              autosize
+              minRows={3}
+              maxRows={8}
+              spellCheck={false}
+              styles={{ input: { fontFamily: "monospace" } }}
+              rightSection={<KeygenLink label="Mint an age identity on Keygen" state={AGE_IDENTITY} />}
+              rightSectionProps={TEXTAREA_SECTION}
+            />
+          )}
+
+          {spec.family === "age" && recipient === "key" && mode === "decrypt" && (
+            <Stack gap="xs">
+              <Textarea
+                label="Identities"
+                description="Read in this tab and never sent anywhere — the file age-keygen wrote goes in whole"
+                value={identities}
+                onChange={(event) => setIdentities(event.currentTarget.value)}
+                placeholder="AGE-SECRET-KEY-1…"
+                autosize
+                minRows={3}
+                maxRows={8}
+                spellCheck={false}
+                styles={{ input: { fontFamily: "monospace" } }}
+                rightSection={<GenerateButton label="Generate an identity" onClick={() => void generateIdentity()} />}
+                rightSectionProps={TEXTAREA_SECTION}
+              />
+              {identityHalves.length > 0 && (
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  style={{ fontFamily: "monospace", wordBreak: "break-all", maxHeight: "4.5em", overflowY: "auto" }}
+                >
+                  {identityHalves.length === 1 ? "Its recipient" : "Their recipients"}: {identityHalves.join(", ")}
+                </Text>
+              )}
+            </Stack>
           )}
 
           {spec.family === "pgp" && recipient === "key" && mode === "encrypt" && (
@@ -442,6 +538,8 @@ export default function Cryptography() {
               maxRows={8}
               spellCheck={false}
               styles={{ input: { fontFamily: "monospace" } }}
+              rightSection={<KeygenLink label="Mint a PGP key pair on Keygen" state={PGP_PAIR} />}
+              rightSectionProps={TEXTAREA_SECTION}
             />
           )}
 
@@ -626,6 +724,24 @@ function GenerateButton({ label, onClick }: { label: string; onClick: () => void
   );
 }
 
+function KeygenLink({ label, state }: { label: string; state: Record<string, unknown> }) {
+  return (
+    <Tooltip label={label} withArrow position="left">
+      <ActionIcon
+        component="a"
+        href={shareLink("/keygen", state)}
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="subtle"
+        color="gray"
+        aria-label={label}
+      >
+        <IconCertificate size="1.1rem" />
+      </ActionIcon>
+    </Tooltip>
+  );
+}
+
 function waitingFor(fields: string[]): string {
   const list = fields.length > 1 ? `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}` : fields[0];
   return `Waiting for ${list}`;
@@ -636,10 +752,18 @@ function placeholder(mode: Mode, source: Source): string {
   return mode === "encrypt" ? "The ciphertext lands here" : "The message lands here";
 }
 
+const TEXTAREA_SECTION = { style: { alignItems: "flex-start", paddingTop: "0.35rem" } };
+
 const MODE_OPTIONS = [{ value: "encrypt", label: "Encrypt" }, { value: "decrypt", label: "Decrypt" }];
 
 const SOURCE_OPTIONS = [{ value: "text", label: "Text" }, { value: "file", label: "File" }];
 
 const RECIPIENT_OPTIONS = [{ value: "key", label: "A public key" }, { value: "password", label: "A password" }];
+
+const AGE_RECIPIENT_OPTIONS = [{ value: "key", label: "A recipient" }, { value: "password", label: "A passphrase" }];
+
+const PGP_PAIR = { kind: "pgp", algorithm: "curve25519" };
+
+const AGE_IDENTITY = { kind: "age", algorithm: "x25519" };
 
 const EMPTY = new Uint8Array();

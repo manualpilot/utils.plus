@@ -30,6 +30,14 @@ async function keyed(page: Page, nonce = "IV") {
   await generate(page, "Generate a random key", `Generate a random ${nonce}`);
 }
 
+async function publicHalf(page: Page) {
+  return ((await page.getByText(/^Your public key: /).textContent()) ?? "").replace("Your public key: ", "");
+}
+
+function fragment(href: string | null) {
+  return JSON.parse(Buffer.from((href ?? "").split("#")[1] ?? "", "base64url").toString());
+}
+
 test("nothing is generated until it is asked for, and the page says what it is waiting for", async ({ page }) => {
   await openCryptography(page);
   await expect(box(page, "Key")).toHaveValue("");
@@ -74,12 +82,8 @@ for (const algorithm of ALGORITHMS) {
     await openCryptography(page);
     await choose(page, "Algorithm", algorithm);
     if (algorithm === "NaCl box") {
-      await generate(
-        page,
-        "Generate a secret key",
-        "Generate a keypair to try this against",
-        "Generate a random nonce",
-      );
+      await generate(page, "Generate a secret key", "Generate a random nonce");
+      await box(page, "Their public key").fill(await publicHalf(page));
     } else {
       await keyed(page, algorithm === "AES-CTR" ? "counter block" : algorithm.startsWith("AES") ? "IV" : "nonce");
     }
@@ -203,6 +207,111 @@ test("OpenPGP seals to a password and reads the same message back", async ({ pag
   await expect(box(page, "Ciphertext")).toHaveValue(/^-----BEGIN PGP MESSAGE-----/, { timeout: SLOW });
 
   await tab(page, "Direction", "Decrypt").click();
+  await expect(box(page, "Message")).toHaveValue(MESSAGE, { timeout: SLOW });
+});
+
+test("age seals to a passphrase and reads the same message back", async ({ page }) => {
+  await openCryptography(page);
+  await choose(page, "Algorithm", "age");
+  await choose(page, "Encrypted to", "A passphrase");
+
+  await box(page, "Message").fill(MESSAGE);
+  await expect(box(page, "Ciphertext")).toHaveAttribute("placeholder", "Waiting for the passphrase");
+
+  await box(page, "Passphrase").fill("correct horse");
+  await expect(box(page, "Ciphertext")).toHaveValue(/^-----BEGIN AGE ENCRYPTED FILE-----/, { timeout: SLOW });
+
+  await tab(page, "Direction", "Decrypt").click();
+  await expect(box(page, "Message")).toHaveValue(MESSAGE, { timeout: SLOW });
+});
+
+test("the page draws an age identity of its own and reads back what its recipient sealed", async ({ page }) => {
+  await openCryptography(page);
+  await choose(page, "Algorithm", "age");
+  await expect(box(page, "Ciphertext")).toHaveAttribute("placeholder", "Waiting for a recipient");
+
+  await tab(page, "Direction", "Decrypt").click();
+  await expect(box(page, "Identities")).toHaveValue("");
+  await page.getByRole("button", { name: "Generate an identity" }).click();
+  await expect(box(page, "Identities")).toHaveValue(/^AGE-SECRET-KEY-1[A-Z0-9]+$/);
+
+  const shown = await page.getByText(/^Its recipient: /).textContent();
+  const recipient = (shown ?? "").replace("Its recipient: ", "");
+  expect(recipient).toMatch(/^age1[a-z0-9]{58}$/);
+
+  await tab(page, "Direction", "Encrypt").click();
+  await box(page, "Recipients").fill(recipient);
+  await box(page, "Message").fill(MESSAGE);
+  await expect(box(page, "Ciphertext")).toHaveValue(/^-----BEGIN AGE ENCRYPTED FILE-----/);
+
+  await tab(page, "Direction", "Decrypt").click();
+  await expect(box(page, "Message")).toHaveValue(MESSAGE);
+});
+
+test("a box holding a public key links to /keygen with the kind already picked", async ({ page }) => {
+  await openCryptography(page);
+  await choose(page, "Algorithm", "NaCl box");
+  const pair = page.getByRole("link", { name: "Mint a NaCl box pair on Keygen" });
+  await expect(pair).toHaveAttribute("target", "_blank");
+  expect(fragment(await pair.getAttribute("href"))).toEqual({ kind: "nacl", format: "hex" });
+  await expect(page.getByRole("button", { name: /^Generate a keypair/ })).toHaveCount(0);
+
+  await choose(page, "Key encoding", "Base64");
+  expect(fragment(await pair.getAttribute("href"))).toEqual({ kind: "nacl", format: "base64" });
+
+  await choose(page, "Algorithm", "OpenPGP");
+  const pgp = page.getByRole("link", { name: "Mint a PGP key pair on Keygen" });
+  await expect(pgp).toHaveAttribute("target", "_blank");
+  expect(fragment(await pgp.getAttribute("href"))).toEqual({ kind: "pgp", algorithm: "curve25519" });
+
+  await choose(page, "Algorithm", "age");
+  const identity = page.getByRole("link", { name: "Mint an age identity on Keygen" });
+  await expect(identity).toHaveAttribute("target", "_blank");
+  expect(fragment(await identity.getAttribute("href"))).toEqual({ kind: "age", algorithm: "x25519" });
+});
+
+test("the pair a box message is sealed to is minted on /keygen and read back here", async ({ page }) => {
+  await page.goto(`${BASE}/keygen`);
+  await choose(page, "Key kind", "NaCl box keys");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Secret key")).toHaveValue(/^[0-9a-f]{64}$/);
+  const theirSecret = await box(page, "Secret key").inputValue();
+  const theirPublic = await box(page, "Public key").inputValue();
+
+  await openCryptography(page);
+  await choose(page, "Algorithm", "NaCl box");
+  await generate(page, "Generate a secret key", "Generate a random nonce");
+  const mine = await publicHalf(page);
+  await box(page, "Their public key").fill(theirPublic);
+  await box(page, "Message").fill(MESSAGE);
+  await expect(box(page, "Ciphertext")).not.toHaveValue("");
+
+  await tab(page, "Direction", "Decrypt").click();
+  await box(page, "Your secret key").fill(theirSecret);
+  await box(page, "Their public key").fill(mine);
+  await expect(box(page, "Message")).toHaveValue(MESSAGE);
+});
+
+test("a post-quantum identity made on /keygen opens what its recipient was sealed to", async ({ page }) => {
+  await page.goto(`${BASE}/keygen`);
+  await choose(page, "Key kind", "age identity");
+  await choose(page, "Algorithm", "ML-KEM-768 + X25519 (post-quantum)");
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(box(page, "Recipient")).toHaveValue(/^age1pq1/);
+  const recipient = await box(page, "Recipient").inputValue();
+  const identity = await box(page, "Identity file").inputValue();
+
+  await openCryptography(page);
+  await choose(page, "Algorithm", "age");
+  await expect(box(page, "Ciphertext")).toHaveAttribute("placeholder", "Waiting for a recipient");
+
+  await box(page, "Recipients").fill(recipient);
+  await box(page, "Message").fill(MESSAGE);
+  await expect(box(page, "Ciphertext")).toHaveValue(/^-----BEGIN AGE ENCRYPTED FILE-----/, { timeout: SLOW });
+
+  await tab(page, "Direction", "Decrypt").click();
+  await box(page, "Identities").fill(identity);
+  await expect(page.getByText(`Its recipient: ${recipient}`)).toBeVisible();
   await expect(box(page, "Message")).toHaveValue(MESSAGE, { timeout: SLOW });
 });
 

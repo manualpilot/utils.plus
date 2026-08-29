@@ -1,3 +1,4 @@
+import { ageArmor, ageDecrypt, ageEncrypt, type AgeSettings, ageUnarmor } from "./age";
 import { ALGORITHMS } from "./algorithms";
 import { boxCipher } from "./box";
 import { decodeBytes, encodeBytes, type Encoding, fromUtf8, utf8 } from "./encoding";
@@ -20,6 +21,7 @@ export interface Job {
   nonce: Uint8Array;
   aad: Uint8Array | undefined;
   pgp: PgpSettings;
+  age: AgeSettings;
 }
 
 export interface Outcome {
@@ -44,6 +46,13 @@ async function encrypt(job: Job): Promise<Outcome> {
       : { bytes: result, name: `${job.filename || "message"}.pgp` };
   }
 
+  if (ALGORITHMS[job.algorithm].family === "age") {
+    const file = await ageEncrypt(input(job), job.age);
+    return job.source === "text"
+      ? { text: await ageArmor(file) }
+      : { bytes: file, name: `${job.filename || "message"}.age` };
+  }
+
   const sealed = await seal(job, input(job));
   const payload = join(job.nonce, sealed);
   return job.source === "text"
@@ -55,6 +64,11 @@ async function decrypt(job: Job): Promise<Outcome> {
   if (ALGORITHMS[job.algorithm].family === "pgp") {
     const opened = await pgpDecrypt(job.source === "text" ? job.text : input(job), job.pgp);
     return plaintext(job, opened);
+  }
+
+  if (ALGORITHMS[job.algorithm].family === "age") {
+    const file = job.source === "text" ? await ageUnarmor(job.text) : input(job);
+    return plaintext(job, await ageDecrypt(file, job.age));
   }
 
   const payload = job.source === "text" ? decodeBytes(job.text, job.encoding) : input(job);
@@ -102,7 +116,7 @@ function plainName(filename: string): string {
   return stripped === filename ? `${filename || "message"}.decrypted` : stripped;
 }
 
-const WRAPPER_SUFFIX = /\.(?:enc|pgp|gpg|asc)$/i;
+const WRAPPER_SUFFIX = /\.(?:enc|age|pgp|gpg|asc)$/i;
 
 function join(head: Uint8Array, tail: Uint8Array): Uint8Array {
   const joined = new Uint8Array(head.length + tail.length);

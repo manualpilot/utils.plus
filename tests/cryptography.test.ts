@@ -1,10 +1,13 @@
+import { generateHybridIdentity, identityToRecipient } from "age-encryption";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
+import { ageDecrypt, ageEncrypt, ageUnarmor, generateAgeIdentity, identityRecipients } from "../src/utilities/cryptography/age";
 import { boxCipher, boxKeypair, boxPublicKey } from "../src/utilities/cryptography/box";
 import { decodeBytes, fromBase64, fromHex, respell, toBase64, toHex } from "../src/utilities/cryptography/encoding";
 import { type Job, runJob } from "../src/utilities/cryptography/run";
 import { message, readField } from "../src/utilities/cryptography/settings";
 import { openBytes, sealBytes } from "../src/utilities/cryptography/symmetric";
+import * as fixture from "./age-fixtures";
 
 const { createCipheriv, createDecipheriv } = createRequire(import.meta.url)(
   "node:crypto",
@@ -31,6 +34,22 @@ const BOX_CIPHERTEXT = "f3ffc7703f9400e52a7dfb4b3d3305d98e993b9f48681273c29650ba
 const SECRETBOX_KEY = hex("1b27556473e985d462cd51197a9a46c76009549eac6474f206c4ee0844f68389");
 
 const KEY_32 = hex("808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f");
+
+const SLOW = 30000;
+
+const AGE_KEYED = {
+  recipient: "key" as const,
+  recipients: fixture.RECIPIENT,
+  identities: fixture.IDENTITY,
+  password: "",
+};
+
+const AGE_PASSWORDED = {
+  recipient: "password" as const,
+  recipients: "",
+  identities: "",
+  password: fixture.PASSPHRASE,
+};
 
 describe("NaCl", () => {
   it("boxes NaCl's own test vector, byte for byte", () => {
@@ -203,6 +222,26 @@ describe("a whole job", () => {
     expect(opened.name).toBe("payload.decrypted");
   });
 
+  it("carries an age message there and back, armoured", async () => {
+    const job = { ...jobFor("age"), text: fixture.MESSAGE };
+    const sealed = await runJob(job);
+    expect(sealed.text).toMatch(/^-----BEGIN AGE ENCRYPTED FILE-----\n/);
+    expect(sealed.text).toMatch(/-----END AGE ENCRYPTED FILE-----\n$/);
+
+    const opened = await runJob({ ...job, mode: "decrypt", text: sealed.text ?? "" });
+    expect(opened.text).toBe(fixture.MESSAGE);
+  });
+
+  it("names an age file .age and takes that suffix back off again", async () => {
+    const job = { ...jobFor("age"), source: "file" as const, filename: "notes.txt", bytes: bytes("in a file") };
+    const sealed = await runJob(job);
+    expect(sealed.name).toBe("notes.txt.age");
+
+    const opened = await runJob({ ...job, mode: "decrypt", filename: sealed.name ?? "", bytes: sealed.bytes ?? null });
+    expect(text(opened.bytes ?? new Uint8Array())).toBe("in a file");
+    expect(opened.name).toBe("notes.txt");
+  });
+
   it("refuses to spell a plaintext that is not text as text", async () => {
     const job = { ...jobFor("aes-gcm"), source: "file" as const, filename: "b.bin", bytes: hex("fffefdfc") };
     const sealed = await runJob(job);
@@ -224,8 +263,83 @@ describe("a whole job", () => {
       nonce: hex("000102030405060708090a0b0c0d0e0f1011121314151617").subarray(0, nonceLength(algorithm)),
       aad: undefined,
       pgp: { recipient: "password", publicKey: "", privateKey: "", passphrase: "", password: "" },
+      age: AGE_KEYED,
     };
   }
+});
+
+describe("age", () => {
+  it("opens a file the age binary itself wrote to a recipient", async () => {
+    expect(text(await ageDecrypt(await ageUnarmor(fixture.FILE), AGE_KEYED))).toBe(fixture.MESSAGE);
+  });
+
+  it("opens one the age binary itself sealed to a passphrase", { timeout: SLOW }, async () => {
+    expect(text(await ageDecrypt(await ageUnarmor(fixture.PASSPHRASE_FILE), AGE_PASSWORDED))).toBe(fixture.MESSAGE);
+  });
+
+  it("opens a post-quantum file the age binary wrote, with the identity age-keygen -pq minted", async () => {
+    const settings = { ...AGE_KEYED, identities: fixture.PQ_IDENTITY };
+    expect(text(await ageDecrypt(await ageUnarmor(fixture.PQ_FILE), settings))).toBe(fixture.MESSAGE);
+    expect(header(await ageUnarmor(fixture.PQ_FILE))[1]).toMatch(/^-> mlkem768x25519 /);
+  });
+
+  it("seals to a post-quantum recipient and reads it back", async () => {
+    const identity = await generateHybridIdentity();
+    const recipient = await identityToRecipient(identity);
+    expect(identity).toMatch(/^AGE-SECRET-KEY-PQ-1[0-9A-Z]+$/);
+    expect(recipient).toMatch(/^age1pq1[0-9a-z]+$/);
+
+    const sealed = await ageEncrypt(bytes("after the quantum computer"), { ...AGE_KEYED, recipients: recipient });
+    expect(header(sealed)[1]).toMatch(/^-> mlkem768x25519 /);
+    expect(text(await ageDecrypt(sealed, { ...AGE_KEYED, identities: identity }))).toBe("after the quantum computer");
+  });
+
+  it("draws the X25519 identity behind the generate button, and derives the recipient shown under it", async () => {
+    const identity = await generateAgeIdentity();
+    expect(identity).toMatch(/^AGE-SECRET-KEY-1[0-9A-Z]+$/);
+    const [recipient] = await identityRecipients(identity);
+    expect(recipient).toBe(await identityToRecipient(identity));
+
+    const sealed = await ageEncrypt(bytes("both sides"), { ...AGE_KEYED, recipients: recipient });
+    expect(header(sealed)[1]).toMatch(/^-> X25519 /);
+    expect(text(await ageDecrypt(sealed, { ...AGE_KEYED, identities: identity }))).toBe("both sides");
+  });
+
+  it("seals to every recipient on the list, and either identity opens it", async () => {
+    const other = await generateAgeIdentity();
+    const recipients = `${fixture.RECIPIENT}\n# and one more\n${await identityToRecipient(other)}\n`;
+    const sealed = await ageEncrypt(bytes("two ways in"), { ...AGE_KEYED, recipients });
+
+    expect(header(sealed).filter((line) => line.startsWith("-> "))).toHaveLength(2);
+    expect(text(await ageDecrypt(sealed, AGE_KEYED))).toBe("two ways in");
+    expect(text(await ageDecrypt(sealed, { ...AGE_KEYED, identities: other }))).toBe("two ways in");
+  });
+
+  it("names the line that is not a key, and cuts a long one short", async () => {
+    const settings = { ...AGE_KEYED, recipients: "age1nonsense" };
+    await expect(ageEncrypt(bytes("x"), settings)).rejects.toThrow("That is not an age recipient: age1nonsense");
+
+    const long = { ...AGE_KEYED, identities: `AGE-SECRET-KEY-1${"Q".repeat(80)}` };
+    await expect(ageDecrypt(await ageUnarmor(fixture.FILE), long)).rejects.toThrow(
+      /identity: AGE-SECRET-KEY-1QQQQQQQQ…$/,
+    );
+  });
+
+  it("tells a wrong passphrase from an identity that is somebody else's", { timeout: SLOW }, async () => {
+    const stranger = { ...AGE_KEYED, identities: await generateAgeIdentity() };
+    await expect(ageDecrypt(await ageUnarmor(fixture.FILE), stranger)).rejects.toThrow(/None of those identities/);
+
+    const wrong = { ...AGE_PASSWORDED, password: "wrong horse" };
+    await expect(ageDecrypt(await ageUnarmor(fixture.PASSPHRASE_FILE), wrong)).rejects.toThrow(/passphrase does not/);
+  });
+
+  it("says a file that is not one is not one", async () => {
+    await expect(ageDecrypt(bytes("hello"), AGE_KEYED)).rejects.toThrow();
+    await expect(ageUnarmor("not armoured at all!")).rejects.toThrow(/armoured age file/);
+  });
+
+  const header = (payload: Uint8Array) =>
+    Array.from(payload.subarray(0, 512), (byte) => String.fromCharCode(byte)).join("").split("\n");
 });
 
 describe("the fields", () => {

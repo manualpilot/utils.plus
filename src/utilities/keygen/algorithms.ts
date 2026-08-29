@@ -5,6 +5,8 @@ export const KIND_OPTIONS = [
   { value: "pgp", label: "PGP key" },
   { value: "jwk", label: "JSON Web Key" },
   { value: "wireguard", label: "WireGuard keys" },
+  { value: "age", label: "age identity" },
+  { value: "nacl", label: "NaCl box keys" },
   { value: "secret", label: "Random secret" },
 ];
 
@@ -13,6 +15,8 @@ export const KIND_LABELS: Record<string, string> = {
   pgp: "PGP key pair",
   jwk: "JSON Web Key",
   wireguard: "WireGuard configuration",
+  age: "age identity",
+  nacl: "NaCl box key pair",
   secret: "Random secret",
 };
 
@@ -93,6 +97,11 @@ export const ALGORITHMS: Record<string, AlgorithmSpec[]> = {
     { group: ENCRYPTION, value: "A256GCMKW", label: "A256GCMKW (AES-GCM key wrap)" },
   ],
   wireguard: [],
+  nacl: [],
+  age: [
+    { value: "x25519", label: "X25519" },
+    { value: "hybrid", label: "ML-KEM-768 + X25519 (post-quantum)" },
+  ],
   secret: [],
 };
 

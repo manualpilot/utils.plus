@@ -545,6 +545,22 @@
       "file": "noble-hashes"
     },
     {
+      "name": "@noble/post-quantum",
+      "version": "0.5.4",
+      "license": "MIT",
+      "publisher": "Paul Miller",
+      "url": "https://github.com/paulmillr/noble-post-quantum",
+      "file": "noble-post-quantum"
+    },
+    {
+      "name": "@scure/base",
+      "version": "2.4.0",
+      "license": "MIT",
+      "publisher": "Paul Miller",
+      "url": "https://github.com/paulmillr/scure-base",
+      "file": "scure-base"
+    },
+    {
       "name": "@sqlite.org/sqlite-wasm",
       "version": "3.53.0-build1",
       "license": "Apache-2.0",
@@ -634,6 +650,14 @@
       "publisher": "",
       "url": "https://github.com/acornjs/acorn",
       "file": "acorn"
+    },
+    {
+      "name": "age-encryption",
+      "version": "0.3.1",
+      "license": "BSD-3-Clause",
+      "publisher": "Filippo Valsorda",
+      "url": "https://github.com/FiloSottile/typage",
+      "file": "age-encryption"
     },
     {
       "name": "any-promise",

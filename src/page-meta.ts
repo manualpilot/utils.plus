@@ -169,9 +169,9 @@ export const PAGE_META = {
     ],
   },
   "/cryptography": {
-    title: "AES, ChaCha, NaCl & PGP Encryption",
+    title: "AES, ChaCha, NaCl, PGP & age Encryption",
     description:
-      "Encrypt and decrypt text or a file with AES-GCM, AES-CBC, AES-CTR, ChaCha20-Poly1305, NaCl secretbox and box, or OpenPGP. Keys are made and used in the tab.",
+      "Encrypt and decrypt text or a file with AES-GCM, AES-CBC, AES-CTR, ChaCha20-Poly1305, NaCl secretbox and box, OpenPGP, or age with post-quantum keys.",
     keywords: [
       "encrypt text online",
       "decrypt text online",
@@ -184,6 +184,11 @@ export const PAGE_META = {
       "tweetnacl box",
       "x25519",
       "pgp encrypt message",
+      "age encryption",
+      "age encrypt file",
+      "decrypt age file",
+      "post-quantum encryption",
+      "ml-kem",
       "encrypt a file in the browser",
     ],
   },
@@ -387,15 +392,19 @@ export const PAGE_META = {
     ],
   },
   "/keygen": {
-    title: "SSH, PGP & JSON Web Key Generator",
+    title: "SSH, PGP, age & JSON Web Key Generator",
     description:
-      "Generate SSH keys, PGP keys, JSON Web Keys, WireGuard keypairs and random secrets, in your browser. The private half is built here and never sent anywhere.",
+      "Generate SSH, PGP, WireGuard and age keys — post-quantum ML-KEM included — plus JSON Web Keys and random secrets. The private half never leaves your browser.",
     keywords: [
       "ssh key generator",
       "pgp key generator",
       "json web key",
       "jwk generator",
       "wireguard keys",
+      "age keygen",
+      "age identity",
+      "post-quantum key",
+      "ml-kem-768",
       "ed25519 key",
       "rsa key generator",
       "ecdsa key",
