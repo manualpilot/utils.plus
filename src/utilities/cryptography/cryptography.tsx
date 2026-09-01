@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Button, Card, CopyButton, Group, PasswordInput, SegmentedControl, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Button, Card, Checkbox, CopyButton, Group, SegmentedControl, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { type ChangeEvent, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { byteSize } from "../../common/byte-size";
 import { download } from "../../common/download";
@@ -9,7 +9,7 @@ import { generateAgeIdentity } from "./age";
 import { ALGORITHM_OPTIONS, ALGORITHMS, keyLength } from "./algorithms";
 import { encodeBytes, type Encoding, ENCODING_OPTIONS, respell, utf8 } from "./encoding";
 import { type Job, type Mode, type Outcome, runJob, type Source } from "./run";
-import { derivedPublicKey, derivedRecipients, message, pickAlgorithm, pickEncoding, pickKeySize, pickMode, pickRecipient, pickText, randomKey, randomNonce, readField } from "./settings";
+import { derivedPublicKey, derivedRecipients, message, pickAlgorithm, pickArmor, pickEncoding, pickKeySize, pickMode, pickRecipient, pickText, randomKey, randomNonce, readField } from "./settings";
 import { type Loaded, MAX_BYTES, readFileBytes } from "./source";
 
 export default function Cryptography() {
@@ -26,6 +26,7 @@ export default function Cryptography() {
     recipient?: string;
     recipients?: string;
     identities?: string;
+    armor?: boolean;
     publicKey?: string;
     privateKey?: string;
     passphrase?: string;
@@ -50,6 +51,7 @@ export default function Cryptography() {
   const [recipients, setRecipients] = useState(pickText(initialState?.recipients));
   const [identities, setIdentities] = useState(pickText(initialState?.identities));
   const [identityHalves, setIdentityHalves] = useState<string[]>([]);
+  const [armor, setArmor] = useState(() => pickArmor(initialState?.armor));
   const [publicKey, setPublicKey] = useState(pickText(initialState?.publicKey));
   const [privateKey, setPrivateKey] = useState(pickText(initialState?.privateKey));
   const [passphrase, setPassphrase] = useState(pickText(initialState?.passphrase));
@@ -84,6 +86,7 @@ export default function Cryptography() {
     identities: spec.family === "age" && recipient === "key" && mode === "decrypt"
       ? identities || undefined
       : undefined,
+    armor: spec.family === "age" && mode === "encrypt" ? armor : undefined,
     publicKey: spec.family === "pgp" && recipient === "key" && mode === "encrypt" ? publicKey || undefined : undefined,
     privateKey: spec.family === "pgp" && recipient === "key" && mode === "decrypt"
       ? privateKey || undefined
@@ -96,6 +99,9 @@ export default function Cryptography() {
   }));
 
   const keyBytes = keyLength(algorithm, keySize);
+  const keyMint = spec.family === "box"
+    ? { label: "Mint a NaCl box pair on Keygen", state: { kind: "nacl", format: keyEncoding } }
+    : { label: "Mint a random secret on Keygen", state: { kind: "secret", size: keyBytes, format: keyEncoding } };
   const keyField = useMemo(() => readField(key, keyEncoding, keyBytes), [key, keyEncoding, keyBytes]);
   const peerField = useMemo(() => readField(peerKey, keyEncoding, 32), [peerKey, keyEncoding]);
   const nonceField = useMemo(() => readField(nonce, keyEncoding, spec.nonceBytes), [
@@ -113,8 +119,8 @@ export default function Cryptography() {
     [spec.family, key, keyEncoding],
   );
   const age = useMemo(
-    () => ({ recipient, recipients, identities, password }),
-    [recipient, recipients, identities, password],
+    () => ({ recipient, recipients, identities, password, armor }),
+    [recipient, recipients, identities, password, armor],
   );
   useEffect(() => {
     if (spec.family !== "age" || mode !== "decrypt" || identities.trim() === "") {
@@ -363,6 +369,15 @@ export default function Cryptography() {
             )}
           </Box>
           <Text size="sm" c="dimmed">{spec.note}</Text>
+
+          {spec.family === "age" && mode === "encrypt" && (
+            <Checkbox
+              label="Armor"
+              description="What age -a writes, and the only form of it a box can hold. Unticked is the file age itself writes, which is bytes and so is saved rather than shown"
+              checked={armor}
+              onChange={(event) => setArmor(event.currentTarget.checked)}
+            />
+          )}
         </Stack>
       </Card>
 
@@ -385,10 +400,13 @@ export default function Cryptography() {
                 spellCheck={false}
                 classNames={{ root: "relative-root", error: "absolute-error" }}
                 styles={{ input: { fontFamily: "monospace" } }}
+                rightSectionWidth={KEY_ACTIONS_WIDTH}
                 rightSection={
-                  <GenerateButton
+                  <KeyActions
                     label={spec.family === "box" ? "Generate a secret key" : "Generate a random key"}
                     onClick={() => setKey(randomKey(algorithm, keySize, keyEncoding))}
+                    mint={keyMint.label}
+                    state={keyMint.state}
                   />
                 }
               />
@@ -470,13 +488,14 @@ export default function Cryptography() {
 
           {sealed && recipient === "password" && (
             <Box className="settings-row">
-              <PasswordInput
+              <TextInput
                 label={spec.family === "age" ? "Passphrase" : "Password"}
                 description={spec.family === "age"
                   ? "The file carries its own salt and wraps its key under scrypt over this"
                   : "The message carries its own salt and derives the session key from this"}
                 value={password}
                 onChange={(event) => setPassword(event.currentTarget.value)}
+                spellCheck={false}
               />
             </Box>
           )}
@@ -511,7 +530,15 @@ export default function Cryptography() {
                 maxRows={8}
                 spellCheck={false}
                 styles={{ input: { fontFamily: "monospace" } }}
-                rightSection={<GenerateButton label="Generate an identity" onClick={() => void generateIdentity()} />}
+                rightSectionWidth={KEY_ACTIONS_WIDTH}
+                rightSection={
+                  <KeyActions
+                    label="Generate an identity"
+                    onClick={() => void generateIdentity()}
+                    mint="Mint an age identity on Keygen"
+                    state={AGE_IDENTITY}
+                  />
+                }
                 rightSectionProps={TEXTAREA_SECTION}
               />
               {identityHalves.length > 0 && (
@@ -558,11 +585,12 @@ export default function Cryptography() {
                 styles={{ input: { fontFamily: "monospace" } }}
               />
               <Box className="settings-row">
-                <PasswordInput
+                <TextInput
                   label="Key passphrase"
                   description="Left blank for a key that carries none"
                   value={passphrase}
                   onChange={(event) => setPassphrase(event.currentTarget.value)}
+                  spellCheck={false}
                 />
               </Box>
             </>
@@ -661,16 +689,7 @@ export default function Cryptography() {
               <Title order={4}>{outputTitle}</Title>
               {saved !== null && <Text size="sm" c="dimmed">{byteSize(saved.length)}</Text>}
             </Group>
-            <Group gap="xs">
-              {saved !== null && result?.name && (
-                <Button
-                  size="xs"
-                  leftSection={<IconDownload size="1rem" />}
-                  onClick={() => download(result.name ?? "message", new Blob([saved as BlobPart]))}
-                >
-                  Download
-                </Button>
-              )}
+            {saved === null && (
               <CopyButton value={output} timeout={2000}>
                 {({ copied, copy }) => (
                   <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="left">
@@ -686,10 +705,25 @@ export default function Cryptography() {
                   </Tooltip>
                 )}
               </CopyButton>
-            </Group>
+            )}
           </Group>
-          {source === "file" && saved !== null
-            ? <Text size="sm" c="dimmed" style={{ fontFamily: "monospace" }}>{result?.name}</Text>
+          {saved !== null
+            ? (
+              <Group gap="sm">
+                <Text size="sm" c="dimmed" style={{ fontFamily: "monospace", overflowWrap: "anywhere" }}>
+                  {result?.name}
+                </Text>
+                {result?.name && (
+                  <Button
+                    size="xs"
+                    leftSection={<IconDownload size="1rem" />}
+                    onClick={() => download(result.name ?? "message", new Blob([saved as BlobPart]))}
+                  >
+                    Download
+                  </Button>
+                )}
+              </Group>
+            )
             : (
               <Textarea
                 value={output}
@@ -742,6 +776,22 @@ function KeygenLink({ label, state }: { label: string; state: Record<string, unk
   );
 }
 
+function KeyActions(
+  { label, onClick, mint, state }: {
+    label: string;
+    onClick: () => void;
+    mint: string;
+    state: Record<string, unknown>;
+  },
+) {
+  return (
+    <Group gap={2} wrap="nowrap">
+      <GenerateButton label={label} onClick={onClick} />
+      <KeygenLink label={mint} state={state} />
+    </Group>
+  );
+}
+
 function waitingFor(fields: string[]): string {
   const list = fields.length > 1 ? `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}` : fields[0];
   return `Waiting for ${list}`;
@@ -754,6 +804,8 @@ function placeholder(mode: Mode, source: Source): string {
 
 const TEXTAREA_SECTION = { style: { alignItems: "flex-start", paddingTop: "0.35rem" } };
 
+const KEY_ACTIONS_WIDTH = 64;
+
 const MODE_OPTIONS = [{ value: "encrypt", label: "Encrypt" }, { value: "decrypt", label: "Decrypt" }];
 
 const SOURCE_OPTIONS = [{ value: "text", label: "Text" }, { value: "file", label: "File" }];
@@ -764,6 +816,6 @@ const AGE_RECIPIENT_OPTIONS = [{ value: "key", label: "A recipient" }, { value: 
 
 const PGP_PAIR = { kind: "pgp", algorithm: "curve25519" };
 
-const AGE_IDENTITY = { kind: "age", algorithm: "x25519" };
+const AGE_IDENTITY = { kind: "age", postQuantum: true };
 
 const EMPTY = new Uint8Array();

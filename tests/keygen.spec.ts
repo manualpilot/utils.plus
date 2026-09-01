@@ -223,6 +223,8 @@ test("a NaCl box pair is two halves in the one encoding, and nothing else to pic
 test("an age identity arrives as the file age-keygen writes, recipient and all", async ({ page }) => {
   await openKeygen(page);
   await choose(page, "Key kind", "age identity");
+
+  await page.getByRole("checkbox", { name: "Post-quantum" }).uncheck();
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(box(page, "Identity file")).toHaveValue(
     /^# created: \S+\n# public key: age1[a-z0-9]+\nAGE-SECRET-KEY-1[A-Z0-9]+\n$/,
@@ -231,10 +233,35 @@ test("an age identity arrives as the file age-keygen writes, recipient and all",
   const recipient = await box(page, "Recipient").inputValue();
   expect(await box(page, "Identity file").inputValue()).toContain(`# public key: ${recipient}`);
 
-  await choose(page, "Algorithm", "ML-KEM-768 + X25519 (post-quantum)");
+  await page.getByRole("checkbox", { name: "Post-quantum" }).check();
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(box(page, "Identity file")).toHaveValue(/\nAGE-SECRET-KEY-PQ-1[A-Z0-9]+\n$/);
   await expect(box(page, "Recipient")).toHaveValue(/^age1pq1[a-z0-9]{1900,}$/);
+});
+
+test("an identity file converts to the recipients file it names", async ({ page }) => {
+  await openKeygen(page);
+  await choose(page, "Key kind", "age identity");
+  await page.getByRole("button", { name: "Generate" }).click();
+  const identity = await box(page, "Identity file").inputValue();
+  const recipient = await box(page, "Recipient").inputValue();
+
+  await choose(page, "Output", "Recipients file");
+  await expect(page.getByRole("checkbox", { name: "Post-quantum" })).toHaveCount(0);
+
+  await expect(page.getByText("Required")).toHaveCount(0);
+  await page.getByRole("button", { name: "Convert" }).click();
+  await expect(page.getByText("Required")).toBeVisible();
+
+  await box(page, "Identity file").fill(identity);
+  await expect(page.getByText("Required")).toHaveCount(0);
+  await page.getByRole("button", { name: "Convert" }).click();
+  await expect(box(page, "Recipients")).toHaveValue(`${recipient}\n`);
+  await expect(page.getByRole("heading", { name: "age recipients file" })).toBeVisible();
+
+  await box(page, "Identity file").fill(`${identity}age1notanidentity\n`);
+  await expect(page.getByText("That is not an age identity: age1notanidentity")).toBeVisible();
+  await expect(box(page, "Recipients")).toHaveCount(0);
 });
 
 test("a random secret is there without being asked for, and follows its settings", async ({ page }) => {
@@ -285,7 +312,7 @@ test("every algorithm works with third-party requests blocked", { tag: "@slow" }
 
   await choose(page, "Key kind", "age identity");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(box(page, "Recipient")).toHaveValue(/^age1/, { timeout: SLOW });
+  await expect(box(page, "Recipient")).toHaveValue(/^age1pq1/, { timeout: SLOW });
 
   await choose(page, "Key kind", "NaCl box keys");
   await page.getByRole("button", { name: "Generate" }).click();

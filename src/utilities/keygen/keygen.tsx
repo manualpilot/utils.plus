@@ -1,15 +1,16 @@
-import { ActionIcon, Box, Button, Card, CopyButton, Group, NumberInput, PasswordInput, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Button, Card, Checkbox, CopyButton, Group, NumberInput, Select, Stack, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { randomBytes } from "@noble/hashes/utils.js";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { EMAIL_PATTERN } from "../../common/email";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconCheck, IconCopy, IconRefresh } from "../../icons";
-import { algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_SECRET_BYTES, FORMAT_OPTIONS, KEY_ID_OPTIONS, KIND_LABELS, KIND_OPTIONS, MAX_JWK_KEYS, MAX_SECRET_BYTES, pickAlgorithm, pickFormat, pickKeyIdSource, pickKind, pickText, pickVariant } from "./algorithms";
+import { identityProblem } from "./age";
+import { AGE_OUTPUT_OPTIONS, algorithmData, ALGORITHMS, algorithmSpec, DEFAULT_SECRET_BYTES, FORMAT_OPTIONS, KEY_ID_OPTIONS, KIND_LABELS, KIND_OPTIONS, MAX_JWK_KEYS, MAX_SECRET_BYTES, pickAgeOutput, pickAlgorithm, pickFormat, pickKeyIdSource, pickKind, pickPostQuantum, pickText, pickVariant } from "./algorithms";
 import { formatSecret } from "./encoding";
 import { generateJwkSet } from "./jwk";
 import { generatePgpKey, generateSshKey } from "./keys";
-import { ageResult, jwkResult, naclResult, pairResult, wireguardResult } from "./results";
+import { ageRecipientsResult, ageResult, jwkResult, naclResult, pairResult, wireguardResult } from "./results";
 import type { Generated, Output } from "./types";
 import { clampWhole, message, parseWhole } from "./validate";
 import { parseWireguardKey } from "./wireguard";
@@ -26,6 +27,8 @@ export default function Keygen() {
     count?: number;
     size?: number;
     format?: string;
+    output?: string;
+    postQuantum?: boolean;
   }>();
 
   const initialKind = pickKind(initialState?.kind);
@@ -45,11 +48,16 @@ export default function Keygen() {
     clampWhole(initialState?.size, DEFAULT_SECRET_BYTES, MAX_SECRET_BYTES)
   );
   const [format, setFormat] = useState(() => pickFormat(initialState?.format));
+  const [ageOutput, setAgeOutput] = useState(() => pickAgeOutput(initialState?.output));
+  const [postQuantum, setPostQuantum] = useState(() => pickPostQuantum(initialState?.postQuantum));
+  const [identityFile, setIdentityFile] = useState("");
   const [secret, setSecret] = useState("");
   const [generated, setGenerated] = useState<Generated | null>(null);
   const [running, setRunning] = useState(false);
   const [asked, setAsked] = useState(false);
   const runIdRef = useRef(0);
+
+  const converting = kind === "age" && ageOutput === "recipients";
 
   const algorithms = ALGORITHMS[kind];
   const algorithmOptions = useMemo(() => algorithmData(algorithms), [algorithms]);
@@ -66,6 +74,8 @@ export default function Keygen() {
     count: kind === "jwk" ? count : undefined,
     size: kind === "secret" ? size : undefined,
     format: kind === "secret" || kind === "nacl" ? format : undefined,
+    output: kind === "age" ? ageOutput : undefined,
+    postQuantum: kind === "age" && !converting ? postQuantum : undefined,
   }));
 
   const parsedSize = parseWhole(size, MAX_SECRET_BYTES);
@@ -81,12 +91,17 @@ export default function Keygen() {
     : null;
   const parsedCount = parseWhole(count, MAX_JWK_KEYS);
   const countError = kind === "jwk" && parsedCount === null ? `Enter a count of 1 to ${MAX_JWK_KEYS}` : null;
+  const missingIdentity = converting && identityFile.trim() === "";
+  const identityShapeError = converting ? identityProblem(identityFile) : "";
+  const identityError = missingIdentity && asked ? "Required" : identityShapeError || null;
   const settled = kind === "ssh"
     ? !commentError
     : kind === "wireguard"
     ? !serverKeyError
     : kind === "jwk"
     ? !countError
+    : kind === "age"
+    ? !missingIdentity && !identityShapeError
     : !missingName && !emailError;
 
   const request = useMemo(() => ({
@@ -101,7 +116,25 @@ export default function Keygen() {
     keyIdSource,
     count,
     format,
-  }), [kind, algorithm, variant, comment, name, email, passphrase, serverKey, keyIdSource, count, format]);
+    ageOutput,
+    postQuantum,
+    identityFile,
+  }), [
+    kind,
+    algorithm,
+    variant,
+    comment,
+    name,
+    email,
+    passphrase,
+    serverKey,
+    keyIdSource,
+    count,
+    format,
+    ageOutput,
+    postQuantum,
+    identityFile,
+  ]);
   const stale = generated === null || generated.request !== request;
   const result = stale || generated === null ? null : generated.result;
   const error = stale || generated === null ? "" : generated.error;
@@ -118,7 +151,7 @@ export default function Keygen() {
         : kind === "nacl"
         ? await naclResult(format)
         : kind === "age"
-        ? await ageResult(algorithm)
+        ? converting ? await ageRecipientsResult(identityFile) : await ageResult(postQuantum)
         : kind === "jwk"
         ? jwkResult(
           await generateJwkSet({ algorithm, variant, keyId: keyIdSource, count: parsedCount ?? 1 }),
@@ -143,6 +176,9 @@ export default function Keygen() {
     keyIdSource,
     parsedCount,
     format,
+    converting,
+    postQuantum,
+    identityFile,
     request,
   ]);
 
@@ -157,6 +193,11 @@ export default function Keygen() {
   const outputs = kind === "secret"
     ? secret === "" ? [] : [{ label: "Secret", value: secret, rows: 2 }]
     : result?.outputs ?? [];
+  const heading = kind === "jwk" && parsedCount !== 1
+    ? "JSON Web Key Set"
+    : converting
+    ? "age recipients file"
+    : KIND_LABELS[kind];
 
   const handleKindChange = (value: string | null) => {
     if (value === null || !(value in ALGORITHMS)) return;
@@ -164,6 +205,12 @@ export default function Keygen() {
     setKind(value);
     setAlgorithm(next);
     setVariant(pickVariant(value, next, null));
+    setAsked(false);
+  };
+
+  const handleAgeOutputChange = (value: string | null) => {
+    if (value === null) return;
+    setAgeOutput(value);
     setAsked(false);
   };
 
@@ -193,6 +240,15 @@ export default function Keygen() {
                 data={algorithmOptions}
                 value={algorithm}
                 onChange={handleAlgorithmChange}
+                allowDeselect={false}
+              />
+            )}
+            {kind === "age" && (
+              <Select
+                label="Output"
+                data={AGE_OUTPUT_OPTIONS}
+                value={ageOutput}
+                onChange={handleAgeOutputChange}
                 allowDeselect={false}
               />
             )}
@@ -232,6 +288,35 @@ export default function Keygen() {
             )}
           </Box>
 
+          {kind === "age" && !converting && (
+            <Checkbox
+              label="Post-quantum"
+              description="An ML-KEM-768 hybrid, whose recipient runs to two kilobytes against X25519's 62 characters"
+              checked={postQuantum}
+              onChange={(event) => setPostQuantum(event.currentTarget.checked)}
+            />
+          )}
+
+          {converting && (
+            <Box className={identityError ? "settings-row has-error" : "settings-row"} mb={identityError ? "md" : 0}>
+              <Textarea
+                label="Identity file"
+                description="Read in this tab and never sent anywhere — the file age-keygen wrote goes in whole"
+                placeholder="AGE-SECRET-KEY-1…"
+                value={identityFile}
+                onChange={(event) =>
+                  setIdentityFile(event.currentTarget.value)}
+                error={identityError}
+                autosize
+                minRows={3}
+                maxRows={10}
+                spellCheck={false}
+                classNames={{ root: "relative-root", error: "absolute-error" }}
+                styles={{ input: { fontFamily: "monospace" } }}
+              />
+            </Box>
+          )}
+
           {kind === "ssh" && (
             <Box className={commentError ? "settings-row has-error" : "settings-row"} mb={commentError ? "md" : 0}>
               <TextInput
@@ -245,12 +330,13 @@ export default function Keygen() {
                 spellCheck={false}
                 classNames={{ root: "relative-root", error: "absolute-error" }}
               />
-              <PasswordInput
+              <TextInput
                 label="Passphrase"
                 description="Left unencrypted when blank"
                 value={passphrase}
                 onChange={(event) =>
                   setPassphrase(event.currentTarget.value)}
+                spellCheck={false}
               />
             </Box>
           )}
@@ -321,11 +407,12 @@ export default function Keygen() {
                 spellCheck={false}
                 classNames={{ root: "relative-root", error: "absolute-error" }}
               />
-              <PasswordInput
+              <TextInput
                 label="Passphrase"
                 description="Left unencrypted when blank"
                 value={passphrase}
                 onChange={(event) => setPassphrase(event.currentTarget.value)}
+                spellCheck={false}
               />
             </Box>
           )}
@@ -336,7 +423,7 @@ export default function Keygen() {
                 {error}
               </Text>
               <Button onClick={generate} loading={running}>
-                Generate
+                {converting ? "Convert" : "Generate"}
               </Button>
             </Group>
           )}
@@ -348,7 +435,7 @@ export default function Keygen() {
           <Stack gap="md">
             <Group justify="space-between">
               <Group gap="sm" align="baseline">
-                <Title order={4}>{kind === "jwk" && parsedCount !== 1 ? "JSON Web Key Set" : KIND_LABELS[kind]}</Title>
+                <Title order={4}>{heading}</Title>
                 {result?.fingerprint && (
                   <Text size="sm" c="dimmed" ff="monospace" style={{ wordBreak: "break-all" }}>
                     {result.fingerprint}

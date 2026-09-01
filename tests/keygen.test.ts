@@ -3,7 +3,7 @@ import { identityToRecipient } from "age-encryption";
 import { createRequire } from "node:module";
 import sshpk from "sshpk";
 import { describe, expect, it } from "vitest";
-import { generateAgeIdentity } from "../src/utilities/keygen/age";
+import { ageRecipientsFile, generateAgeIdentity, identityProblem } from "../src/utilities/keygen/age";
 import { formatSecret } from "../src/utilities/keygen/encoding";
 import { generateJwkSet } from "../src/utilities/keygen/jwk";
 import { generateSshKey } from "../src/utilities/keygen/keys";
@@ -173,10 +173,10 @@ describe("WireGuard configurations", () => {
 
 describe("age identities", () => {
   it.each([
-    ["x25519", /^AGE-SECRET-KEY-1[0-9A-Z]+$/, /^age1[0-9a-z]+$/],
-    ["hybrid", /^AGE-SECRET-KEY-PQ-1[0-9A-Z]+$/, /^age1pq1[0-9a-z]+$/],
-  ])("writes the file age-keygen writes for %s, comment lines and all", async (algorithm, secret, published) => {
-    const { file, recipient } = await generateAgeIdentity(algorithm);
+    [false, /^AGE-SECRET-KEY-1[0-9A-Z]+$/, /^age1[0-9a-z]+$/],
+    [true, /^AGE-SECRET-KEY-PQ-1[0-9A-Z]+$/, /^age1pq1[0-9a-z]+$/],
+  ])("writes the file age-keygen writes with -pq %s, comment lines and all", async (pq, secret, published) => {
+    const { file, recipient } = await generateAgeIdentity(pq);
     const [created, publishedLine, identity, nothing] = file.split("\n");
 
     expect(created).toMatch(/^# created: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
@@ -188,13 +188,48 @@ describe("age identities", () => {
   });
 
   it("hands out a recipient two kilobytes long for the post-quantum kind, and 62 characters for the curve", async () => {
-    expect((await generateAgeIdentity("x25519")).recipient).toHaveLength(62);
-    expect((await generateAgeIdentity("hybrid")).recipient.length).toBeGreaterThan(1900);
+    expect((await generateAgeIdentity(false)).recipient).toHaveLength(62);
+    expect((await generateAgeIdentity(true)).recipient.length).toBeGreaterThan(1900);
   });
 
   it("gives a different identity every time it is asked", async () => {
-    const [first, second] = await Promise.all([generateAgeIdentity("x25519"), generateAgeIdentity("x25519")]);
+    const [first, second] = await Promise.all([generateAgeIdentity(false), generateAgeIdentity(false)]);
     expect(first.recipient).not.toBe(second.recipient);
+  });
+});
+
+describe("age recipients files", () => {
+  it("answers a whole identity file with the recipient it names, which is what age-keygen -y writes", async () => {
+    const { file, recipient } = await generateAgeIdentity(false);
+    expect(await ageRecipientsFile(file)).toBe(`${recipient}\n`);
+  });
+
+  it("converts every identity in a file, in the order they were written", async () => {
+    const identities = await Promise.all([generateAgeIdentity(false), generateAgeIdentity(true)]);
+    const file = identities.map(({ file }) => file).join("");
+    expect(await ageRecipientsFile(file)).toBe(`${identities.map(({ recipient }) => recipient).join("\n")}\n`);
+  });
+
+  it("takes a bare identity, that being what somebody pastes as often as the file around it", async () => {
+    const { file, recipient } = await generateAgeIdentity(true);
+    expect(await ageRecipientsFile(file.split("\n")[2])).toBe(`${recipient}\n`);
+  });
+
+  it("has nothing to convert in a file that is all comments", async () => {
+    await expect(ageRecipientsFile("# created: 2026-01-01T00:00:00Z\n")).rejects.toThrow("no identity");
+  });
+
+  it("says which line was refused, cut short where a post-quantum key would run on", async () => {
+    const { file } = await generateAgeIdentity(false);
+    const broken = `${file}AGE-SECRET-KEY-1QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ\n`;
+    await expect(ageRecipientsFile(broken)).rejects.toThrow("That is not an age identity: AGE-SECRET-KEY-1QQQQQQQQ…");
+  });
+
+  it("holds a line to the shape of an identity as it is typed, and skips the comments around it", () => {
+    expect(identityProblem("")).toBe("");
+    expect(identityProblem("# public key: age1abc\n\nAGE-SECRET-KEY-1ABC")).toBe("");
+    expect(identityProblem("age1abc")).toBe("That is not an age identity: age1abc");
+    expect(identityProblem("age-secret-key-1abc")).toBe("That is not an age identity: age-secret-key-1abc");
   });
 });
 

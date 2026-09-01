@@ -1,4 +1,4 @@
-import { ageArmor, ageDecrypt, ageEncrypt, type AgeSettings, ageUnarmor } from "./age";
+import { ageArmor, ageDecrypt, ageEncrypt, ageFile, type AgeSettings, ageUnarmor } from "./age";
 import { ALGORITHMS } from "./algorithms";
 import { boxCipher } from "./box";
 import { decodeBytes, encodeBytes, type Encoding, fromUtf8, utf8 } from "./encoding";
@@ -48,9 +48,10 @@ async function encrypt(job: Job): Promise<Outcome> {
 
   if (ALGORITHMS[job.algorithm].family === "age") {
     const file = await ageEncrypt(input(job), job.age);
-    return job.source === "text"
-      ? { text: await ageArmor(file) }
-      : { bytes: file, name: `${job.filename || "message"}.age` };
+    const name = `${job.filename || "message"}.age`;
+    if (!job.age.armor) return { bytes: file, name };
+    const armoured = await ageArmor(file);
+    return job.source === "text" ? { text: armoured } : { bytes: utf8(armoured), name };
   }
 
   const sealed = await seal(job, input(job));
@@ -67,7 +68,7 @@ async function decrypt(job: Job): Promise<Outcome> {
   }
 
   if (ALGORITHMS[job.algorithm].family === "age") {
-    const file = job.source === "text" ? await ageUnarmor(job.text) : input(job);
+    const file = job.source === "text" ? await ageUnarmor(job.text) : await ageFile(input(job));
     return plaintext(job, await ageDecrypt(file, job.age));
   }
 

@@ -98,12 +98,14 @@ export const ALGORITHMS: Record<string, AlgorithmSpec[]> = {
   ],
   wireguard: [],
   nacl: [],
-  age: [
-    { value: "x25519", label: "X25519" },
-    { value: "hybrid", label: "ML-KEM-768 + X25519 (post-quantum)" },
-  ],
+  age: [],
   secret: [],
 };
+
+export const AGE_OUTPUT_OPTIONS = [
+  { value: "identity", label: "New identity" },
+  { value: "recipients", label: "Recipients file" },
+];
 
 export const KEY_ID_OPTIONS = [
   { value: "none", label: "None" },
@@ -192,6 +194,14 @@ export function pickVariant(kind: string, algorithm: string, value: unknown): st
 
 export function pickKeyIdSource(value: unknown): string {
   return KEY_ID_OPTIONS.some((option) => option.value === value) ? value as string : "sha256";
+}
+
+export function pickAgeOutput(value: unknown): string {
+  return AGE_OUTPUT_OPTIONS.some((option) => option.value === value) ? value as string : "identity";
+}
+
+export function pickPostQuantum(value: unknown): boolean {
+  return typeof value === "boolean" ? value : true;
 }
 
 export function pickFormat(value: unknown): string {

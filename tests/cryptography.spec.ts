@@ -7,6 +7,8 @@ const SLOW = 60000;
 
 const MESSAGE = "Meet me at the usual place";
 
+const NOTES = { name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("nothing is uploaded") };
+
 const box = (page: Page, name: string) => page.getByRole("textbox", { name, exact: true });
 
 const tab = (page: Page, group: string, label: string) =>
@@ -28,6 +30,12 @@ async function generate(page: Page, ...names: string[]) {
 
 async function keyed(page: Page, nonce = "IV") {
   await generate(page, "Generate a random key", `Generate a random ${nonce}`);
+}
+
+async function save(page: Page) {
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download" }).click();
+  return saving;
 }
 
 async function publicHalf(page: Page) {
@@ -172,15 +180,9 @@ test("a file is encrypted to a file and comes back byte for byte", async ({ page
   await openCryptography(page);
   await keyed(page);
   await tab(page, "Input source", "File").click();
-  await page.locator("input[type=\"file\"]").setInputFiles({
-    name: "notes.txt",
-    mimeType: "text/plain",
-    buffer: Buffer.from("nothing is uploaded"),
-  });
+  await page.locator("input[type=\"file\"]").setInputFiles(NOTES);
 
-  const saving = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download" }).click();
-  const sealed = await saving;
+  const sealed = await save(page);
   expect(sealed.suggestedFilename()).toBe("notes.txt.enc");
 
   await tab(page, "Direction", "Decrypt").click();
@@ -190,9 +192,7 @@ test("a file is encrypted to a file and comes back byte for byte", async ({ page
     buffer: readFileSync((await sealed.path())!),
   });
 
-  const opening = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download" }).click();
-  const opened = await opening;
+  const opened = await save(page);
   expect(opened.suggestedFilename()).toBe("notes.txt");
   expect(readFileSync((await opened.path())!).toString()).toBe("nothing is uploaded");
 });
@@ -225,6 +225,58 @@ test("age seals to a passphrase and reads the same message back", async ({ page 
   await expect(box(page, "Message")).toHaveValue(MESSAGE, { timeout: SLOW });
 });
 
+test("the armor flag says whether an age file is PEM, and either kind is dropped back in", async ({ page }) => {
+  await openCryptography(page);
+  await choose(page, "Algorithm", "age");
+
+  await tab(page, "Direction", "Decrypt").click();
+  await page.getByRole("button", { name: "Generate an identity" }).click();
+  await expect(page.getByText(/^Its recipient: age1/)).toBeVisible();
+  const shown = await page.getByText(/^Its recipient: /).textContent();
+
+  await tab(page, "Direction", "Encrypt").click();
+  await box(page, "Recipients").fill((shown ?? "").replace("Its recipient: ", ""));
+
+  const armor = page.getByRole("checkbox", { name: "Armor" });
+  await expect(armor).toBeChecked();
+  await box(page, "Message").fill(MESSAGE);
+  await expect(box(page, "Ciphertext")).toHaveValue(/^-----BEGIN AGE ENCRYPTED FILE-----/);
+  await armor.uncheck();
+  await expect(box(page, "Ciphertext")).toBeHidden();
+  const typed = await save(page);
+  expect(typed.suggestedFilename()).toBe("message.age");
+  expect(readFileSync((await typed.path())!).toString()).toMatch(/^age-encryption\.org\/v1\n/);
+
+  await tab(page, "Input source", "File").click();
+  await expect(page.getByRole("button", { name: "Download" })).toBeHidden();
+  await page.locator("input[type=\"file\"]").setInputFiles(NOTES);
+  const raw = await save(page);
+  expect(raw.suggestedFilename()).toBe("notes.txt.age");
+  expect(readFileSync((await raw.path())!).toString()).toMatch(/^age-encryption\.org\/v1\n/);
+
+  await armor.check();
+  await page.getByRole("button", { name: "Clear message" }).click();
+  await expect(page.getByRole("button", { name: "Download" })).toBeHidden();
+  await page.locator("input[type=\"file\"]").setInputFiles(NOTES);
+
+  const armoured = await save(page);
+  expect(armoured.suggestedFilename()).toBe("notes.txt.age");
+  const pem = readFileSync((await armoured.path())!).toString();
+  expect(pem).toMatch(/^-----BEGIN AGE ENCRYPTED FILE-----\n/);
+
+  await tab(page, "Direction", "Decrypt").click();
+  await expect(armor).toBeHidden();
+  await page.locator("input[type=\"file\"]").setInputFiles({
+    name: armoured.suggestedFilename(),
+    mimeType: "text/plain",
+    buffer: Buffer.from(pem),
+  });
+
+  const opened = await save(page);
+  expect(opened.suggestedFilename()).toBe("notes.txt");
+  expect(readFileSync((await opened.path())!).toString()).toBe("nothing is uploaded");
+});
+
 test("the page draws an age identity of its own and reads back what its recipient sealed", async ({ page }) => {
   await openCryptography(page);
   await choose(page, "Algorithm", "age");
@@ -252,12 +304,13 @@ test("a box holding a public key links to /keygen with the kind already picked",
   await openCryptography(page);
   await choose(page, "Algorithm", "NaCl box");
   const pair = page.getByRole("link", { name: "Mint a NaCl box pair on Keygen" });
-  await expect(pair).toHaveAttribute("target", "_blank");
-  expect(fragment(await pair.getAttribute("href"))).toEqual({ kind: "nacl", format: "hex" });
+  await expect(pair).toHaveCount(2);
+  await expect(pair.first()).toHaveAttribute("target", "_blank");
+  expect(fragment(await pair.first().getAttribute("href"))).toEqual({ kind: "nacl", format: "hex" });
   await expect(page.getByRole("button", { name: /^Generate a keypair/ })).toHaveCount(0);
 
   await choose(page, "Key encoding", "Base64");
-  expect(fragment(await pair.getAttribute("href"))).toEqual({ kind: "nacl", format: "base64" });
+  expect(fragment(await pair.last().getAttribute("href"))).toEqual({ kind: "nacl", format: "base64" });
 
   await choose(page, "Algorithm", "OpenPGP");
   const pgp = page.getByRole("link", { name: "Mint a PGP key pair on Keygen" });
@@ -267,7 +320,30 @@ test("a box holding a public key links to /keygen with the kind already picked",
   await choose(page, "Algorithm", "age");
   const identity = page.getByRole("link", { name: "Mint an age identity on Keygen" });
   await expect(identity).toHaveAttribute("target", "_blank");
-  expect(fragment(await identity.getAttribute("href"))).toEqual({ kind: "age", algorithm: "x25519" });
+  expect(fragment(await identity.getAttribute("href"))).toEqual({ kind: "age", postQuantum: true });
+
+  await tab(page, "Direction", "Decrypt").click();
+  await expect(page.getByRole("button", { name: "Generate an identity" })).toBeVisible();
+  expect(fragment(await identity.getAttribute("href"))).toEqual({ kind: "age", postQuantum: true });
+});
+
+test("the key field links to /keygen with the size and the spelling already answered", async ({ page }) => {
+  await openCryptography(page);
+  const secret = page.getByRole("link", { name: "Mint a random secret on Keygen" });
+  await expect(secret).toHaveAttribute("target", "_blank");
+  expect(fragment(await secret.getAttribute("href"))).toEqual({ kind: "secret", size: 32, format: "hex" });
+
+  await choose(page, "Key size", "128 bits");
+  expect(fragment(await secret.getAttribute("href"))).toEqual({ kind: "secret", size: 16, format: "hex" });
+
+  await choose(page, "Key encoding", "Base64");
+  expect(fragment(await secret.getAttribute("href"))).toEqual({ kind: "secret", size: 16, format: "base64" });
+
+  await choose(page, "Algorithm", "XChaCha20-Poly1305");
+  expect(fragment(await secret.getAttribute("href"))).toEqual({ kind: "secret", size: 32, format: "base64" });
+
+  await generate(page, "Generate a random key");
+  await expect(box(page, "Key")).toHaveValue(/^[A-Za-z0-9+/]+=*$/);
 });
 
 test("the pair a box message is sealed to is minted on /keygen and read back here", async ({ page }) => {
@@ -295,7 +371,6 @@ test("the pair a box message is sealed to is minted on /keygen and read back her
 test("a post-quantum identity made on /keygen opens what its recipient was sealed to", async ({ page }) => {
   await page.goto(`${BASE}/keygen`);
   await choose(page, "Key kind", "age identity");
-  await choose(page, "Algorithm", "ML-KEM-768 + X25519 (post-quantum)");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(box(page, "Recipient")).toHaveValue(/^age1pq1/);
   const recipient = await box(page, "Recipient").inputValue();

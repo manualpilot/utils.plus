@@ -1,4 +1,4 @@
-import { generateAgeIdentity } from "./age";
+import { ageRecipientsFile, generateAgeIdentity } from "./age";
 import { WEB_CRYPTO_CURVES } from "./algorithms";
 import { toBase64 } from "./encoding";
 import { generateNaclKeypair } from "./nacl";
@@ -27,8 +27,8 @@ export async function naclResult(format: string): Promise<KeyResult> {
   };
 }
 
-export async function ageResult(algorithm: string): Promise<KeyResult> {
-  const { file, recipient } = await generateAgeIdentity(algorithm);
+export async function ageResult(postQuantum: boolean): Promise<KeyResult> {
+  const { file, recipient } = await generateAgeIdentity(postQuantum);
   return {
     outputs: [
       { label: "Identity file", value: file, rows: 3 },
@@ -36,6 +36,10 @@ export async function ageResult(algorithm: string): Promise<KeyResult> {
     ],
     fingerprint: "",
   };
+}
+
+export async function ageRecipientsResult(identityFile: string): Promise<KeyResult> {
+  return { outputs: [{ label: "Recipients", value: await ageRecipientsFile(identityFile), rows: 2 }], fingerprint: "" };
 }
 
 export function jwkResult({ privateKeys, publicKeys, thumbprint }: JwkSet): KeyResult {

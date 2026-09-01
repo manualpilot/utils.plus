@@ -1,7 +1,8 @@
 import { generateHybridIdentity, identityToRecipient } from "age-encryption";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
-import { ageDecrypt, ageEncrypt, ageUnarmor, generateAgeIdentity, identityRecipients } from "../src/utilities/cryptography/age";
+import { identityRecipients } from "../src/common/age-identity";
+import { ageDecrypt, ageEncrypt, ageUnarmor, generateAgeIdentity } from "../src/utilities/cryptography/age";
 import { boxCipher, boxKeypair, boxPublicKey } from "../src/utilities/cryptography/box";
 import { decodeBytes, fromBase64, fromHex, respell, toBase64, toHex } from "../src/utilities/cryptography/encoding";
 import { type Job, runJob } from "../src/utilities/cryptography/run";
@@ -42,6 +43,7 @@ const AGE_KEYED = {
   recipients: fixture.RECIPIENT,
   identities: fixture.IDENTITY,
   password: "",
+  armor: true,
 };
 
 const AGE_PASSWORDED = {
@@ -49,6 +51,7 @@ const AGE_PASSWORDED = {
   recipients: "",
   identities: "",
   password: fixture.PASSPHRASE,
+  armor: true,
 };
 
 describe("NaCl", () => {
@@ -240,6 +243,56 @@ describe("a whole job", () => {
     const opened = await runJob({ ...job, mode: "decrypt", filename: sealed.name ?? "", bytes: sealed.bytes ?? null });
     expect(text(opened.bytes ?? new Uint8Array())).toBe("in a file");
     expect(opened.name).toBe("notes.txt");
+  });
+
+  it("writes an age file as bytes or as PEM as the armor flag says, and reads either one back", async () => {
+    const job = { ...jobFor("age"), source: "file" as const, filename: "notes.txt", bytes: bytes("in a file") };
+    const raw = await runJob({ ...job, age: { ...AGE_KEYED, armor: false } });
+    expect(text(raw.bytes ?? new Uint8Array())).toMatch(/^age-encryption\.org\/v1\n/);
+
+    const armoured = await runJob(job);
+    expect(text(armoured.bytes ?? new Uint8Array())).toMatch(/^-----BEGIN AGE ENCRYPTED FILE-----\n/);
+
+    for (const sealed of [raw, armoured]) {
+      const opened = await runJob({
+        ...job,
+        mode: "decrypt" as const,
+        filename: sealed.name ?? "",
+        bytes: sealed.bytes ?? null,
+      });
+      expect(text(opened.bytes ?? new Uint8Array())).toBe("in a file");
+      expect(opened.name).toBe("notes.txt");
+    }
+  });
+
+  it("saves a file when the armor flag is off, even for a message that was typed", async () => {
+    const job = { ...jobFor("age"), text: fixture.MESSAGE, age: { ...AGE_KEYED, armor: false } };
+    const sealed = await runJob(job);
+    expect(sealed.text).toBeUndefined();
+    expect(sealed.name).toBe("message.age");
+    expect(text(sealed.bytes ?? new Uint8Array())).toMatch(/^age-encryption\.org\/v1\n/);
+
+    const dropped = { ...job, mode: "decrypt" as const, source: "file" as const, filename: sealed.name ?? "" };
+    expect(text((await runJob({ ...dropped, bytes: sealed.bytes ?? null })).bytes ?? new Uint8Array()))
+      .toBe(fixture.MESSAGE);
+  });
+
+  it("reads a bare Base64 ciphertext pasted into the box", async () => {
+    const armoured = (await runJob({ ...jobFor("age"), text: fixture.MESSAGE })).text ?? "";
+    const bare = armoured.split("\n").filter((line) => !line.startsWith("-----")).join("");
+    const opened = await runJob({ ...jobFor("age"), mode: "decrypt", text: bare });
+    expect(opened.text).toBe(fixture.MESSAGE);
+  });
+
+  it("opens an armoured file the age binary wrote when it is dropped as a file", async () => {
+    const job = {
+      ...jobFor("age"),
+      mode: "decrypt" as const,
+      source: "file" as const,
+      filename: "message.age",
+      bytes: bytes(fixture.FILE),
+    };
+    expect(text((await runJob(job)).bytes ?? new Uint8Array())).toBe(fixture.MESSAGE);
   });
 
   it("refuses to spell a plaintext that is not text as text", async () => {

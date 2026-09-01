@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Box, Button, Card, CopyButton, Group, NumberInput, PasswordInput, SegmentedControl, Select, Stack, Table, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Box, Button, Card, CopyButton, Group, NumberInput, SegmentedControl, Select, Stack, Table, Text, Textarea, TextInput, Title, Tooltip } from "@mantine/core";
 import { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FactTable } from "../../common/fact-table";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
@@ -442,11 +442,13 @@ export default function Certificate() {
                   error={daysError}
                   classNames={{ root: "relative-root", error: "absolute-error" }}
                 />
-                <PasswordInput
+                <TextInput
                   label="Passphrase"
                   description="Left unencrypted when blank"
                   value={passphrase}
                   onChange={(event) => setPassphrase(event.currentTarget.value)}
+                  spellCheck={false}
+                  autoCapitalize="off"
                 />
               </Box>
 

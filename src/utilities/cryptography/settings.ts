@@ -1,4 +1,4 @@
-import { identityRecipients } from "./age";
+import { identityRecipients } from "../../common/age-identity";
 import { ALGORITHMS, keyLength } from "./algorithms";
 import { boxKeypair, boxPublicKey } from "./box";
 import { decodeBytes, encodeBytes, type Encoding } from "./encoding";
@@ -24,6 +24,10 @@ export function pickKeySize(algorithm: string, value: unknown): number {
 
 export function pickRecipient(value: unknown): "key" | "password" {
   return value === "password" ? "password" : "key";
+}
+
+export function pickArmor(value: unknown): boolean {
+  return typeof value === "boolean" ? value : true;
 }
 
 export function pickText(value: unknown): string {

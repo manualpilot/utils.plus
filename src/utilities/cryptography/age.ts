@@ -1,3 +1,4 @@
+import { keyLines, shortened } from "../../common/age-identity";
 import { fromBase64 } from "./encoding";
 
 export interface AgeSettings {
@@ -5,6 +6,7 @@ export interface AgeSettings {
   recipients: string;
   identities: string;
   password: string;
+  armor: boolean;
 }
 
 export async function ageEncrypt(data: Uint8Array, settings: AgeSettings): Promise<Uint8Array> {
@@ -49,6 +51,11 @@ export async function ageArmor(payload: Uint8Array): Promise<string> {
   return (await library()).armor.encode(payload);
 }
 
+export async function ageFile(file: Uint8Array): Promise<Uint8Array> {
+  const head = ASCII.decode(file.subarray(0, ARMOR_BEGIN.length));
+  return head === ARMOR_BEGIN ? ageUnarmor(ASCII.decode(file)) : file;
+}
+
 export async function ageUnarmor(text: string): Promise<Uint8Array> {
   const trimmed = text.trim();
   if (!trimmed.startsWith(ARMOR_BEGIN)) {
@@ -65,25 +72,15 @@ export async function generateAgeIdentity(): Promise<string> {
   return (await library()).generateX25519Identity();
 }
 
-export async function identityRecipients(text: string): Promise<string[]> {
-  const { identityToRecipient } = await library();
-  return Promise.all(keyLines(text).map((line) => identityToRecipient(line)));
-}
-
 function library(): Promise<typeof import("age-encryption")> {
   return import("age-encryption");
-}
-
-function keyLines(text: string): string[] {
-  return text.split("\n").map((line) => line.trim()).filter((line) => line !== "" && !line.startsWith("#"));
 }
 
 function readKey(add: () => void, noun: string, line: string): void {
   try {
     add();
   } catch {
-    const shown = line.length > SHOWN ? `${line.slice(0, SHOWN)}…` : line;
-    throw new Error(`That is not an age ${noun}: ${shown}`);
+    throw new Error(`That is not an age ${noun}: ${shortened(line)}`);
   }
 }
 
@@ -91,4 +88,4 @@ const UNOPENED = "no identity matched any of the file's recipients";
 
 const ARMOR_BEGIN = "-----BEGIN AGE ENCRYPTED FILE-----";
 
-const SHOWN = 24;
+const ASCII = new TextDecoder("ascii");
