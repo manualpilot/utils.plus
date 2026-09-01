@@ -75,6 +75,7 @@ export default function IpAddress() {
     <Stack gap="md">
       <UtilityTitle
         directory="ip-address"
+        publications="IANA, the five RIRs and the RPKI"
         control={
           <SegmentedControl
             value={mode}

@@ -14,6 +14,7 @@ export default defineConfig({
   root: "src",
   publicDir: false,
   css: { postcss: join(import.meta.dirname, "conf") },
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   build: {
     outDir: "../dist",
     emptyOutDir: true,

@@ -55,6 +55,7 @@ export { default as IconH3 } from "@tabler/icons-react/dist/esm/icons/IconH3.mjs
 export { default as IconHash } from "@tabler/icons-react/dist/esm/icons/IconHash.mjs";
 export { default as IconId } from "@tabler/icons-react/dist/esm/icons/IconId.mjs";
 export { default as IconIndentDecrease } from "@tabler/icons-react/dist/esm/icons/IconIndentDecrease.mjs";
+export { default as IconInfoCircle } from "@tabler/icons-react/dist/esm/icons/IconInfoCircle.mjs";
 export { default as IconItalic } from "@tabler/icons-react/dist/esm/icons/IconItalic.mjs";
 export { default as IconKey } from "@tabler/icons-react/dist/esm/icons/IconKey.mjs";
 export { default as IconLanguage } from "@tabler/icons-react/dist/esm/icons/IconLanguage.mjs";

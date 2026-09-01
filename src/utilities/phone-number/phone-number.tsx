@@ -50,7 +50,7 @@ export default function PhoneNumber() {
 
   return (
     <Stack gap="md">
-      <UtilityTitle directory="phone-number">Phone Number</UtilityTitle>
+      <UtilityTitle directory="phone-number" publications="Google's libphonenumber">Phone Number</UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Box className={error ? "settings-row has-error" : "settings-row"} mb={error ? "md" : 0}>

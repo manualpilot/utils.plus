@@ -22,7 +22,7 @@ export default function Countries() {
 
   return (
     <Stack gap="md">
-      <UtilityTitle directory="countries">Countries</UtilityTitle>
+      <UtilityTitle directory="countries" publications="Natural Earth">Countries</UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
         <Select

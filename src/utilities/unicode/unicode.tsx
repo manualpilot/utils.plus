@@ -83,6 +83,7 @@ export default function Unicode() {
     <Stack gap="md">
       <UtilityTitle
         directory="unicode"
+        publications="the Unicode Character Database"
         control={
           <SegmentedControl value={mode} onChange={onMode} aria-label="How the box is read" data={MODE_OPTIONS} />
         }
