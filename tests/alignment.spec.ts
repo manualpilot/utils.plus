@@ -72,3 +72,18 @@ test("settings rows stack once the main region is narrow", async ({ page }) => {
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1000);
 });
+
+test("a mode switch does not push the page down", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  const tops: Record<string, number> = {};
+  for (const path of ["/codec", "/ip-address", "/cryptography", "/image"]) {
+    await page.goto(`${BASE}${path}`);
+    await expect(page.locator("h1")).toBeVisible();
+    const row = (await page.locator(".utility-title").boundingBox())!;
+    expect(row.height).toBe(36);
+    tops[path] = (await page.locator(".mantine-Card-root").first().boundingBox())!.y;
+  }
+
+  expect(new Set(Object.values(tops)).size).toBe(1);
+});

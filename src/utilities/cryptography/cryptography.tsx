@@ -308,7 +308,6 @@ export default function Cryptography() {
         directory="cryptography"
         control={
           <SegmentedControl
-            size="xs"
             data={MODE_OPTIONS}
             value={mode}
             onChange={(value) => handleMode(value as Mode)}

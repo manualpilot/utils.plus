@@ -60,6 +60,10 @@
   max-width: none;
 }
 
+.utility-title {
+  min-height: calc(2.25rem * var(--mantine-scale));
+}
+
 .page-width-toggle {
   display: none;
 }

@@ -6,7 +6,7 @@ import { PageWidthToggle } from "./page-width";
 
 export function UtilityTitle({ directory, publications, control, children }: UtilityTitleProps) {
   return (
-    <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+    <Group className="utility-title" justify="space-between" align="center" wrap="nowrap" gap="sm">
       <Group gap={4} align="center" wrap="nowrap">
         <Title order={1} size="h2" lh={1.15}>{children}</Title>
         <Tooltip label="View source on GitHub" withArrow>
