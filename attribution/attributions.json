@@ -162,7 +162,7 @@
     },
     {
       "name": "@codemirror/search",
-      "version": "6.7.1",
+      "version": "6.7.2",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/codemirror/search",
@@ -170,7 +170,7 @@
     },
     {
       "name": "@codemirror/state",
-      "version": "6.7.1",
+      "version": "6.7.2",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/codemirror/state",
@@ -186,7 +186,7 @@
     },
     {
       "name": "@codemirror/view",
-      "version": "6.43.9",
+      "version": "6.43.10",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/codemirror/view",
@@ -234,7 +234,7 @@
     },
     {
       "name": "@electric-sql/pglite",
-      "version": "0.5.7",
+      "version": "0.5.8",
       "license": "Apache-2.0",
       "publisher": "Electric DB Limited",
       "url": "https://github.com/electric-sql/pglite",
@@ -330,7 +330,7 @@
     },
     {
       "name": "@jridgewell/sourcemap-codec",
-      "version": "1.5.5",
+      "version": "1.6.0",
       "license": "MIT",
       "publisher": "Justin Ridgewell",
       "url": "https://github.com/jridgewell/sourcemaps",
@@ -434,10 +434,10 @@
     },
     {
       "name": "@lezer/php",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
-      "url": "https://github.com/lezer-parser/php",
+      "url": "https://code.haverbeke.berlin/lezer/php",
       "file": "lezer-php"
     },
     {
@@ -474,7 +474,7 @@
     },
     {
       "name": "@mantine/core",
-      "version": "9.5.2",
+      "version": "9.6.0",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -482,7 +482,7 @@
     },
     {
       "name": "@mantine/dates",
-      "version": "9.5.2",
+      "version": "9.6.0",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -490,7 +490,7 @@
     },
     {
       "name": "@mantine/hooks",
-      "version": "9.5.2",
+      "version": "9.6.0",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -498,7 +498,7 @@
     },
     {
       "name": "@mantine/spotlight",
-      "version": "9.5.2",
+      "version": "9.6.0",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -506,7 +506,7 @@
     },
     {
       "name": "@mantine/store",
-      "version": "9.5.2",
+      "version": "9.6.0",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -522,7 +522,7 @@
     },
     {
       "name": "@noble/ciphers",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-ciphers",
@@ -530,7 +530,7 @@
     },
     {
       "name": "@noble/curves",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-curves",
@@ -538,7 +538,7 @@
     },
     {
       "name": "@noble/hashes",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "license": "MIT",
       "publisher": "Paul Miller",
       "url": "https://github.com/paulmillr/noble-hashes",
@@ -686,7 +686,7 @@
     },
     {
       "name": "base64-js",
-      "version": "1.5.1",
+      "version": "0.0.8",
       "license": "MIT",
       "publisher": "T. Jameson Little",
       "url": "https://github.com/beatgammit/base64-js",
@@ -905,7 +905,7 @@
     },
     {
       "name": "libphonenumber-js",
-      "version": "1.13.11",
+      "version": "1.13.12",
       "license": "MIT",
       "publisher": "catamphetamine",
       "url": "https://gitlab.com/catamphetamine/libphonenumber-js",
@@ -1025,7 +1025,7 @@
     },
     {
       "name": "pyodide",
-      "version": "314.0.5",
+      "version": "314.0.6",
       "license": "MPL-2.0",
       "publisher": "",
       "url": "https://github.com/pyodide/pyodide",
@@ -1244,7 +1244,7 @@
     },
     {
       "name": "type-fest",
-      "version": "5.8.0",
+      "version": "5.9.0",
       "license": "(MIT OR CC0-1.0)",
       "publisher": "Sindre Sorhus",
       "url": "sindresorhus/type-fest",

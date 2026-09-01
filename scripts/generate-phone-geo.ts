@@ -8,7 +8,7 @@ import { promisify } from "node:util";
 
 const run = promisify(execFile);
 
-export const RELEASE = "v9.0.37";
+export const RELEASE = "v9.0.38";
 
 const LOCALE = "en";
 
