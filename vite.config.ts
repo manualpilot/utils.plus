@@ -21,6 +21,7 @@ export default defineConfig({
     minify: true,
     assetsInlineLimit: (file) =>
       PHONE_GEO.test(file) || COUNTRY_VIEW.test(file) || UNICODE_NAME.test(file) || LICENCE.test(file)
+        || IP_DELEGATION.test(file) || IP_ROA.test(file)
         ? false
         : undefined,
     rolldownOptions: {
@@ -89,6 +90,8 @@ function assetDirectory(asset: Rolldown.PreRenderedAsset): string {
   const original = asset.originalFileNames[0] ?? "";
   if (PHONE_GEO.test(original)) return "assets/phone-geo";
   if (UNICODE_NAME.test(original)) return "assets/unicode-names";
+  if (IP_DELEGATION.test(original)) return "assets/ip-registry";
+  if (IP_ROA.test(original)) return "assets/ip-roas";
   if (LICENCE.test(original)) return "assets/license";
   return COUNTRY_VIEW.test(original) ? "assets/country-views" : "assets";
 }
@@ -100,6 +103,10 @@ const PHONE_GEO = /\/phone-number\/maps\/[^/]+\.json$/;
 const COUNTRY_VIEW = /\/countries\/views\/[^/]+\.json$/;
 
 const UNICODE_NAME = /\/unicode\/names\/[^/]+\.json$/;
+
+const IP_DELEGATION = /\/ip-address\/delegations\/[^/]+\.json$/;
+
+const IP_ROA = /\/ip-address\/roas\/[^/]+\.json$/;
 
 const LICENCE = /\/attribution\/(?:license|canonical)\/[^/]+\.txt$/;
 

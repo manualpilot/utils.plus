@@ -1,5 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { RELEASE as SHAPES_RELEASE } from "./generate-country-shapes.ts";
+import { IANA_RELEASE, RELEASE as NRO_RELEASE } from "./generate-ip-registry.ts";
+import { RELEASE as ROA_RELEASE } from "./generate-ip-roas.ts";
 import { RELEASE as PHONE_RELEASE } from "./generate-phone-geo.ts";
 import { RELEASE as UNICODE_RELEASE } from "./generate-unicode.ts";
 
@@ -14,6 +16,7 @@ interface Pinned {
   source: string;
   pinned: string;
   generator: string;
+  constant?: string;
   latest: () => Promise<string | undefined>;
 }
 
@@ -38,6 +41,28 @@ const PINNED: Pinned[] = [
     pinned: UNICODE_RELEASE,
     generator: "scripts/generate-unicode.ts",
     latest: unicodeVersion,
+  },
+  {
+    title: "IANA number registries",
+    source: "iana.org",
+    pinned: IANA_RELEASE,
+    generator: "scripts/generate-ip-registry.ts",
+    constant: "IANA_RELEASE",
+    latest: ianaUpdated,
+  },
+  {
+    title: "registry delegations",
+    source: "nro.net",
+    pinned: NRO_RELEASE,
+    generator: "scripts/generate-ip-registry.ts",
+    latest: () => publishedDay("https://ftp.ripe.net/pub/stats/ripencc/nro-stats/", /"(\d{8})\/"/g),
+  },
+  {
+    title: "route origin authorisations",
+    source: "ripe.net RPKI",
+    pinned: ROA_RELEASE,
+    generator: "scripts/generate-ip-roas.ts",
+    latest: roaDay,
   },
 ];
 
@@ -79,7 +104,9 @@ for (const [kind, found] of [...groups].sort(([a], [b]) => rank(a) - rank(b))) {
 
 if (behind.length > 0) warn(`Outdated pinned releases (${behind.length})`, behind);
 
-async function pinnedRelease({ title, source, pinned, generator, latest }: Pinned): Promise<string | undefined> {
+async function pinnedRelease(
+  { title, source, pinned, generator, constant, latest }: Pinned,
+): Promise<string | undefined> {
   const failed = `${title[0].toUpperCase()}${title.slice(1)} check failed`;
   let published: string | undefined;
   try {
@@ -88,7 +115,9 @@ async function pinnedRelease({ title, source, pinned, generator, latest }: Pinne
     fail(failed, cause instanceof Error ? cause.message : String(cause));
   }
   if (!published) fail(failed, `${source} named no release`);
-  return published === pinned ? undefined : `${source} ${pinned} → ${published} (RELEASE in ${generator})`;
+  return published === pinned
+    ? undefined
+    : `${source} ${pinned} → ${published} (${constant ?? "RELEASE"} in ${generator})`;
 }
 
 async function githubRelease(repository: string): Promise<string | undefined> {
@@ -105,6 +134,42 @@ async function unicodeVersion(): Promise<string | undefined> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return /Version (\d+\.\d+\.\d+) of the Unicode Standard/.exec(await response.text())?.[1];
+}
+
+async function ianaUpdated(): Promise<string | undefined> {
+  const registries = [
+    "ipv4-address-space/ipv4-address-space.xml",
+    "ipv6-unicast-address-assignments/ipv6-unicast-address-assignments.xml",
+    "as-numbers/as-numbers.xml",
+    "multicast-addresses/multicast-addresses.xml",
+    "ipv6-multicast-addresses/ipv6-multicast-addresses.xml",
+  ];
+
+  const dates: string[] = [];
+  for (const registry of registries) {
+    const url = `https://www.iana.org/assignments/${registry}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${url} answered ${response.status}`);
+    const updated = /<updated>(\d{4}-\d{2}-\d{2})<\/updated>/.exec(await response.text())?.[1];
+    if (updated) dates.push(updated);
+  }
+  return dates.sort().at(-1);
+}
+
+async function roaDay(): Promise<string | undefined> {
+  const year = await publishedDay("https://ftp.ripe.net/rpki/ripencc.tal/", /"(\d{4})\/"/g);
+  if (!year) return undefined;
+  const month = await publishedDay(`https://ftp.ripe.net/rpki/ripencc.tal/${year}/`, /"(\d{2})\/"/g);
+  if (!month) return undefined;
+  const day = await publishedDay(`https://ftp.ripe.net/rpki/ripencc.tal/${year}/${month}/`, /"(\d{2})\/"/g);
+  return day && `${year}/${month}/${day}`;
+}
+
+async function publishedDay(url: string, named: RegExp): Promise<string | undefined> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url} answered ${response.status}`);
+  const found = [...(await response.text()).matchAll(named)].map((match) => match[1]);
+  return found.sort().at(-1);
 }
 
 function outdated(): Report {

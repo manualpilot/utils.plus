@@ -1,3 +1,4 @@
+import { AS_MAX } from "./asn";
 import { BITS, type Family } from "./parse";
 
 export const FAMILIES = {
@@ -17,9 +18,25 @@ export const FAMILIES = {
   },
 };
 
-export const FAMILY_OPTIONS = Object.entries(FAMILIES).map(([value, { label }]) => ({ value, label }));
+export type Mode = Family | "asn";
+
+export const ASN = { label: "AS", title: "AS Number", sample: "AS15169", hint: `e.g. AS15169, or 0 to ${AS_MAX}` };
+
+export const MODE_OPTIONS = [
+  ...Object.entries(FAMILIES).map(([value, { label }]) => ({ value, label })),
+  { value: "asn", label: ASN.label },
+];
+
+export function titleOf(mode: Mode): string {
+  return mode === "asn" ? ASN.title : FAMILIES[mode].title;
+}
 
 export const SPLIT_LIMIT = 64;
+
+export function pickMode(value: unknown): Mode {
+  if (value === "ipv6" || value === "asn") return value;
+  return "ipv4";
+}
 
 export function pickFamily(value: unknown): Family {
   return value === "ipv6" ? "ipv6" : "ipv4";
@@ -31,6 +48,10 @@ export function pickText(value: unknown): string {
 
 export function pickAddress(value: unknown, family: Family): string {
   return typeof value === "string" ? value : FAMILIES[family].sample;
+}
+
+export function pickAsn(value: unknown): string {
+  return typeof value === "string" ? value : ASN.sample;
 }
 
 export function pickSplit(value: unknown, family: Family): number | "" {

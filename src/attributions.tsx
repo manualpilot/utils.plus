@@ -221,6 +221,27 @@ export default function Attributions() {
             </Text>
           </Box>
           <Box>
+            <Title order={4}>The Internet number registries</Title>
+            <Text size="sm" mt={4}>
+              <Anchor href="/ip-address" inherit>IP Address</Anchor>{" "}
+              answers from three publications no package above declares, because none of them arrives through npm. The
+              block and AS number registries are{" "}
+              <Anchor href="https://www.iana.org/" target="_blank" rel="noopener noreferrer" inherit>IANA</Anchor>'s,
+              dedicated with the IETF under <strong>CC0 1.0</strong>{" "}
+              and intended, in their own words, to be embedded in software implementations. What each of the five
+              regional registries has delegated, and to which country, comes from the daily statistics the{" "}
+              <Anchor href="https://www.nro.net/" target="_blank" rel="noopener noreferrer" inherit>
+                Number Resource Organization
+              </Anchor>{" "}
+              combines — freely downloadable, and a separate publication from the whois database, which is why the page
+              names registries and never the holder of an address. And the route origins are the{" "}
+              <strong>Route Origin Authorisations</strong>{" "}
+              the five registries publish under RPKI: statements signed by the holder of a prefix that a given AS may
+              originate it, validated daily by the RIPE NCC and signed so that anybody may check them. All three are
+              read at build time and served from this origin, so the page makes no request of any registry.
+            </Text>
+          </Box>
+          <Box>
             <Title order={4}>Natural Earth</Title>
             <Text size="sm" mt={4}>
               The map on <Anchor href="/countries" inherit>Countries</Anchor> is drawn from{" "}

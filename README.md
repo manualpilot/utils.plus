@@ -10,7 +10,8 @@ see.
 
 ## Development
 
-Requires the Node version in [.node-version](.node-version).
+Requires the Node version in [.node-version](.node-version), and `xz` on the path — the regional internet registries
+publish the route origin data `npm run data` reads in that format and no other.
 
 ```sh
 npm install

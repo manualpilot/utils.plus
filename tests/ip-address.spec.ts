@@ -80,16 +80,16 @@ test("an address or a block is tested against the one on the page", async ({ pag
   await openIpAddress(page);
 
   await containsBox(page).fill("192.168.1.140");
-  await expect(page.locator("[data-verdict]")).toHaveText("Inside");
+  await expect(page.locator("[data-contains] [data-verdict]")).toHaveText("Inside");
   await expect(fact(page, "contains", "Offset from the network")).toHaveText("12");
 
   await containsBox(page).fill("192.168.1.200");
-  await expect(page.locator("[data-verdict]")).toHaveText("Outside");
+  await expect(page.locator("[data-contains] [data-verdict]")).toHaveText("Outside");
 
   await containsBox(page).fill("192.168.1.144/28");
-  await expect(page.locator("[data-verdict]")).toHaveText("Inside");
+  await expect(page.locator("[data-contains] [data-verdict]")).toHaveText("Inside");
   await containsBox(page).fill("192.168.1.0/24");
-  await expect(page.locator("[data-verdict]")).toHaveText("Outside");
+  await expect(page.locator("[data-contains] [data-verdict]")).toHaveText("Outside");
 });
 
 test("a block splits into equal ones, and says how many were left off the list", async ({ page }) => {
@@ -109,7 +109,7 @@ test("the link carries the family, the address and both of the questions asked a
   await addressBox(page).fill("2001:db8::/48");
   await containsBox(page).fill("2001:db8:0:1::/64");
   await splitBox(page).fill("52");
-  await expect(page.locator("[data-verdict]")).toHaveText("Inside");
+  await expect(page.locator("[data-contains] [data-verdict]")).toHaveText("Inside");
 
   await expect(page).toHaveURL(/#./);
   const shared = page.url();
@@ -120,4 +120,98 @@ test("the link carries the family, the address and both of the questions asked a
   await expect(addressBox(page)).toHaveValue("2001:db8::/48");
   await expect(containsBox(page)).toHaveValue("2001:db8:0:1::/64");
   await expect(splitBox(page)).toHaveValue("/52");
+});
+
+test("the registries say who administers the block and who it was delegated to", async ({ page }) => {
+  await openIpAddress(page);
+  await addressBox(page).fill("8.8.8.8");
+
+  await expect(fact(page, "registry", "Administered by")).toHaveText("Administered by ARIN");
+  await expect(fact(page, "registry", "IANA block")).toHaveText("8.0.0.0/8");
+  await expect(fact(page, "registry", "Delegated to")).toHaveText("ARIN");
+  await expect(fact(page, "registry", "Country")).toContainText("US");
+  await expect(fact(page, "registry", "Delegated block")).toHaveText("8.8.8.0 – 8.8.8.255");
+});
+
+test("a signed authorisation names the AS allowed to originate the prefix", async ({ page }) => {
+  await openIpAddress(page);
+  await addressBox(page).fill("8.8.8.8");
+
+  await expect(page.locator("[data-origin] [data-verdict]")).toHaveText("Authorised origin");
+  await expect(page.locator("[data-origin]")).toContainText("AS15169");
+  await expect(page.locator("[data-origin] tbody tr").first()).toContainText("8.8.8.0/24");
+  await expect(page.locator("[data-origin] tbody tr").first()).toContainText("up to /24");
+});
+
+test("an address nobody has signed for says so rather than leaving the card empty", async ({ page }) => {
+  await openIpAddress(page);
+  await addressBox(page).fill("192.168.1.1");
+
+  await expect(page.locator("[data-origin] [data-verdict]")).toHaveText("No ROA published");
+  await expect(page.locator("[data-origin]")).toContainText("says nothing about who may originate it");
+});
+
+test("an authorisation signed far above the address is still found", async ({ page }) => {
+  await openIpAddress(page);
+  await addressBox(page).fill("23.1.253.0");
+
+  await expect(page.locator("[data-origin] [data-verdict]")).toHaveText("Authorised origin");
+  await expect(page.locator("[data-origin] tbody tr").first()).toContainText("23.0.0.0/12");
+  await expect(page.locator("[data-origin]")).toContainText("AS20940");
+});
+
+test("an IPv6 address is read against the same three registries", async ({ page }) => {
+  await openIpAddress(page);
+  await addressBox(page).fill("2001:4860:4860::8888");
+
+  await expect(page.getByRole("heading", { name: "IPv6 Address" })).toBeVisible();
+  await expect(fact(page, "registry", "IANA block")).toHaveText("2001:4800::/23");
+  await expect(fact(page, "registry", "Delegated to")).toHaveText("ARIN");
+  await expect(page.locator("[data-origin] tbody tr").first()).toContainText("2001:4860::/32");
+});
+
+test("the AS mode answers from IANA's ranges and the registries' delegations", async ({ page }) => {
+  await openIpAddress(page);
+  await page.getByRole("radiogroup").getByText("AS", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "AS Number" })).toBeVisible();
+
+  await expect(fact(page, "registry", "IANA range")).toHaveText("AS13312 – AS15359");
+  await expect(fact(page, "registry", "Delegated to")).toHaveText("ARIN");
+  await expect(fact(page, "registry", "Country")).toContainText("US");
+  await expect(page.locator("[data-overview] [data-verdict]")).toHaveText("Delegated to a registry");
+
+  await page.getByRole("textbox", { name: "AS number" }).fill("AS64512");
+  await expect(page.locator("[data-overview] [data-verdict]")).toHaveText("Reserved, never delegated");
+  await expect(page.locator("[data-overview]")).toContainText("RFC 6996");
+});
+
+test("the link carries the AS mode and the number asked about", async ({ page }) => {
+  await openIpAddress(page);
+  await page.getByRole("radiogroup").getByText("AS", { exact: true }).click();
+  await page.getByRole("textbox", { name: "AS number" }).fill("AS3333");
+  await expect(page).toHaveURL(/#./);
+  const shared = page.url();
+
+  await page.goto(`${BASE}/`);
+  await page.goto(shared);
+  await expect(page.getByRole("heading", { name: "AS Number" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "AS number" })).toHaveValue("AS3333");
+});
+
+test("every registry answer arrives with third-party requests blocked", async ({ page }) => {
+  const host = new URL(BASE || "http://localhost:5173").host;
+  const blocked: string[] = [];
+
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url());
+    if (url.host === host) return route.continue();
+    blocked.push(url.host);
+    return route.abort();
+  });
+
+  await openIpAddress(page);
+  await addressBox(page).fill("8.8.8.8");
+  await expect(fact(page, "registry", "Delegated to")).toHaveText("ARIN");
+  await expect(page.locator("[data-origin]")).toContainText("AS15169");
+  expect(blocked).toEqual([]);
 });

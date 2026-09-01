@@ -1,6 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { AS_MAX, asWidth, readAsNumber, reservedUse, writeAsNumber } from "../src/utilities/ip-address/asn";
 import { blockOf, holdsBlock, hostsOf, maskFor, roleOf, sizeOf, split, splitCount, wildcardFor } from "../src/utilities/ip-address/blocks";
+import { asDelegationOf, delegationOf } from "../src/utilities/ip-address/delegation";
 import { type Address, BITS, type Family, familyOf, prefixOf, readCidr, withPrefix } from "../src/utilities/ip-address/parse";
+import { administrationOf, asRangeOf, multicastGroup } from "../src/utilities/ip-address/registry";
+import { originsOf } from "../src/utilities/ip-address/roa";
+import { shardFor } from "../src/utilities/ip-address/shards";
 import { classify } from "../src/utilities/ip-address/special";
 import { embeddedIpv4, writeAddress, writeArpa, writeBinary, writeCidr, writeExpanded, writeHex, writeInteger, writeValue } from "../src/utilities/ip-address/write";
 
@@ -314,5 +321,173 @@ describe("the width field and the text it edits", () => {
 describe("BITS", () => {
   it("is the whole of what the two families differ in", () => {
     expect(BITS).toEqual({ ipv4: 32, ipv6: 128 });
+  });
+});
+
+describe("administrationOf", () => {
+  it("answers a /8 out of the registry that records them one per row", () => {
+    expect(administrationOf(address("8.8.8.8"))).toMatchObject({
+      designation: "Administered by ARIN",
+      status: "LEGACY",
+      cidr: "8.0.0.0/8",
+    });
+  });
+
+  it("takes the narrowest IPv6 registration holding the address, the registry being written in /23s", () => {
+    expect(administrationOf(address("2001:4860:4860::8888", "ipv6"))).toMatchObject({
+      designation: "ARIN",
+      cidr: "2001:4800::/23",
+    });
+  });
+
+  it("has nothing to say about space nobody has been given", () => {
+    expect(administrationOf(address("fc00::1", "ipv6"))).toBeUndefined();
+  });
+});
+
+describe("multicastGroup", () => {
+  it("names a well-known IPv4 group", () => {
+    expect(multicastGroup(address("224.0.0.251"))).toBe("mDNS");
+    expect(multicastGroup(address("224.0.0.1"))).toBe("All Systems on this Subnet");
+  });
+
+  it("reads a variable-scope group at whichever scope it is asked at", () => {
+    expect(multicastGroup(address("ff02::fb", "ipv6"))).toBe("mDNSv6");
+    expect(multicastGroup(address("ff05::fb", "ipv6"))).toBe("mDNSv6");
+    expect(multicastGroup(address("ff08::fb", "ipv6"))).toBe("mDNSv6");
+  });
+
+  it("says nothing about an address in no group at all", () => {
+    expect(multicastGroup(address("8.8.8.8"))).toBe("");
+    expect(multicastGroup(address("2001:db8::1", "ipv6"))).toBe("");
+  });
+});
+
+describe("asRangeOf", () => {
+  it("names the registry a number was allocated to", () => {
+    expect(asRangeOf(15169)).toMatchObject({ designation: "Assigned by ARIN", first: 13312, last: 15359 });
+  });
+
+  it("names the stretches the IETF reserved, which are in the same registry", () => {
+    expect(asRangeOf(64512)?.designation).toBe("Reserved for Private Use");
+  });
+});
+
+describe("readAsNumber", () => {
+  it("reads a number with or without the AS in front", () => {
+    expect(readAsNumber("AS15169")).toEqual({ kind: "reading", number: 15169 });
+    expect(readAsNumber("as15169")).toEqual({ kind: "reading", number: 15169 });
+    expect(readAsNumber(" 15169 ")).toEqual({ kind: "reading", number: 15169 });
+  });
+
+  it("takes both ends of the range and nothing past them", () => {
+    expect(readAsNumber("0")).toEqual({ kind: "reading", number: 0 });
+    expect(readAsNumber(String(AS_MAX))).toEqual({ kind: "reading", number: AS_MAX });
+    expect(readAsNumber(String(AS_MAX + 1)).kind).toBe("error");
+  });
+
+  it("is unfinished rather than wrong while it is blank", () => {
+    expect(readAsNumber("")).toEqual({ kind: "blank" });
+    expect(readAsNumber("   ")).toEqual({ kind: "blank" });
+  });
+
+  it("refuses what is not a number at all", () => {
+    for (const text of ["AS", "AS-1", "1.5", "0x10", "ASN15169", "15169a"]) {
+      expect(readAsNumber(text).kind, text).toBe("error");
+    }
+  });
+
+  it("writes a number the way one is written down", () => {
+    expect(writeAsNumber(15169)).toBe("AS15169");
+    expect(asWidth(65535)).toBe("16-bit");
+    expect(asWidth(65536)).toBe("32-bit");
+  });
+
+  it("names the reserved stretches and nothing outside them", () => {
+    expect(reservedUse(64512)).toContain("Private use");
+    expect(reservedUse(4200000000)).toContain("Private use");
+    expect(reservedUse(64496)).toContain("Documentation");
+    expect(reservedUse(15169)).toBe("");
+  });
+});
+
+describe("shardFor", () => {
+  const index = ["0", "100", "200", "300"];
+
+  it("takes the last shard that starts at or below the key", () => {
+    expect(shardFor(index, 0n)).toBe(0);
+    expect(shardFor(index, 0xffn)).toBe(0);
+    expect(shardFor(index, 0x100n)).toBe(1);
+    expect(shardFor(index, 0x2ffn)).toBe(2);
+    expect(shardFor(index, 0x300n)).toBe(3);
+    expect(shardFor(index, 1n << 120n)).toBe(3);
+  });
+
+  it("answers with no shard at all below the first, which is a question needing no request", () => {
+    expect(shardFor(["100", "200"], 0n)).toBe(-1);
+    expect(shardFor([], 5n)).toBe(-1);
+  });
+});
+
+describe("the registries a shard is fetched from", () => {
+  const utility = join(import.meta.dirname, "../src/utilities/ip-address");
+  const missing: string[] = [];
+
+  beforeAll(() => {
+    for (const directory of ["delegations", "roas"]) {
+      if (!existsSync(join(utility, directory))) {
+        throw new Error(`no ${directory} at ${utility} — run \`npm run data\``);
+      }
+    }
+    vi.stubGlobal("fetch", (url: string) => {
+      const path = join(utility, url.replace(/^.*\/utilities\/ip-address\//, "").split("?")[0]);
+      if (!existsSync(path)) {
+        missing.push(url);
+        return Promise.resolve({ ok: false, status: 404 });
+      }
+      const file = readFileSync(path, "utf8");
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(JSON.parse(file)) });
+    });
+  });
+
+  afterAll(() => vi.unstubAllGlobals());
+
+  it("reads which registry an address was delegated to, and when", async () => {
+    expect(await delegationOf(address("8.8.8.8"))).toMatchObject({ rir: "arin", country: "US", date: "2023-12-28" });
+  });
+
+  it("reads an IPv6 delegation out of the prefix it was recorded as", async () => {
+    expect(await delegationOf(address("2001:4860:4860::8888", "ipv6"))).toMatchObject({ rir: "arin", country: "US" });
+  });
+
+  it("reads an AS number's delegation off the same number line", async () => {
+    expect(await asDelegationOf(15169)).toMatchObject({ rir: "arin", country: "US", date: "2000-03-30" });
+  });
+
+  it("finds an authorisation signed far above the address", async () => {
+    const found = await originsOf(address("23.1.253.0"));
+    expect(found?.covering.map((roa) => roa.cidr)).toEqual(["23.0.0.0/12"]);
+    expect(found?.covering[0].origins).toEqual([20940]);
+  });
+
+  it("gathers every authorisation covering an address, and the width each reaches", async () => {
+    const found = await originsOf(address("8.8.8.8"));
+    expect(found?.covering).toEqual([{ cidr: "8.8.8.0/24", prefix: 24, maxLength: 24, origins: [15169] }]);
+  });
+
+  it("answers with no authorisation at all for space nobody has signed for", async () => {
+    const found = await originsOf(address("192.168.1.1"));
+    expect(found?.covering).toEqual([]);
+    expect(found?.release).toMatch(/^\d{4}\/\d{2}\/\d{2}$/);
+  });
+
+  it("answers with nothing whatever when the shard will not load", async () => {
+    vi.stubGlobal("fetch", () => Promise.reject(new Error("offline")));
+    expect(await originsOf(address("210.10.10.10"))).toBeUndefined();
+    expect(await delegationOf(address("196.10.10.10"))).toBeUndefined();
+  });
+
+  it("asked for nothing that was never written", () => {
+    expect(missing).toEqual([]);
   });
 });

@@ -17,7 +17,9 @@
     "phone-geo": "node scripts/generate-phone-geo.ts",
     "country-shapes": "node scripts/generate-country-shapes.ts",
     "unicode": "node scripts/generate-unicode.ts",
-    "data": "npm run phone-geo && npm run country-shapes && npm run unicode",
+    "ip-registry": "node scripts/generate-ip-registry.ts",
+    "ip-roas": "node scripts/generate-ip-roas.ts",
+    "data": "npm run phone-geo && npm run country-shapes && npm run unicode && npm run ip-registry && npm run ip-roas",
     "outdated": "node scripts/outdated.ts",
     "check": "npm run data && npm run fmt:check && npm run typecheck && npm run attributions:check",
     "test": "npm run check && npm run vitest && npm run build"

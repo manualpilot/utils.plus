@@ -11,3 +11,6 @@ src/utilities/phone-number/maps
 src/utilities/phone-number/short-numbers.json
 src/utilities/unicode/names
 src/utilities/unicode/tables
+src/utilities/ip-address/tables
+src/utilities/ip-address/delegations
+src/utilities/ip-address/roas
