@@ -1,4 +1,4 @@
-import type { Polygon, World } from "./shapes";
+import type { Polygon, Shape, World } from "./shapes";
 
 export const ASPECT = 2;
 
@@ -34,7 +34,15 @@ export interface Place {
 }
 
 export function prepare(world: World): Prepared {
-  return new Map(Object.entries(world).map(([code, shape]) => [code, shape.map(boxed)]));
+  return new Map(Object.entries(world).map(([code, shape]) => [code, boxesOf(shape)]));
+}
+
+const BOXED = new WeakMap<Shape, readonly Part[]>();
+
+function boxesOf(shape: Shape): readonly Part[] {
+  let parts = BOXED.get(shape);
+  if (!parts) BOXED.set(shape, parts = shape.map(boxed));
+  return parts;
 }
 
 export function mapOf(

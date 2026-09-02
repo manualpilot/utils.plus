@@ -3,9 +3,9 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { FALLBACK_COUNTRY, localCountryCode } from "../src/common/local-country";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageName, languageRows, nativeNameRows } from "../src/utilities/countries/facts";
-import { borderCountries, COUNTRIES, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "../src/utilities/countries/list";
+import { borderCountries, COUNTRIES, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry, VIEW_OPTIONS } from "../src/utilities/countries/list";
 import { mapOf, prepare } from "../src/utilities/countries/map";
-import { boundariesOf, type View } from "../src/utilities/countries/shapes";
+import { boundariesOf, DEFAULT_VIEW, localView, pickView, type View, VIEW_CODES } from "../src/utilities/countries/shapes";
 
 function country(code: string) {
   const found = findCountry(code);
@@ -194,10 +194,10 @@ function boundaryFile(name: string): View {
 }
 
 const BASE = boundaryFile("world.json");
-const DEFAULT_VIEW = boundariesOf(BASE, undefined, undefined);
-const CHINA_VIEW = boundariesOf(BASE, boundaryFile("views/CN.json"), "CN");
+const DEFAULT_BOUNDARIES = boundariesOf(BASE, undefined, DEFAULT_VIEW);
+const CHINA_BOUNDARIES = boundariesOf(BASE, boundaryFile("views/CN.json"), "CN");
 
-function drawn(code: string, boundaries = DEFAULT_VIEW) {
+function drawn(code: string, boundaries = DEFAULT_BOUNDARIES) {
   const found = country(code);
   const [latitude, longitude] = found.latlng;
   return mapOf(
@@ -218,25 +218,65 @@ function acrossIn(path: string): [number, number] {
   return [Math.min(...across), Math.max(...across)];
 }
 
+describe("the point of view", () => {
+  it("offers Natural Earth's own set and every country it authors one for, named as the page names them", () => {
+    expect(VIEW_OPTIONS[0]).toEqual({ value: DEFAULT_VIEW, label: "Default" });
+    expect(VIEW_OPTIONS).toHaveLength(VIEW_CODES.length + 1);
+    expect(VIEW_OPTIONS).toContainEqual({ value: "CN", label: "China" });
+    expect(VIEW_OPTIONS).toContainEqual({ value: "GB", label: "United Kingdom" });
+    expect(VIEW_OPTIONS.every((option) => !/\p{Regional_Indicator}/u.test(option.label))).toBe(true);
+
+    const labels = VIEW_OPTIONS.slice(1).map((option) => option.label);
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b, "en")));
+  });
+
+  it("opens on the reader's own view where Natural Earth publishes one, and on the default where it does not", () => {
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue(
+      { timeZone: "Europe/Berlin" } as Intl.ResolvedDateTimeFormatOptions,
+    );
+    expect(localView()).toBe("DE");
+    expect(pickView(undefined)).toBe("DE");
+
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue(
+      { timeZone: "Australia/Sydney" } as Intl.ResolvedDateTimeFormatOptions,
+    );
+    expect(localView()).toBe(DEFAULT_VIEW);
+    vi.restoreAllMocks();
+  });
+
+  it("falls back rather than fails, which is what opens a link naming a view that has since gone", () => {
+    expect(pickView("CN")).toBe("CN");
+    expect(pickView("cn")).toBe("CN");
+    expect(pickView(DEFAULT_VIEW)).toBe(DEFAULT_VIEW);
+    expect(pickView("AU")).toBe(localView());
+    expect(pickView("ZZ")).toBe(localView());
+    expect(pickView(42)).toBe(localView());
+  });
+
+  it("draws the default view for a code that names no published one, whatever it was asked for", () => {
+    expect(boundariesOf(BASE, undefined, "CN").view).toBe(DEFAULT_VIEW);
+  });
+});
+
 describe("the boundaries", () => {
   it("has one for every country the picker offers, or says which country holds the land instead", () => {
     for (const entry of COUNTRIES) {
-      const shape = DEFAULT_VIEW.world[entry.cca2];
-      const absent = DEFAULT_VIEW.absent[entry.cca2];
+      const shape = DEFAULT_BOUNDARIES.world[entry.cca2];
+      const absent = DEFAULT_BOUNDARIES.absent[entry.cca2];
       expect(shape !== undefined || absent !== undefined, `${entry.cca2} is in neither`).toBe(true);
       expect(shape !== undefined && absent !== undefined, `${entry.cca2} is in both`).toBe(false);
     }
-    expect(Object.keys(DEFAULT_VIEW.absent).sort()).toEqual(
+    expect(Object.keys(DEFAULT_BOUNDARIES.absent).sort()).toEqual(
       ["BQ", "BV", "CC", "CX", "GF", "GP", "MQ", "RE", "SJ", "TK", "YT"],
     );
-    expect(DEFAULT_VIEW.absent.RE).toBe("FR");
+    expect(DEFAULT_BOUNDARIES.absent.RE).toBe("FR");
   });
 });
 
 describe("the map", () => {
   it("frames a country on what is near enough to it to be one place", () => {
     expect(ringsIn(drawn("AU")?.own)).toBe(2);
-    expect(DEFAULT_VIEW.world.FR.length).toBe(7);
+    expect(DEFAULT_BOUNDARIES.world.FR.length).toBe(7);
     expect(ringsIn(drawn("FR")?.own)).toBe(2);
     expect(drawn("FR")?.rest.map((land) => land.code)).not.toContain("BR");
     expect(drawn("FR")?.borders.map((land) => land.code).sort()).toEqual(
@@ -265,12 +305,12 @@ describe("the map", () => {
   });
 
   it("draws a point of view as that view has it", () => {
-    expect(CHINA_VIEW.absent).toMatchObject({ TW: "CN", XK: "RS" });
-    expect(CHINA_VIEW.shapes.TW).toBeUndefined();
-    expect(CHINA_VIEW.viewer).toBe("CN");
-    const taiwan = drawn("TW", CHINA_VIEW);
+    expect(CHINA_BOUNDARIES.absent).toMatchObject({ TW: "CN", XK: "RS" });
+    expect(CHINA_BOUNDARIES.shapes.TW).toBeUndefined();
+    expect(CHINA_BOUNDARIES.view).toBe("CN");
+    const taiwan = drawn("TW", CHINA_BOUNDARIES);
     expect(taiwan?.own).toBeUndefined();
     expect(taiwan?.rest.map((land) => land.code)).toContain("CN");
-    expect(CHINA_VIEW.shapes.AU).toBe(DEFAULT_VIEW.world.AU);
+    expect(CHINA_BOUNDARIES.shapes.AU).toBe(DEFAULT_BOUNDARIES.world.AU);
   });
 });

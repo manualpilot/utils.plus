@@ -1,19 +1,21 @@
 import { Badge, Box, Button, Card, CheckIcon, Code, type ComboboxLikeRenderOptionInput, Group, Select, Skeleton, Stack, Table, Text, Title, Tooltip } from "@mantine/core";
 import { type ReactNode, useMemo, useState } from "react";
 import { FactTable } from "../../common/fact-table";
+import { InfoMark } from "../../common/info-mark";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageRows, nativeNameRows } from "./facts";
-import { borderCountries, type Country, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry } from "./list";
+import { borderCountries, type Country, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry, VIEW_OPTIONS } from "./list";
 import { mapOf, type Place, prepare, VIEW_BOX } from "./map";
-import { type Boundaries, useBoundaries } from "./shapes";
+import { type Boundaries, DEFAULT_VIEW, pickView, useBoundaries } from "./shapes";
 
 export default function Countries() {
-  const initialState = useInitialHashState<{ country?: string }>();
+  const initialState = useInitialHashState<{ country?: string; view?: string }>();
 
   const [country, setCountry] = useState(() => pickCountry(initialState?.country));
+  const [view, setView] = useState(() => pickView(initialState?.view));
 
-  useRegisterShareState(() => ({ country: country.cca2 }));
+  useRegisterShareState(() => ({ country: country.cca2, view }));
 
   const borders = borderCountries(country);
   const prefixes = callingCodes(country);
@@ -126,8 +128,23 @@ export default function Countries() {
 
       <Card withBorder shadow="sm" radius="md">
         <Stack gap="sm">
-          <Title order={4}>Map</Title>
-          <CountryMap country={country} onSelect={setCountry} />
+          <Group justify="space-between" align="flex-end">
+            <Title order={4}>Map</Title>
+            <Group className="country-view-row" gap={4} align="flex-end" wrap="nowrap">
+              {view === DEFAULT_VIEW && <InfoMark label={DEFAULT_MEANS} />}
+              <Select
+                className="country-view"
+                label="Point of view"
+                data={VIEW_OPTIONS}
+                value={view}
+                onChange={(picked) => setView(pickView(picked))}
+                renderOption={renderCountryOption}
+                allowDeselect={false}
+                comboboxProps={{ withinPortal: true }}
+              />
+            </Group>
+          </Group>
+          <CountryMap country={country} view={view} onSelect={setCountry} />
         </Stack>
       </Card>
 
@@ -171,8 +188,8 @@ export default function Countries() {
   );
 }
 
-function CountryMap({ country, onSelect }: CountryMapProps) {
-  const boundaries = useBoundaries();
+function CountryMap({ country, view, onSelect }: CountryMapProps) {
+  const boundaries = useBoundaries(view);
   const [hovered, setHovered] = useState<string>();
 
   const prepared = useMemo(() => {
@@ -234,6 +251,7 @@ function CountryMap({ country, onSelect }: CountryMapProps) {
 
 interface CountryMapProps {
   country: Country;
+  view: string;
   onSelect: (country: Country) => void;
 }
 
@@ -246,10 +264,10 @@ function CountryName({ country }: { country: Country }) {
   );
 }
 
-function viewText({ viewer }: Boundaries): string {
-  const view = viewer && findCountry(viewer)?.name.common;
-  return view
-    ? `Boundaries as Natural Earth draws them for the ${view} point of view.`
+function viewText({ view }: Boundaries): string {
+  const named = view !== DEFAULT_VIEW ? findCountry(view)?.name.common : undefined;
+  return named
+    ? `Boundaries as Natural Earth draws them for the ${named} point of view.`
     : "Boundaries as Natural Earth draws them by default, from the territory each country holds.";
 }
 
@@ -259,6 +277,9 @@ function absentText(country: Country, { absent }: Boundaries): string {
     ? `No boundary of its own in that view: this land is inside the shape filed under ${holder}.`
     : "No boundary of its own in that view.";
 }
+
+const DEFAULT_MEANS = "Default draws each country as the territory it holds rather than as anybody claims it — "
+  + "this information is provided by Natural Earth";
 
 function placeOf(country: Country): Place {
   const [latitude, longitude] = country.latlng;
@@ -284,10 +305,11 @@ function inlinePrefixes(prefixes: string[]): string {
 }
 
 function renderCountryOption({ option, checked }: ComboboxLikeRenderOptionInput<{ value: string; label: string }>) {
+  const flag = findCountry(option.value)?.flag;
   return (
     <Group gap="xs" wrap="nowrap">
       {checked && <CheckIcon size={12} />}
-      <Text span>{findCountry(option.value)?.flag}</Text>
+      {flag && <Text span>{flag}</Text>}
       <Text size="sm">{option.label}</Text>
     </Group>
   );

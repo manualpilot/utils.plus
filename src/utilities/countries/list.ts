@@ -1,6 +1,7 @@
 import type { ComboboxParsedItem, OptionsFilter } from "@mantine/core";
 import countries, { type Country } from "world-countries";
 import { FALLBACK_COUNTRY, localCountryCode } from "../../common/local-country";
+import { DEFAULT_VIEW, VIEW_CODES } from "./shapes";
 
 export type { Country };
 
@@ -23,6 +24,13 @@ export function borderCountries(country: Country): Country[] {
 
 const BY_CODE = new Map(COUNTRIES.map((country) => [country.cca2, country]));
 const BY_ALPHA3 = new Map(COUNTRIES.map((country) => [country.cca3, country]));
+
+export const VIEW_OPTIONS = [
+  { value: DEFAULT_VIEW, label: "Default" },
+  ...VIEW_CODES
+    .map((code) => ({ value: code, label: BY_CODE.get(code)?.name.common ?? code }))
+    .sort((a, b) => a.label.localeCompare(b.label, "en")),
+];
 
 export const countryFilter: OptionsFilter = ({ options, search }) => {
   const needle = fold(search.trim());

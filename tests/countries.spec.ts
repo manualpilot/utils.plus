@@ -1,4 +1,4 @@
-import { expect, Page, test } from "@playwright/test";
+import { expect, Locator, Page, test } from "@playwright/test";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -143,7 +143,43 @@ test.describe("the page", () => {
   test("says whose boundaries it is drawing", async ({ page }) => {
     await open(page);
 
+    await expect(viewer(page)).toHaveValue("Default");
     await expect(page.getByText("Boundaries as Natural Earth draws them by default")).toBeVisible();
+  });
+
+  test("says what the one option that names no country means, while that is the one picked", async ({ page }) => {
+    await open(page);
+
+    const mark = page.getByRole("button", { name: /^Default draws each country as the territory it holds/ });
+    await mark.hover();
+    await expect(page.getByRole("tooltip")).toContainText("this information is provided by Natural Earth");
+
+    const input = await box(viewer(page));
+    const icon = await box(mark);
+    expect(icon.y + icon.height / 2).toBeCloseTo(input.y + input.height / 2, 0);
+
+    await pickView(page, "China");
+    await expect(mark).toHaveCount(0);
+    expect((await box(viewer(page))).x).toBe(input.x);
+
+    await pickView(page, "Default");
+    await expect(mark).toBeVisible();
+  });
+
+  test("redraws the map from whichever point of view is picked, and back again", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Taiwan", "Taiwan");
+    await expect(page.locator(".country-map-own")).toHaveCount(1);
+
+    await pickView(page, "China");
+    await expect(page.getByText("for the China point of view")).toBeVisible();
+    await expect(page.locator(".country-map-own")).toHaveCount(0);
+    await expect(page.getByText("this land is inside the shape filed under China")).toBeVisible();
+
+    await pickView(page, "Default");
+    await expect(page.getByText("Boundaries as Natural Earth draws them by default")).toBeVisible();
+    await expect(page.locator(".country-map-own")).toHaveCount(1);
   });
 
   test("shows the whole of a dialling plan without putting it in a row", async ({ page }) => {
@@ -188,11 +224,14 @@ test.describe("the page", () => {
     expect(offsite).toEqual([]);
   });
 
-  test("the link carries the country and nothing else", async ({ page }) => {
+  test("the link carries the country and the boundaries it is drawn from, and nothing else", async ({ page }) => {
     await open(page);
 
     await pick(page, "Japan", "Japan");
-    await expect.poll(() => hashState(page)).toEqual({ country: "JP" });
+    await expect.poll(() => hashState(page)).toEqual({ country: "JP", view: "default" });
+
+    await pickView(page, "India");
+    await expect.poll(() => hashState(page)).toEqual({ country: "JP", view: "IN" });
 
     const shared = page.url();
     const other = await page.context().newPage();
@@ -200,6 +239,8 @@ test.describe("the page", () => {
 
     await expect(showing(other)).toHaveAttribute("data-country", "JP");
     await expect(other.getByText("日本").first()).toBeVisible();
+    await expect(viewer(other)).toHaveValue("India");
+    await expect(other.getByText("for the India point of view")).toBeVisible();
   });
 });
 
@@ -217,6 +258,19 @@ async function pick(page: Page, search: string, option: string) {
   await page.getByRole("option", { name: option }).first().click();
 }
 
+const viewer = (page: Page) => page.getByRole("combobox", { name: "Point of view" });
+
+async function box(locator: Locator) {
+  const found = await locator.boundingBox();
+  if (!found) throw new Error("nothing on screen to measure");
+  return found;
+}
+
+async function pickView(page: Page, option: string) {
+  await viewer(page).click();
+  await page.getByRole("option", { name: option }).first().click();
+}
+
 function hashState(page: Page): Record<string, string> {
   let b64 = new URL(page.url()).hash.slice(1).replace(/-/g, "+").replace(/_/g, "/");
   if (!b64) return {};
@@ -231,9 +285,10 @@ function hashState(page: Page): Record<string, string> {
 test.describe("a browser in a country Natural Earth publishes a point of view for", () => {
   test.use({ timezoneId: "Asia/Shanghai", locale: "zh-CN" });
 
-  test("is drawn the boundaries that view has, and told which view it is", async ({ page }) => {
+  test("opens on the boundaries that view has, and is told which view it is", async ({ page }) => {
     await open(page);
 
+    await expect(viewer(page)).toHaveValue("China");
     await expect(page.getByText("for the China point of view")).toBeVisible();
 
     await pick(page, "Taiwan", "Taiwan");

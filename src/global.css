@@ -410,6 +410,14 @@
   max-width: calc(23rem * var(--mantine-scale));
 }
 
+.country-view {
+  width: calc(12rem * var(--mantine-scale));
+}
+
+.country-view-row .mantine-ActionIcon-root {
+  margin-bottom: calc(0.25rem * var(--mantine-scale));
+}
+
 .country-prefixes {
   max-height: calc(7rem * var(--mantine-scale));
   overflow-y: auto;
