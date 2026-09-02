@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { FALLBACK_COUNTRY, localCountryCode } from "../src/common/local-country";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageName, languageRows, nativeNameRows } from "../src/utilities/countries/facts";
 import { borderCountries, COUNTRIES, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry, VIEW_OPTIONS } from "../src/utilities/countries/list";
-import { mapOf, prepare } from "../src/utilities/countries/map";
+import { type Box, flight, type Framing, mapOf, prepare } from "../src/utilities/countries/map";
 import { boundariesOf, DEFAULT_VIEW, localView, pickView, type View, VIEW_CODES } from "../src/utilities/countries/shapes";
 
 function country(code: string) {
@@ -197,7 +197,7 @@ const BASE = boundaryFile("world.json");
 const DEFAULT_BOUNDARIES = boundariesOf(BASE, undefined, DEFAULT_VIEW);
 const CHINA_BOUNDARIES = boundariesOf(BASE, boundaryFile("views/CN.json"), "CN");
 
-function drawn(code: string, boundaries = DEFAULT_BOUNDARIES) {
+function drawn(code: string, boundaries = DEFAULT_BOUNDARIES, from?: Framing) {
   const found = country(code);
   const [latitude, longitude] = found.latlng;
   return mapOf(
@@ -206,7 +206,20 @@ function drawn(code: string, boundaries = DEFAULT_BOUNDARIES) {
     code,
     borderCountries(found).map((border) => border.cca2),
     { longitude, latitude, across: found.area > 0 ? 2 * Math.sqrt(found.area) / 111 : 6 },
+    from,
   );
+}
+
+function framingOf(code: string): Framing {
+  const map = drawn(code);
+  if (!map) throw new Error(`no map of ${code}`);
+  return map.framing;
+}
+
+function opening(keyframe: Keyframe): { x: number; y: number; scale: number } {
+  const read = /^translate\((-?[\d.]+)px, (-?[\d.]+)px\) scale\(([\d.]+)\)$/.exec(String(keyframe.transform));
+  if (!read) throw new Error(`not a flight: ${String(keyframe.transform)}`);
+  return { x: Number(read[1]), y: Number(read[2]), scale: Number(read[3]) };
 }
 
 function ringsIn(path: string | undefined): number {
@@ -302,6 +315,38 @@ describe("the map", () => {
     const reunion = drawn("RE");
     expect(reunion?.own).toBeUndefined();
     expect(reunion?.rest.map((land) => land.code)).toEqual(["FR"]);
+  });
+
+  it("flies from where the last map was framed, over everything the flight passes across", () => {
+    const estonia = drawn("EE", DEFAULT_BOUNDARIES, framingOf("RU"));
+    const opened = estonia?.from as Box;
+    expect(opened).toBeDefined();
+    expect(opened.right - opened.left).toBeGreaterThan(10000);
+
+    expect(estonia?.rest.length).toBeGreaterThan(3 * Number(drawn("EE")?.rest.length));
+
+    const russia = drawn("RU", DEFAULT_BOUNDARIES, framingOf("EE"));
+    const closed = russia?.from as Box;
+    expect(closed).toBeDefined();
+    expect(closed.right - closed.left).toBeLessThan(100);
+  });
+
+  it("cuts rather than fly where the two frames have nothing in common", () => {
+    expect(drawn("IS", DEFAULT_BOUNDARIES, framingOf("AU"))?.from).toBeUndefined();
+    expect(drawn("PT", DEFAULT_BOUNDARIES, framingOf("PT"))?.from).toBeUndefined();
+  });
+
+  it("opens a flight over the frame it is flown from and lands on the whole box", () => {
+    const frames = flight({ left: 250, top: 125, right: 750, bottom: 375 }, 1.6);
+    const [first] = frames;
+    const last = frames[frames.length - 1];
+
+    expect(opening(first)).toEqual({ x: -500, y: -250, scale: 2 });
+    expect(first.strokeWidth).toBe(0.8);
+    expect(opening(last)).toEqual({ x: 0, y: 0, scale: 1 });
+    expect(last.strokeWidth).toBe(1.6);
+
+    expect(opening(frames[frames.length >> 1]).scale).toBeCloseTo(Math.SQRT2, 6);
   });
 
   it("draws a point of view as that view has it", () => {

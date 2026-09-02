@@ -6,6 +6,8 @@ export const VIEW_BOX = "0 0 1000 500";
 
 const WIDTH = 1000;
 
+const HEIGHT = WIDTH / ASPECT;
+
 export interface Land {
   code: string;
   path: string;
@@ -15,6 +17,14 @@ export interface CountryMap {
   own: string | undefined;
   borders: readonly Land[];
   rest: readonly Land[];
+  framing: Framing;
+  from: Box | undefined;
+}
+
+export interface Framing {
+  meridian: number;
+  parallel: number;
+  frame: Box;
 }
 
 export interface Part {
@@ -51,27 +61,90 @@ export function mapOf(
   code: string,
   borders: readonly string[],
   place: Place,
+  from?: Framing,
 ): CountryMap | undefined {
-  const framing = world.get(code) ?? shapes.get(code);
-  const middle = framing && widest(framing);
+  const pieces = world.get(code) ?? shapes.get(code);
+  const middle = pieces && widest(pieces);
   const meridian = middle ? (middle.west + middle.east) / 2 : place.longitude;
   const parallel = middle ? (middle.north + middle.south) / 2 : place.latitude;
-  const frame = fitted(framing ? framed(framing, meridian, parallel) : over(place, parallel));
+  const frame = fitted(pieces ? framed(pieces, meridian, parallel) : over(place, parallel));
+
+  if (nothingIn(shapes, meridian, parallel, frame)) return undefined;
+
+  const previous = from && reframed(from, meridian, parallel);
+  const start = previous && overlaps(previous, frame) ? onto(previous, frame) : undefined;
+  const flown = start && moved(start) ? start : undefined;
+  const cover = previous && flown ? union(frame, previous) : frame;
 
   const drawn = (found: string): Land | undefined => {
-    const path = pathOf(shapes.get(found), meridian, parallel, frame);
+    const path = pathOf(shapes.get(found), meridian, parallel, frame, cover);
     return path ? { code: found, path } : undefined;
   };
 
   const named = new Set([code, ...borders]);
-  const own = pathOf(shapes.get(code), meridian, parallel, frame) || undefined;
+  const own = pathOf(shapes.get(code), meridian, parallel, frame, cover) || undefined;
   const neighbours = borders.flatMap((border) => drawn(border) ?? []);
   const rest = [...shapes.keys()].filter((found) => !named.has(found)).flatMap((found) => drawn(found) ?? []);
 
-  if (!own && neighbours.length === 0 && rest.length === 0) return undefined;
-
-  return { own, borders: neighbours, rest };
+  return { own, borders: neighbours, rest, framing: { meridian, parallel, frame }, from: flown };
 }
+
+function nothingIn(shapes: Prepared, meridian: number, parallel: number, frame: Box): boolean {
+  for (const parts of shapes.values()) {
+    for (const part of parts) {
+      if (overlaps(boxAt(part, meridian, parallel), frame)) return false;
+    }
+  }
+  return true;
+}
+
+function reframed(from: Framing, meridian: number, parallel: number): Box {
+  const squeeze = Math.cos(parallel * Math.PI / 180) / Math.cos(from.parallel * Math.PI / 180);
+  const shift = x(from.meridian, meridian, parallel);
+  return {
+    left: from.frame.left * squeeze + shift,
+    right: from.frame.right * squeeze + shift,
+    top: from.frame.top,
+    bottom: from.frame.bottom,
+  };
+}
+
+function onto(box: Box, frame: Box): Box {
+  const scale = WIDTH / (frame.right - frame.left);
+  return {
+    left: (box.left - frame.left) * scale,
+    top: (box.top - frame.top) * scale,
+    right: (box.right - frame.left) * scale,
+    bottom: (box.bottom - frame.top) * scale,
+  };
+}
+
+function moved(start: Box): boolean {
+  return Math.abs(start.left) > STILL || Math.abs(start.top) > STILL
+    || Math.abs(start.right - WIDTH) > STILL || Math.abs(start.bottom - HEIGHT) > STILL;
+}
+
+const STILL = 1;
+
+export function flight(from: Box, stroke: number): Keyframe[] {
+  const opened = Math.max(WIDTH / (from.right - from.left), HEIGHT / (from.bottom - from.top));
+  const across = (from.left + from.right) / 2;
+  const down = (from.top + from.bottom) / 2;
+
+  return Array.from({ length: STEPS + 1 }, (_, step) => {
+    const through = step / STEPS;
+    const scale = opened ** (1 - through);
+    const along = opened === 1 ? through : (1 / opened - 1 / scale) / (1 / opened - 1);
+    const middle = { x: across + (WIDTH / 2 - across) * along, y: down + (HEIGHT / 2 - down) * along };
+    return {
+      transform: `translate(${round(WIDTH / 2 - scale * middle.x)}px, ${round(HEIGHT / 2 - scale * middle.y)}px) `
+        + `scale(${scale})`,
+      strokeWidth: stroke / scale,
+    };
+  });
+}
+
+const STEPS = 24;
 
 function over(place: Place, parallel: number): Box {
   const half = place.across / 2;
@@ -87,7 +160,7 @@ function y(latitude: number): number {
   return -latitude;
 }
 
-interface Box {
+export interface Box {
   left: number;
   top: number;
   right: number;
@@ -150,13 +223,19 @@ const MARGIN = 0.08;
 
 const SMALLEST = 0.01;
 
-function pathOf(parts: readonly Part[] | undefined, meridian: number, parallel: number, frame: Box): string {
+function pathOf(
+  parts: readonly Part[] | undefined,
+  meridian: number,
+  parallel: number,
+  frame: Box,
+  cover: Box,
+): string {
   const scale = WIDTH / (frame.right - frame.left);
   let path = "";
 
   for (const part of parts ?? []) {
     const shift = around(part, meridian);
-    if (!overlaps(boxAt(part, meridian, parallel, shift), frame)) continue;
+    if (!overlaps(boxAt(part, meridian, parallel, shift), cover)) continue;
     for (const ring of part.polygon) {
       for (let at = 0; at < ring.length; at += 2) {
         const across = (x(ring[at] + shift, meridian, parallel) - frame.left) * scale;

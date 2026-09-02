@@ -122,6 +122,46 @@ test.describe("the page", () => {
     await expect(fact(page, "Capital")).toContainText("Madrid");
   });
 
+  test("makes the countries the frame merely holds the way to them too", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Portugal", "Portugal");
+    const map = page.locator("svg.country-map");
+
+    const land = map.locator(".country-map-land[data-reachable]");
+    await expect(land.first()).toBeAttached();
+
+    await land.first().dispatchEvent("click");
+    await expect(showing(page)).not.toHaveAttribute("data-country", "PT");
+    await expect(page.locator("svg.country-map")).toBeVisible();
+  });
+
+  test("flies to the country clicked rather than cutting to it", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Portugal", "Portugal");
+    const map = page.locator("svg.country-map");
+    const flight = page.locator(".country-map-flight");
+
+    const opened = page.evaluate(() =>
+      new Promise<string>((resolve) => {
+        const group = document.querySelector(".country-map-flight");
+        const watch = () => {
+          if (!group) return resolve("gone");
+          if (group.getAnimations().length > 0) return resolve(getComputedStyle(group).transform);
+          requestAnimationFrame(watch);
+        };
+        watch();
+      })
+    );
+
+    await map.locator(".country-map-neighbour").click();
+    expect(await opened).not.toBe("none");
+
+    await expect(showing(page)).toHaveAttribute("data-country", "ES");
+    await expect.poll(() => flight.evaluate((group) => getComputedStyle(group).transform)).toBe("none");
+  });
+
   test("names whatever the pointer is over on the map, with its flag", async ({ page }) => {
     await open(page);
 

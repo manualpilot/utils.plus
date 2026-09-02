@@ -1,12 +1,13 @@
 import { Badge, Box, Button, Card, CheckIcon, Code, type ComboboxLikeRenderOptionInput, Group, Select, Skeleton, Stack, Table, Text, Title, Tooltip } from "@mantine/core";
-import { type ReactNode, useMemo, useState } from "react";
+import { useReducedMotion } from "@mantine/hooks";
+import { type ReactNode, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import { FactTable } from "../../common/fact-table";
 import { InfoMark } from "../../common/info-mark";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageRows, nativeNameRows } from "./facts";
 import { borderCountries, type Country, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry, VIEW_OPTIONS } from "./list";
-import { mapOf, type Place, prepare, VIEW_BOX } from "./map";
+import { flight, type Framing, mapOf, type Place, prepare, VIEW_BOX } from "./map";
 import { type Boundaries, DEFAULT_VIEW, pickView, useBoundaries } from "./shapes";
 
 export default function Countries() {
@@ -191,6 +192,10 @@ export default function Countries() {
 function CountryMap({ country, view, onSelect }: CountryMapProps) {
   const boundaries = useBoundaries(view);
   const [hovered, setHovered] = useState<string>();
+  const still = useReducedMotion();
+  const flying = useRef<SVGGElement>(null);
+  const framing = useRef<Framing>(undefined);
+  const [landing, land] = useReducer((count: number) => count + 1, 0);
 
   const prepared = useMemo(() => {
     if (!boundaries) return undefined;
@@ -206,9 +211,33 @@ function CountryMap({ country, view, onSelect }: CountryMapProps) {
         country.cca2,
         borderCountries(country).map((each) => each.cca2),
         placeOf(country),
+        still ? undefined : framing.current,
       ),
-    [prepared, country],
+    [prepared, country, still, landing],
   );
+
+  useLayoutEffect(() => {
+    framing.current = drawn?.framing;
+    const group = flying.current;
+    if (!group || !drawn?.from) return;
+
+    const frames = flight(drawn.from, Number.parseFloat(getComputedStyle(group).strokeWidth) || 0);
+    group.style.transform = String(frames[0].transform);
+    group.style.strokeWidth = String(frames[0].strokeWidth);
+
+    const moving = group.animate(frames, { duration: FLIGHT, easing: EASING, fill: "forwards" });
+    const settle = () => {
+      group.style.transform = "";
+      group.style.strokeWidth = "";
+      moving.cancel();
+    };
+    moving.finished.then(() => {
+      settle();
+      land();
+    }, () => {});
+
+    return settle;
+  }, [drawn]);
 
   if (boundaries === undefined) return <Skeleton className="country-map" radius="sm" />;
   if (boundaries === null) return <Text size="sm" c="dimmed">The boundaries could not be read.</Text>;
@@ -219,27 +248,37 @@ function CountryMap({ country, view, onSelect }: CountryMapProps) {
     onMouseLeave: () => setHovered(undefined),
   });
 
+  const reaching = (code: string) =>
+    findCountry(code) ? { ...naming(code), onClick: () => onSelect(pickCountry(code)), "data-reachable": true } : {};
+
   return (
     <Stack gap={6}>
       {drawn && (
         <Tooltip.Floating label={under && <CountryName country={under} />} disabled={!under} position="top">
           <svg className="country-map" viewBox={VIEW_BOX} role="img" aria-label={mapLabel(country)}>
-            {drawn.rest.map((land) => (
-              <path key={land.code} className="country-map-land" fillRule="evenodd" d={land.path} />
-            ))}
-            {drawn.borders.map((land) => (
-              <path
-                key={land.code}
-                className="country-map-neighbour"
-                fillRule="evenodd"
-                d={land.path}
-                onClick={() => onSelect(pickCountry(land.code))}
-                {...naming(land.code)}
-              />
-            ))}
-            {drawn.own && (
-              <path className="country-map-own" fillRule="evenodd" d={drawn.own} {...naming(country.cca2)} />
-            )}
+            <g ref={flying} className="country-map-flight">
+              {drawn.rest.map((shape) => (
+                <path
+                  key={shape.code}
+                  className="country-map-land"
+                  fillRule="evenodd"
+                  d={shape.path}
+                  {...reaching(shape.code)}
+                />
+              ))}
+              {drawn.borders.map((shape) => (
+                <path
+                  key={shape.code}
+                  className="country-map-neighbour"
+                  fillRule="evenodd"
+                  d={shape.path}
+                  {...reaching(shape.code)}
+                />
+              ))}
+              {drawn.own && (
+                <path className="country-map-own" fillRule="evenodd" d={drawn.own} {...naming(country.cca2)} />
+              )}
+            </g>
           </svg>
         </Tooltip.Floating>
       )}
@@ -254,6 +293,10 @@ interface CountryMapProps {
   view: string;
   onSelect: (country: Country) => void;
 }
+
+const FLIGHT = 520;
+
+const EASING = "ease-in-out";
 
 function CountryName({ country }: { country: Country }) {
   return (

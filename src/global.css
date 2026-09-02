@@ -432,21 +432,30 @@
 svg.country-map {
   background: var(--mantine-color-body);
   border-radius: var(--mantine-radius-sm);
-}
-
-.country-map path {
   stroke: var(--mantine-color-body);
   stroke-width: 1.6;
   stroke-linejoin: round;
+}
+
+.country-map-flight {
+  transform-box: view-box;
+  transform-origin: 0 0;
 }
 
 .country-map-land {
   fill: var(--mantine-color-grey-7);
 }
 
+.country-map path[data-reachable] {
+  cursor: pointer;
+}
+
+.country-map-land[data-reachable]:hover {
+  fill: var(--mantine-color-grey-6);
+}
+
 .country-map-neighbour {
   fill: var(--mantine-color-grey-5);
-  cursor: pointer;
 }
 
 .country-map-neighbour:hover {
