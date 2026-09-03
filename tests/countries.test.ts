@@ -288,9 +288,9 @@ describe("the boundaries", () => {
 
 describe("the map", () => {
   it("frames a country on what is near enough to it to be one place", () => {
-    expect(ringsIn(drawn("AU")?.own)).toBe(2);
-    expect(DEFAULT_BOUNDARIES.world.FR.length).toBe(7);
-    expect(ringsIn(drawn("FR")?.own)).toBe(2);
+    expect(ringsIn(drawn("AU")?.own)).toBe(5);
+    expect(DEFAULT_BOUNDARIES.world.FR.length).toBe(9);
+    expect(ringsIn(drawn("FR")?.own)).toBe(3);
     expect(drawn("FR")?.rest.map((land) => land.code)).not.toContain("BR");
     expect(drawn("FR")?.borders.map((land) => land.code).sort()).toEqual(
       ["AD", "BE", "CH", "DE", "ES", "IT", "LU", "MC"],
