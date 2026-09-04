@@ -72,6 +72,50 @@ test("the calendar opens on what the box says and writes back the offset it was 
   await expect(page.getByText("That is not an epoch or a date this page can read")).toBeVisible();
 });
 
+test("the calendar reads and writes its wall clock in the zone the dropdown names", async ({ page }) => {
+  await openTime(page);
+  await input(page).fill("2026-02-10T13:34:56+01:00");
+
+  await page.getByRole("combobox", { name: "Time zones" }).click();
+  await page.keyboard.type("Tokyo");
+  await page.getByRole("option", { name: "Asia/Tokyo" }).click();
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Pick a date and time" }).click();
+  const picker = page.getByRole("dialog", { name: "Pick a date and time" });
+  const zone = picker.getByRole("combobox", { name: "Zone", exact: true });
+  await expect(zone).toHaveValue("Europe/Berlin");
+
+  await zone.click();
+  await expect(picker.getByRole("option")).toHaveText(["Europe/Berlin", "UTC", "Asia/Tokyo"]);
+  await picker.getByRole("option", { name: "Asia/Tokyo", exact: true }).click();
+  await expect(picker.getByRole("spinbutton").first()).toHaveValue("21");
+  await expect(input(page)).toHaveValue("2026-02-10T13:34:56+01:00");
+
+  await picker.getByRole("button", { name: "11 February 2026" }).click();
+  await expect(input(page)).toHaveValue("2026-02-11T21:34:56+09:00");
+  await expect(row(page, "Unix seconds")).toContainText("1770813296");
+  await expect(fact(page, "Europe/Berlin", "ISO 8601")).toHaveText("2026-02-11T13:34:56+01:00");
+});
+
+test("the calendar under the counting modes is read on the zone the page counts in", async ({ page }) => {
+  await openTime(page);
+  await chooseMode(page, "Duration");
+  const counted = page.getByRole("combobox", { name: "Zone", exact: true });
+  await counted.click();
+  await counted.fill("Asia/Tokyo");
+  await page.getByRole("option", { name: "Asia/Tokyo" }).click();
+
+  await box(page, "Instant").fill("2026-02-10T13:34:56+01:00");
+  await page.getByRole("button", { name: "Pick a date and time" }).click();
+  const picker = page.getByRole("dialog", { name: "Pick a date and time" });
+  await expect(picker.getByRole("combobox", { name: "Zone", exact: true })).toHaveCount(0);
+  await expect(picker.getByRole("spinbutton").first()).toHaveValue("21");
+
+  await picker.getByRole("button", { name: "11 February 2026" }).click();
+  await expect(box(page, "Instant")).toHaveValue("2026-02-11T21:34:56+09:00");
+});
+
 test("the calendar over a blank box holds the second it was opened", async ({ page }) => {
   await openTime(page);
   await page.getByRole("button", { name: "Pick a date and time" }).click();
@@ -124,6 +168,42 @@ test("an unreadable input says so and takes the times away", async ({ page }) =>
   await expect(page.getByText("That is not an epoch or a date this page can read")).toBeVisible();
   await expect(page.locator(".absolute-error")).toHaveCount(1);
   await expect(zoneCards(page)).toHaveCount(0);
+});
+
+test("the zone picker answers to the country and to a city the name never mentions", async ({ page }) => {
+  await openTime(page);
+
+  const zones = page.getByRole("combobox", { name: "Time zones" });
+  await zones.click();
+  await zones.fill("New Zealand");
+  await expect(page.locator(".zone-name")).toHaveText(["Pacific/Auckland", "Pacific/Chatham", "Antarctica/McMurdo"]);
+  await expect(page.locator(".zone-match")).toHaveText(["New Zealand", "New Zealand", "New Zealand Time"]);
+
+  await zones.fill("Wellington");
+  await expect(page.locator(".zone-name")).toHaveText(["Pacific/Auckland"]);
+  await expect(page.locator(".zone-match")).toHaveText(["Wellington"]);
+  await page.getByRole("option", { name: "Pacific/Auckland" }).click();
+  await page.keyboard.press("Escape");
+  await expect(zoneCards(page)).toHaveText(["Instant", "Europe/Berlin", "UTC", "Pacific/Auckland"]);
+});
+
+test("a reason too long for the row is cut off rather than widening the list", async ({ page }) => {
+  await page.setViewportSize({ width: 430, height: 700 });
+  await openTime(page);
+
+  const zones = page.getByRole("combobox", { name: "Time zones" });
+  await zones.click();
+  await zones.fill("a");
+
+  const dropdown = page.locator(".zone-dropdown");
+  const rows = page.locator(".zone-row");
+  const width = await dropdown.evaluate((el) => el.clientWidth);
+  const widest = await rows.evaluateAll((els) => Math.max(...els.map((el) => el.clientWidth)));
+  expect(widest).toBeLessThanOrEqual(width);
+
+  const clipped = page.locator(".zone-match").first();
+  await expect(clipped).toHaveCSS("text-overflow", "ellipsis");
+  expect(await clipped.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
 });
 
 test("the link carries the zones it was shared from, not the reader's", async ({ browser, page }) => {

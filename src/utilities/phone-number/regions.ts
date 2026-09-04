@@ -1,7 +1,7 @@
-import type { ComboboxParsedItem, OptionsFilter } from "@mantine/core";
 import { type CountryCode, getCountries, getCountryCallingCode, parsePhoneNumberFromString } from "libphonenumber-js/max";
 import metadata from "libphonenumber-js/metadata.max";
 import { FALLBACK_COUNTRY, localCountryCode } from "../../common/local-country";
+import { fold, NO_MATCH, rankedFilter } from "../../common/option-search";
 
 export type { CountryCode };
 
@@ -96,18 +96,7 @@ const DIGIT = /\d/;
 const DIGITS = /\D/g;
 const MAX_CALLING_CODE_DIGITS = 3;
 
-export const regionFilter: OptionsFilter = ({ options, search }) => {
-  const needle = fold(search.trim().replace(/^\+/, ""));
-  if (!needle) return options;
-
-  return options
-    .flatMap((option) => {
-      const rank = isItem(option) ? rankOf(String(option.value), needle) : NO_MATCH;
-      return rank === NO_MATCH ? [] : [{ option, rank }];
-    })
-    .sort((a, b) => a.rank - b.rank)
-    .map((match) => match.option);
-};
+export const regionFilter = rankedFilter(rankOf, (search) => fold(search.replace(/^\+/, "")));
 
 function rankOf(code: string, needle: string): number {
   const terms = SEARCH_TERMS.get(code);
@@ -118,26 +107,16 @@ function rankOf(code: string, needle: string): number {
   return terms.calling.startsWith(needle) ? 3 : NO_MATCH;
 }
 
-const NO_MATCH = Number.MAX_SAFE_INTEGER;
-
-interface SearchTerms {
+interface RegionTerms {
   name: string;
   code: string;
   calling: string;
 }
 
-function isItem(option: ComboboxParsedItem): option is Extract<ComboboxParsedItem, { value: unknown }> {
-  return "value" in option;
-}
-
-const SEARCH_TERMS = new Map<string, SearchTerms>(
+const SEARCH_TERMS = new Map<string, RegionTerms>(
   REGIONS.map((region) => [region.code, {
     name: fold(region.name),
     code: fold(region.code),
     calling: region.callingCode,
   }]),
 );
-
-function fold(value: string): string {
-  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-}

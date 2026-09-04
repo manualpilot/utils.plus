@@ -91,6 +91,15 @@ export function wallDate(text: string, timeZone: string): Date | null {
   return new Date(zoneInstant(wall, timeZone));
 }
 
+export function wallText(wall: WallClock): string {
+  const date = `${String(wall.year).padStart(4, "0")}-${pad(wall.month)}-${pad(wall.day)}`;
+  return `${date} ${pad(wall.hour)}:${pad(wall.minute)}:${pad(wall.second)}`;
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
 function readsAs(ms: number, wall: WallClock, timeZone: string): boolean {
   return wallKey(zoneClock(new Date(ms), timeZone)) === wallKey(wall);
 }

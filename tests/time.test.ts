@@ -1,9 +1,11 @@
+import rawTimeZones from "@vvo/tzdb/raw-time-zones.json";
 import { describe, expect, it } from "vitest";
-import { TIME_ZONES, wallDate, zoneClock } from "../src/common/zone-clock";
+import { TIME_ZONES, wallDate, wallText, zoneClock } from "../src/common/zone-clock";
 import { betweenInstants, elapsedMs, shiftInstant } from "../src/utilities/time/arithmetic";
 import { clockDuration, compactDuration, isoDuration, readDuration, signedCompact, spelledDuration, unitTotals } from "../src/utilities/time/duration";
 import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, relativeTime, rfc2822 } from "../src/utilities/time/formats";
 import { readTimestamp } from "../src/utilities/time/read";
+import { zoneFilter, zoneMatches } from "../src/utilities/time/zones";
 
 const BERLIN_SUMMER = new Date("2026-08-10T12:34:56.789Z");
 const BERLIN_WINTER = new Date("2026-01-10T12:34:56.000Z");
@@ -93,6 +95,82 @@ describe("the zone list", () => {
     expect(TIME_ZONES).not.toContain("Europe/Kiev");
   });
 });
+
+describe("the zone search", () => {
+  it("finds a zone by the country it is in, which its own name never says", () => {
+    expect(search("new zealand")).toEqual(["Pacific/Auckland", "Pacific/Chatham", "Antarctica/McMurdo"]);
+    expect(search("germany")).toEqual(["Europe/Berlin"]);
+    expect(search("deutschland")).toEqual([]);
+  });
+
+  it("finds a zone by a city it keeps the time of and is not named after", () => {
+    expect(search("wellington")).toEqual(["Pacific/Auckland"]);
+    expect(search("rio de janeiro")).toEqual(["America/Sao_Paulo"]);
+  });
+
+  it("reads an underscore and a space as each other, which the IANA name spells one way", () => {
+    expect(search("new york")).toContain("America/New_York");
+    expect(search("new_york")).toEqual(search("new york"));
+  });
+
+  it("finds a zone by what its clock reads as well as by where it is", () => {
+    expect(search("nzst")).toEqual(["Antarctica/McMurdo", "Pacific/Auckland"]);
+    expect(search("+05:30")).toEqual(["Asia/Colombo", "Asia/Kolkata"]);
+    expect(search("cst").slice(0, 3)).toEqual(["America/Bahia_Banderas", "America/Belize", "America/Chicago"]);
+  });
+
+  it("ranks the name on the label first, then the country, then the cities in it", () => {
+    expect(search("chi").slice(0, 3)).toEqual(["America/Chicago", "America/Chihuahua", "Asia/Chita"]);
+    expect(search("chi")).toContain("Asia/Shanghai");
+    expect(search("china").slice(0, 2)).toEqual(["Asia/Shanghai", "Asia/Urumqi"]);
+    expect(search("china")).toContain("America/Managua");
+    expect(search("auckland")[0]).toBe("Pacific/Auckland");
+  });
+
+  it("offers the whole list for a search nobody has typed into, and none of it for a word nowhere on earth", () => {
+    expect(search("   ")).toEqual(TIME_ZONES);
+    expect(search("zzzz")).toEqual([]);
+  });
+
+  it("answers to every name it offers, UTC included", () => {
+    expect(search("utc")).toEqual(["UTC"]);
+    expect(TIME_ZONES.filter((zone) => !search(zone).includes(zone))).toEqual([]);
+  });
+
+  it("has tzdb's account of every zone the picker offers", () => {
+    const known = new Set(rawTimeZones.flatMap((zone) => [zone.name, ...zone.group]));
+    expect(TIME_ZONES.filter((zone) => zone !== "UTC" && !known.has(zone))).toEqual([]);
+  });
+});
+
+describe("the reason a zone answered", () => {
+  it("names the word that matched and never one the label already says", () => {
+    expect(zoneMatches("Pacific/Auckland", "wellington")).toEqual(["Wellington"]);
+    expect(zoneMatches("Pacific/Auckland", "auckland")).toEqual([]);
+    expect(zoneMatches("Asia/Shanghai", "china")).toEqual(["China"]);
+  });
+
+  it("says one reason where two would say the same thing", () => {
+    expect(zoneMatches("Pacific/Auckland", "new zealand")).toEqual(["New Zealand"]);
+    expect(zoneMatches("Antarctica/McMurdo", "new zealand")).toEqual(["New Zealand Time"]);
+  });
+
+  it("names them in the order the bands are ranked in", () => {
+    expect(zoneMatches("Africa/Abidjan", "a")).toEqual(["Ivory Coast", "Abobo", "Bouaké", "Greenwich Mean Time"]);
+  });
+
+  it("has nothing to say for a search nobody has typed, or a zone that is nowhere", () => {
+    expect(zoneMatches("Pacific/Auckland", "   ")).toEqual([]);
+    expect(zoneMatches("UTC", "utc")).toEqual([]);
+  });
+});
+
+const ZONE_OPTIONS = TIME_ZONES.map((zone) => ({ value: zone, label: zone }));
+
+function search(term: string): string[] {
+  return zoneFilter({ options: ZONE_OPTIONS, search: term, limit: Infinity })
+    .flatMap((option) => "value" in option ? [String(option.value)] : []);
+}
 
 function formats(timeZone: string): boolean {
   try {
@@ -223,6 +301,17 @@ describe("wallDate", () => {
 
   it.each(["2026-02-10", "2026-02-10 13:34", "half past four", ""])("has nothing to read in %s", (wall) => {
     expect(wallDate(wall, "UTC")).toBeNull();
+  });
+
+  it.each([
+    ["2026-02-10 13:34:56", "Europe/Berlin"],
+    ["2026-08-10 14:34:56", "Europe/Berlin"],
+    ["2026-02-10 12:34:56", "UTC"],
+    ["2026-02-10 18:04:56", "Asia/Kolkata"],
+    ["2026-02-10 21:34:56", "Asia/Tokyo"],
+  ])("writes %s back as itself in %s", (wall, zone) => {
+    const date = wallDate(wall, zone);
+    expect(date && wallText(zoneClock(date, zone))).toBe(wall);
   });
 });
 

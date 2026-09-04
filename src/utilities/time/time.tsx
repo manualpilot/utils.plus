@@ -2,7 +2,7 @@ import { closestCenter, DndContext, type DragEndEvent, KeyboardSensor, PointerSe
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ActionIcon, Badge, Box, Card, Group, MultiSelect, SegmentedControl, Select, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Box, Card, CheckIcon, type ComboboxLikeRenderOptionInput, Group, MultiSelect, SegmentedControl, Select, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import { FactTable } from "../../common/fact-table";
 import { INSTANT_PICKER_WIDTH, InstantPicker } from "../../common/instant-picker";
@@ -15,7 +15,7 @@ import { clockDuration, compactDuration, type Duration, isoDuration, readDuratio
 import { httpDate, isoBasic, isoExtended, isoOrdinalDate, isoWeekDate, offsetDigits, readable, relativeTime, rfc2822, zoneName } from "./formats";
 import { type Mode, MODE_OPTIONS, MODES, pickDuration, pickMode } from "./modes";
 import { readTimestamp } from "./read";
-import { pickZone, pickZones } from "./zones";
+import { pickZone, pickZones, zoneFilter, zoneMatches } from "./zones";
 
 export default function Time() {
   const initialState = useInitialHashState<{
@@ -34,6 +34,7 @@ export default function Time() {
   const [until, setUntil] = useState(typeof initialState?.until === "string" ? initialState.until : "");
   const [zones, setZones] = useState(() => pickZones(initialState?.zones));
   const [zone, setZone] = useState(() => pickZone(initialState?.zone));
+  const [zoneSearch, setZoneSearch] = useState("");
   const [now, setNow] = useState(() => Date.now());
   const [collapsed, setCollapsed] = useState(initialState?.collapsed ?? false);
 
@@ -71,7 +72,9 @@ export default function Time() {
     reading.error || (mode === "duration" && span.error) || (mode === "between" && ending.error),
   );
 
-  const spellInstant = (picked: Date) => isoExtended(zoneClock(picked, LOCAL_ZONE));
+  const pickedZones = mode === "instant" ? zones : [zone];
+
+  const spellInstant = (picked: Date, timeZone: string) => isoExtended(zoneClock(picked, timeZone));
 
   const reorderZones = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -125,7 +128,8 @@ export default function Time() {
                 instant={instant}
                 live={live}
                 field={mode === "between" ? MODES.between.field : undefined}
-                onPick={(picked) => setValue(spellInstant(picked))}
+                zones={pickedZones}
+                onPick={(picked, timeZone) => setValue(spellInstant(picked, timeZone))}
                 onPin={() => setValue(String(ticking.getTime()))}
                 onClear={() => setValue("")}
               />
@@ -148,7 +152,8 @@ export default function Time() {
                   instant={endInstant}
                   live={endLive}
                   field="To"
-                  onPick={(picked) => setUntil(spellInstant(picked))}
+                  zones={pickedZones}
+                  onPick={(picked, timeZone) => setUntil(spellInstant(picked, timeZone))}
                   onPin={() => setUntil(String(ticking.getTime()))}
                   onClear={() => setUntil("")}
                 />
@@ -159,12 +164,17 @@ export default function Time() {
             ? (
               <MultiSelect
                 label="Time zones"
-                description="Searched by IANA name"
+                description="Searched by name, city, country or abbreviation"
                 data={TIME_ZONES}
                 value={zones}
                 onChange={setZones}
+                filter={zoneFilter}
                 searchable
-                nothingFoundMessage="No zone by that name"
+                onSearchChange={setZoneSearch}
+                renderOption={zoneOption(zoneSearch)}
+                classNames={{ option: "zone-row", dropdown: "zone-dropdown" }}
+                selectFirstOptionOnChange
+                nothingFoundMessage="No zone, city or country by that name"
               />
             )
             : (
@@ -174,9 +184,14 @@ export default function Time() {
                 data={TIME_ZONES}
                 value={zone}
                 onChange={(next) => setZone(pickZone(next))}
+                filter={zoneFilter}
                 searchable
+                onSearchChange={setZoneSearch}
+                renderOption={zoneOption(zoneSearch)}
+                classNames={{ option: "zone-row", dropdown: "zone-dropdown" }}
                 allowDeselect={false}
-                nothingFoundMessage="No zone by that name"
+                selectFirstOptionOnChange
+                nothingFoundMessage="No zone, city or country by that name"
               />
             )}
         </Box>
@@ -355,6 +370,19 @@ function ShiftedCard({
       </Stack>
     </Card>
   );
+}
+
+function zoneOption(search: string) {
+  return ({ option, checked }: ComboboxLikeRenderOptionInput<{ value: string; label: string }>) => {
+    const matched = zoneMatches(option.value, search);
+    return (
+      <Group gap="xs" wrap="nowrap" className="zone-option">
+        {checked && <CheckIcon size={12} />}
+        <Text size="sm" className="zone-name">{option.label}</Text>
+        {matched.length > 0 && <Text size="sm" c="dimmed" truncate className="zone-match">{matched.join(", ")}</Text>}
+      </Group>
+    );
+  };
 }
 
 function calendared(duration: Duration): boolean {
