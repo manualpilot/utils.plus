@@ -106,7 +106,9 @@ interface Interpreter {
   repl: (source: string) => string;
 }
 
-const INDEX_URL = `/assets/pyodide/${PYODIDE_VERSION}/`;
+declare const __ASSET_DIR__: string;
+
+const INDEX_URL = `${__ASSET_DIR__}/pyodide/${PYODIDE_VERSION}/`;
 
 const DECODER = new TextDecoder();
 
