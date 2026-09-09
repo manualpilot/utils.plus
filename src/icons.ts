@@ -23,6 +23,7 @@ export { default as IconCalendarRepeat } from "@tabler/icons-react/dist/esm/icon
 export { default as IconCertificate } from "@tabler/icons-react/dist/esm/icons/IconCertificate.mjs";
 export { default as IconCheck } from "@tabler/icons-react/dist/esm/icons/IconCheck.mjs";
 export { default as IconChevronDown } from "@tabler/icons-react/dist/esm/icons/IconChevronDown.mjs";
+export { default as IconChevronLeft } from "@tabler/icons-react/dist/esm/icons/IconChevronLeft.mjs";
 export { default as IconChevronRight } from "@tabler/icons-react/dist/esm/icons/IconChevronRight.mjs";
 export { default as IconChevronUp } from "@tabler/icons-react/dist/esm/icons/IconChevronUp.mjs";
 export { default as IconCircleCheck } from "@tabler/icons-react/dist/esm/icons/IconCircleCheck.mjs";

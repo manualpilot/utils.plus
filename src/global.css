@@ -38,6 +38,56 @@
   display: none;
 }
 
+.app-navbar {
+  visibility: visible;
+  transition-property: transform, top, height, visibility;
+}
+
+@media (width < $mantine-breakpoint-sm) {
+  .app-navbar[data-collapsed-mobile] {
+    visibility: hidden;
+  }
+}
+
+@media (width >= $mantine-breakpoint-sm) {
+  .app-navbar[data-collapsed-desktop] {
+    visibility: hidden;
+  }
+}
+
+.navbar-notch {
+  display: none;
+  position: fixed;
+  left: var(--app-shell-navbar-offset, 0rem);
+  top: calc(var(--app-shell-header-offset, 0rem) + (100dvh - var(--app-shell-header-offset, 0rem)) / 2);
+  transform: translateY(-50%);
+  z-index: calc(var(--app-shell-navbar-z-index, 100) + 1);
+  width: calc(0.875rem * var(--mantine-scale));
+  height: calc(2.75rem * var(--mantine-scale));
+  align-items: center;
+  justify-content: center;
+  color: var(--mantine-color-dimmed);
+  background-color: var(--mantine-color-body);
+  border: 1px solid var(--app-shell-border-color);
+  border-inline-start: none;
+  border-radius: 0 var(--mantine-radius-sm) var(--mantine-radius-sm) 0;
+  transition-property: left, color, background-color;
+  transition-duration: var(--app-shell-transition-duration, 200ms);
+  transition-timing-function: var(--app-shell-transition-timing-function, ease);
+}
+
+.navbar-notch:hover,
+.navbar-notch:focus-visible {
+  color: var(--mantine-color-text);
+  background-color: var(--mantine-color-default-hover);
+}
+
+@media (width >= $mantine-breakpoint-sm) {
+  .navbar-notch {
+    display: flex;
+  }
+}
+
 .main-region {
   display: flex;
   flex-direction: column;

@@ -53,3 +53,59 @@ test("a modifier click opens a second tab and leaves this one alone", async ({ p
   await expect(await opened).toHaveURL(/\/time$/);
   await expect(page).toHaveURL(/\/codec$/);
 });
+
+test("the navbar collapses at a width that has room for it", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/codec");
+
+  const link = page.locator("nav a[href=\"/time\"]");
+  await expect(link).toBeVisible();
+
+  await page.getByRole("button", { name: "Hide the navigation" }).click();
+  await expect(link).toBeHidden();
+
+  await page.getByRole("button", { name: "Show the navigation" }).click();
+  await expect(link).toBeVisible();
+});
+
+test("a collapsed navbar stays collapsed on the next page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/codec");
+
+  await page.getByRole("button", { name: "Hide the navigation" }).click();
+  await page.getByText("utils+").click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("button", { name: "Show the navigation" })).toBeVisible();
+  await expect(page.locator("nav a[href=\"/time\"]")).toBeHidden();
+});
+
+test("a collapsed navbar is out of the tab order", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/codec");
+
+  await page.getByRole("button", { name: "Hide the navigation" }).click();
+  await expect(page.locator("nav a[href=\"/time\"]")).toBeHidden();
+
+  const focused = await page.evaluate(() => {
+    const link = document.querySelector("nav a[href=\"/time\"]") as HTMLElement;
+    link.focus();
+    return document.activeElement === link;
+  });
+  expect(focused).toBe(false);
+});
+
+test("a narrow window's navbar opens and closes on the link it was opened for", async ({ page }) => {
+  await page.setViewportSize({ width: 400, height: 900 });
+  await page.goto("/codec");
+
+  const link = page.locator("nav a[href=\"/time\"]");
+  await expect(link).toBeHidden();
+
+  await page.getByRole("button", { name: "Open the navigation" }).click();
+  await expect(link).toBeVisible();
+
+  await link.click();
+  await expect(page).toHaveURL(/\/time$/);
+  await expect(link).toBeHidden();
+});

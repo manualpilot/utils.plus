@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import { useDocumentHead } from "./common/document-head";
 import { PageWidthContext } from "./common/page-width";
 import { ShareStateProvider, useShareStateContext } from "./common/share-state";
-import { IconBrandGithub, IconCheck, IconLink, IconRestore, IconServerCog } from "./icons";
+import { IconBrandGithub, IconCheck, IconChevronLeft, IconChevronRight, IconLink, IconRestore, IconServerCog } from "./icons";
 import { UtilitySpotlight } from "./spotlight";
 import { ATTRIBUTIONS_PATH, utilities } from "./utility-registry";
 
@@ -122,8 +122,21 @@ function SiteFooter() {
   );
 }
 
+function NavbarNotch({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+  const label = shown ? "Hide the navigation" : "Show the navigation";
+
+  return (
+    <Tooltip label={label} withArrow position="right">
+      <UnstyledButton className="navbar-notch" onClick={onToggle} aria-label={label} aria-expanded={shown}>
+        {shown ? <IconChevronLeft size="0.85rem" stroke={2} /> : <IconChevronRight size="0.85rem" stroke={2} />}
+      </UnstyledButton>
+    </Tooltip>
+  );
+}
+
 export function Layout({ children }: LayoutProps) {
   const [opened, { toggle, close }] = useDisclosure();
+  const [navShown, { toggle: toggleNav }] = useDisclosure(true);
   const [location, setLocation] = useLocation();
   const [stateKey, setStateKey] = useState(0);
   const [wide, setWide] = useState(false);
@@ -140,7 +153,7 @@ export function Layout({ children }: LayoutProps) {
       <PageWidthContext.Provider value={pageWidth}>
         <AppShell
           header={{ height: 60 }}
-          navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
+          navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened, desktop: !navShown } }}
           padding="md"
         >
           <UtilitySpotlight />
@@ -152,7 +165,14 @@ export function Layout({ children }: LayoutProps) {
           <AppShell.Header>
             <Group h="100%" px="md" justify="space-between">
               <Group gap={0}>
-                <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" mr="sm" />
+                <Burger
+                  opened={opened}
+                  onClick={toggle}
+                  hiddenFrom="sm"
+                  size="sm"
+                  mr="sm"
+                  aria-label={opened ? "Close the navigation" : "Open the navigation"}
+                />
                 <Group
                   gap="sm"
                   style={{ cursor: "pointer" }}
@@ -176,7 +196,14 @@ export function Layout({ children }: LayoutProps) {
             </Group>
           </AppShell.Header>
 
-          <AppShell.Navbar p="md">
+          <NavbarNotch shown={navShown} onToggle={toggleNav} />
+
+          <AppShell.Navbar
+            p="md"
+            className="app-navbar"
+            data-collapsed-mobile={!opened || undefined}
+            data-collapsed-desktop={!navShown || undefined}
+          >
             <Box className="navbar-links">
               {utilities.map(({ path, label, Icon }) => (
                 <Link key={path} href={path} onClick={close} asChild>

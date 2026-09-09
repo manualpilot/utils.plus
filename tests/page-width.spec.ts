@@ -46,3 +46,13 @@ test("a window with no room to spare is not offered the toggle", async ({ page }
   await page.setViewportSize({ width: 1800, height: 900 });
   await expect(page.getByRole("button", { name: "Use the full width" })).toBeVisible();
 });
+
+test("collapsing the navbar offers a toggle the window had no room for", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/codec");
+
+  await expect(page.getByRole("button", { name: "Use the full width" })).toBeHidden();
+
+  await page.getByRole("button", { name: "Hide the navigation" }).click();
+  await expect(page.getByRole("button", { name: "Use the full width" })).toBeVisible();
+});
