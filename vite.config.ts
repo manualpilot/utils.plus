@@ -10,19 +10,14 @@ import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, r
 const METADATA_NAME = "utils-metadata";
 const METADATA_SRC = `/${METADATA_NAME}.ts`;
 
-const BUILT_AT = new Date();
-
-const ASSET_DIR = `assets/${Math.floor(BUILT_AT.getTime() / 1000)}`;
-
 export default defineConfig({
   root: "src",
   publicDir: false,
   css: { postcss: join(import.meta.dirname, "conf") },
-  define: { __BUILD_TIME__: JSON.stringify(BUILT_AT.toISOString()), __ASSET_DIR__: JSON.stringify(`/${ASSET_DIR}`) },
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   build: {
     outDir: "../dist",
     emptyOutDir: true,
-    assetsDir: ASSET_DIR,
     sourcemap: true,
     minify: true,
     assetsInlineLimit: (file) =>
@@ -33,6 +28,7 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         index: join(import.meta.dirname, "src/index.html"),
+        "404": join(import.meta.dirname, "src/404.html"),
         [METADATA_NAME]: join(import.meta.dirname, `src/${METADATA_NAME}.ts`),
       },
       output: { chunkFileNames, assetFileNames },
@@ -66,7 +62,7 @@ export default defineConfig({
 
 function chunkFileNames(chunk: Rolldown.PreRenderedChunk): string {
   const name = (DIRECTORY_NAMES.has(chunk.name) ? packageOf(chunk) : undefined) ?? chunk.name;
-  return `${ASSET_DIR}/${scopedName(name, chunk)}-[hash].js`;
+  return `assets/${scopedName(name, chunk)}-[hash].js`;
 }
 
 function scopedName(name: string, chunk: Rolldown.PreRenderedChunk): string {
@@ -92,14 +88,14 @@ function assetFileNames(asset: Rolldown.PreRenderedAsset): string {
 }
 
 function assetDirectory(asset: Rolldown.PreRenderedAsset): string {
-  if (FONT.test(asset.names[0] ?? "")) return `${ASSET_DIR}/fonts`;
+  if (FONT.test(asset.names[0] ?? "")) return "assets/fonts";
   const original = asset.originalFileNames[0] ?? "";
-  if (PHONE_GEO.test(original)) return `${ASSET_DIR}/phone-geo`;
-  if (UNICODE_NAME.test(original)) return `${ASSET_DIR}/unicode-names`;
-  if (IP_DELEGATION.test(original)) return `${ASSET_DIR}/ip-registry`;
-  if (IP_ROA.test(original)) return `${ASSET_DIR}/ip-roas`;
-  if (LICENCE.test(original)) return `${ASSET_DIR}/license`;
-  return COUNTRY_VIEW.test(original) ? `${ASSET_DIR}/country-views` : ASSET_DIR;
+  if (PHONE_GEO.test(original)) return "assets/phone-geo";
+  if (UNICODE_NAME.test(original)) return "assets/unicode-names";
+  if (IP_DELEGATION.test(original)) return "assets/ip-registry";
+  if (IP_ROA.test(original)) return "assets/ip-roas";
+  if (LICENCE.test(original)) return "assets/license";
+  return COUNTRY_VIEW.test(original) ? "assets/country-views" : "assets";
 }
 
 const FONT = /\.(?:woff2?|ttf|otf|eot)$/;
@@ -189,7 +185,7 @@ const DOCUMENT_URLS = new Map<string, string>(
 function pyodideAssets(): Plugin {
   const require = createRequire(import.meta.url);
   const packageDir = dirname(require.resolve("pyodide/package.json"));
-  const dir = `${ASSET_DIR}/pyodide/${require("pyodide/package.json").version}`;
+  const dir = `assets/pyodide/${require("pyodide/package.json").version}`;
   const read = (name: string) => readFile(join(packageDir, name));
 
   return {
