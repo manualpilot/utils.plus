@@ -63,6 +63,7 @@
     "@vvo/tzdb": "^6.198.0",
     "acorn": "^8.18.0",
     "age-encryption": "^0.3.1",
+    "bcrypt-pbkdf": "^1.0.2",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "country-flag-emoji-polyfill": "^0.1.10",
@@ -81,7 +82,6 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "smol-toml": "^1.8.0",
-    "sshpk": "^1.18.0",
     "sucrase": "^3.35.1",
     "world-countries": "^5.1.0",
     "wouter": "^3.11.0",
@@ -100,7 +100,6 @@
     "@types/pdfmake": "^0.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@types/sshpk": "^1.17.5",
     "@vitejs/plugin-react": "^6.1.1",
     "dprint": "^0.57.4",
     "jsdom": "^30.0.1",
@@ -110,7 +109,6 @@
     "postcss-simple-vars": "^7.0.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vite-plugin-node-polyfills": "^0.28.0",
     "vitest": "^5.0.0"
   }
 }

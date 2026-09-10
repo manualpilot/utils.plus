@@ -1,4 +1,4 @@
-import { createRequire } from "node:module";
+import { createPrivateKey, X509Certificate } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { arrange } from "../src/utilities/certificate/chain";
 import { oidOf, readDer, timeOf } from "../src/utilities/certificate/der";
@@ -10,10 +10,6 @@ import { isHostOrAddress } from "../src/utilities/certificate/validate";
 import { relative, validity } from "../src/utilities/certificate/validity";
 import { integer, oid as writeOid, time as writeTime } from "../src/utilities/certificate/write";
 import { BUNDLE, ED25519, ED25519_KEY, EXPIRED, INTERMEDIATE, LEAF, LEAF_KEY, LEAF_KEY_LOCKED, LEAF_PUBLIC, LEGACY_KEY_LOCKED, LOGGED, REQUEST, ROOT, SSH_ECDSA, SSH_ED25519, SSH_PRIVATE, SSH_RSA } from "./certificate-fixtures";
-
-const { createPrivateKey, X509Certificate } = createRequire(import.meta.url)(
-  "node:crypto",
-) as typeof import("node:crypto");
 
 const fact = (item: Item, label: string) => item.facts.find((row) => row.label === label)?.value ?? "";
 const extension = (item: Item, name: string) => item.extensions.find((row) => row.name === name)?.value ?? "";

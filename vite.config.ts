@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, extname, join } from "node:path";
 import type { Plugin, Rolldown } from "vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { defineConfig } from "vitest/config";
 import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, robotsTxt, sitemapXml, withBody, withHead } from "./src/page-meta.ts";
 
@@ -34,12 +33,7 @@ export default defineConfig({
       output: { chunkFileNames, assetFileNames },
     },
   },
-  plugins: [
-    react(),
-    nodePolyfills({ include: ["assert", "buffer", "crypto", "stream", "util"] }),
-    pyodideAssets(),
-    pageMetaFiles(),
-  ],
+  plugins: [react(), pyodideAssets(), pageMetaFiles()],
   test: {
     root: import.meta.dirname,
     globals: true,
@@ -48,12 +42,7 @@ export default defineConfig({
     include: ["tests/**/*.test.{ts,tsx}"],
   },
 
-  resolve: {
-    tsconfigPaths: true,
-    alias: {
-      "stream/promises": "stream-browserify",
-    },
-  },
+  resolve: { tsconfigPaths: true },
 
   optimizeDeps: {
     exclude: ["@sqlite.org/sqlite-wasm", "@electric-sql/pglite"],

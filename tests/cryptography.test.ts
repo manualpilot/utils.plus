@@ -1,5 +1,5 @@
 import { generateHybridIdentity, identityToRecipient } from "age-encryption";
-import { createRequire } from "node:module";
+import { createCipheriv, createDecipheriv } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { identityRecipients } from "../src/common/age-identity";
 import { ageDecrypt, ageEncrypt, ageUnarmor, generateAgeIdentity } from "../src/utilities/cryptography/age";
@@ -9,10 +9,6 @@ import { type Job, runJob } from "../src/utilities/cryptography/run";
 import { message, readField } from "../src/utilities/cryptography/settings";
 import { openBytes, sealBytes } from "../src/utilities/cryptography/symmetric";
 import * as fixture from "./age-fixtures";
-
-const { createCipheriv, createDecipheriv } = createRequire(import.meta.url)(
-  "node:crypto",
-) as typeof import("node:crypto");
 
 const hex = (text: string) => fromHex(text);
 const bytes = (text: string) => new TextEncoder().encode(text);

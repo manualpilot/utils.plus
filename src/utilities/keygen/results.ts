@@ -1,6 +1,4 @@
 import { ageRecipientsFile, generateAgeIdentity } from "./age";
-import { WEB_CRYPTO_CURVES } from "./algorithms";
-import { toBase64 } from "./encoding";
 import { generateNaclKeypair } from "./nacl";
 import type { Jwk, JwkSet, KeyPair, KeyResult } from "./types";
 import { generateWireguardConfigs } from "./wireguard";
@@ -64,27 +62,4 @@ export function pairResult(kind: string, pair: KeyPair): KeyResult {
     ],
     fingerprint: pair.fingerprint,
   };
-}
-
-export async function webCryptoKeyPair(algorithm: string, variant: string): Promise<CryptoKeyPair> {
-  const params: RsaHashedKeyGenParams | EcKeyGenParams = algorithm === "rsa"
-    ? {
-      name: "RSASSA-PKCS1-v1_5",
-      modulusLength: Number(variant),
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-      hash: "SHA-256",
-    }
-    : { name: "ECDSA", namedCurve: WEB_CRYPTO_CURVES[variant] ?? "P-256" };
-
-  return await crypto.subtle.generateKey(params, true, ["sign", "verify"]) as CryptoKeyPair;
-}
-
-export async function webCryptoPkcs8(algorithm: string, variant: string): Promise<string> {
-  const pair = await webCryptoKeyPair(algorithm, variant);
-  return toPem(new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey)), "PRIVATE KEY");
-}
-
-export function toPem(der: Uint8Array, label: string): string {
-  const body = toBase64(der).replace(/(.{64})/g, "$1\n").replace(/\n$/, "");
-  return `-----BEGIN ${label}-----\n${body}\n-----END ${label}-----\n`;
 }

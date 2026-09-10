@@ -40,6 +40,16 @@ test("an SSH key pair arrives with the comment on its public half", async ({ pag
   await expect(page.getByText(/^SHA256:/)).toBeVisible();
 });
 
+test("an SSH key with a passphrase arrives encrypted the way ssh-keygen encrypts one", async ({ page }) => {
+  await openKeygen(page);
+  await page.getByLabel("Passphrase").fill("hunter2");
+
+  await page.getByRole("button", { name: "Generate" }).click();
+  await expect(privateBox(page)).toHaveValue(/^-----BEGIN OPENSSH PRIVATE KEY-----\n/, { timeout: SLOW });
+  const file = Buffer.from((await privateBox(page).inputValue()).replace(/-----[A-Z ]+-----|\s/g, ""), "base64");
+  expect(file.toString("latin1")).toContain("aes256-ctr\0\0\0\x06bcrypt");
+});
+
 test("the algorithm decides what the second field asks for", async ({ page }) => {
   await openKeygen(page);
   await expect(page.getByRole("combobox", { name: "Curve" })).toHaveCount(0);

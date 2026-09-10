@@ -668,23 +668,6 @@
       "file": "any-promise"
     },
     {
-      "name": "asn1",
-      "version": "0.2.6",
-      "license": "MIT",
-      "publisher": "Joyent",
-      "url": "https://github.com/joyent/node-asn1",
-      "file": "asn1"
-    },
-    {
-      "name": "assert-plus",
-      "version": "1.0.0",
-      "license": "MIT",
-      "publisher": "Mark Cavage",
-      "url": "https://github.com/mcavage/node-assert-plus",
-      "file": "assert-plus",
-      "reconstructed": true
-    },
-    {
       "name": "base64-js",
       "version": "0.0.8",
       "license": "MIT",
@@ -782,14 +765,6 @@
       "file": "csstype"
     },
     {
-      "name": "dashdash",
-      "version": "1.14.1",
-      "license": "MIT",
-      "publisher": "Trent Mick",
-      "url": "https://github.com/trentm/node-dashdash",
-      "file": "dashdash"
-    },
-    {
       "name": "dayjs",
       "version": "1.11.23",
       "license": "MIT",
@@ -821,14 +796,6 @@
       "publisher": "Dr.-Ing. Mario Heiderich, Cure53",
       "url": "https://github.com/cure53/DOMPurify",
       "file": "dompurify"
-    },
-    {
-      "name": "ecc-jsbn",
-      "version": "0.1.2",
-      "license": "MIT",
-      "publisher": "Jeremie Miller",
-      "url": "https://github.com/quartzjer/ecc-jsbn",
-      "file": "ecc-jsbn"
     },
     {
       "name": "fast-deep-equal",
@@ -872,14 +839,6 @@
       "file": "get-nonce"
     },
     {
-      "name": "getpass",
-      "version": "0.1.7",
-      "license": "MIT",
-      "publisher": "Alex Wilson",
-      "url": "https://github.com/arekinath/node-getpass",
-      "file": "getpass"
-    },
-    {
       "name": "jose",
       "version": "6.2.12",
       "license": "MIT",
@@ -894,14 +853,6 @@
       "publisher": "Chen, Yi-Cyuan",
       "url": "https://github.com/emn178/js-md5",
       "file": "js-md5"
-    },
-    {
-      "name": "jsbn",
-      "version": "0.1.1",
-      "license": "MIT",
-      "publisher": "Tom Wu",
-      "url": "https://github.com/andyperlitch/jsbn",
-      "file": "jsbn"
     },
     {
       "name": "libphonenumber-js",
@@ -1107,14 +1058,6 @@
       "file": "restructure"
     },
     {
-      "name": "safer-buffer",
-      "version": "2.1.2",
-      "license": "MIT",
-      "publisher": "Nikita Skovoroda",
-      "url": "https://github.com/ChALkeR/safer-buffer",
-      "file": "safer-buffer"
-    },
-    {
       "name": "sax",
       "version": "1.6.1",
       "license": "BlueOak-1.0.0",
@@ -1137,14 +1080,6 @@
       "publisher": "Cynthia Rey",
       "url": "github:squirrelchat/smol-toml",
       "file": "smol-toml"
-    },
-    {
-      "name": "sshpk",
-      "version": "1.18.0",
-      "license": "MIT",
-      "publisher": "Joyent, Inc",
-      "url": "https://github.com/joyent/node-sshpk",
-      "file": "sshpk"
     },
     {
       "name": "style-mod",

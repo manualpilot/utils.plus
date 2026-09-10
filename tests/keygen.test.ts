@@ -1,8 +1,12 @@
 import { x25519 } from "@noble/curves/ed25519.js";
 import { identityToRecipient } from "age-encryption";
-import { createRequire } from "node:module";
-import sshpk from "sshpk";
-import { describe, expect, it } from "vitest";
+import bcrypt from "bcrypt-pbkdf";
+import { execFileSync, spawnSync } from "node:child_process";
+import { createDecipheriv, createHash, createPrivateKey, createPublicKey, type KeyObject, sign, verify } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, describe, expect, it } from "vitest";
 import { ageRecipientsFile, generateAgeIdentity, identityProblem } from "../src/utilities/keygen/age";
 import { formatSecret } from "../src/utilities/keygen/encoding";
 import { generateJwkSet } from "../src/utilities/keygen/jwk";
@@ -10,10 +14,6 @@ import { generateSshKey } from "../src/utilities/keygen/keys";
 import { generateNaclKeypair } from "../src/utilities/keygen/nacl";
 import type { Jwk } from "../src/utilities/keygen/types";
 import { generateWireguardConfigs } from "../src/utilities/keygen/wireguard";
-
-const { createHash, createPrivateKey, createPublicKey } = createRequire(import.meta.url)(
-  "node:crypto",
-) as typeof import("node:crypto");
 
 const SETTINGS = { algorithm: "ed25519", variant: "", comment: "", name: "", email: "", passphrase: "" };
 
@@ -62,8 +62,11 @@ describe("SSH keys", () => {
 
     expect(key.privateKey).toMatch(/^-----BEGIN OPENSSH PRIVATE KEY-----\n/);
     expect(key.publicKey).toMatch(/^ssh-ed25519 \S+ me@example\.com$/);
-    expect(sshpk.parseKey(key.publicKey, "ssh").fingerprint("sha256").toString()).toBe(key.fingerprint);
-    expect(sshpk.parsePrivateKey(key.privateKey, "ssh-private").fingerprint("sha256").toString()).toBe(key.fingerprint);
+    const file = readPrivateKey(key.privateKey);
+    expect(file.comment).toBe("me@example.com");
+    expect(file.blob.toString("base64")).toBe(key.publicKey.split(" ")[1]);
+    expect(sshFingerprint(key.publicKey)).toBe(key.fingerprint);
+    expectOnePair(file.privateKey, file.blob);
   });
 
   it("leaves the comment off the public line when there is none", { timeout: SLOW }, async () => {
@@ -72,29 +75,68 @@ describe("SSH keys", () => {
   });
 
   it.each([
-    ["ecdsa", "nistp256", "ecdsa-sha2-nistp256", 256],
-    ["ecdsa", "nistp521", "ecdsa-sha2-nistp521", 521],
-    ["rsa", "2048", "ssh-rsa", 2048],
-  ])("builds a %s key on %s", { timeout: SLOW }, async (algorithm, variant, type, size) => {
+    ["ecdsa", "nistp256", "ecdsa-sha2-nistp256", { namedCurve: "prime256v1" }],
+    ["ecdsa", "nistp384", "ecdsa-sha2-nistp384", { namedCurve: "secp384r1" }],
+    ["ecdsa", "nistp521", "ecdsa-sha2-nistp521", { namedCurve: "secp521r1" }],
+    ["rsa", "2048", "ssh-rsa", { modulusLength: 2048, publicExponent: 65537n }],
+  ])("builds a %s key on %s", { timeout: SLOW }, async (algorithm, variant, type, details) => {
     const key = await generateSshKey({ ...SETTINGS, algorithm, variant });
 
     expect(key.publicKey.startsWith(`${type} `)).toBe(true);
-    const parsed = sshpk.parseKey(key.publicKey, "ssh");
-    expect(parsed.size).toBe(size);
-    expect(parsed.fingerprint("sha256").toString()).toBe(key.fingerprint);
+    expect(sshFingerprint(key.publicKey)).toBe(key.fingerprint);
+    const file = readPrivateKey(key.privateKey);
+    expect(file.blob.toString("base64")).toBe(key.publicKey.split(" ")[1]);
+    expect(publicKeyOf(file.blob).asymmetricKeyDetails).toMatchObject(details);
+    expectOnePair(file.privateKey, file.blob);
+  });
+
+  it("pads the private section to a whole block with a counting run", { timeout: SLOW }, async () => {
+    const file = readPrivateKey((await generateSshKey({ ...SETTINGS, comment: "odd" })).privateKey);
+    expect([file.cipher, file.kdf]).toEqual(["none", "none"]);
+    expect(file.padding).toEqual(Array.from(file.padding, (_, index) => index + 1));
+    expect(file.sectionLength % 8).toBe(0);
   });
 
   it("encrypts the private half once a passphrase is given", { timeout: SLOW }, async () => {
-    const key = await generateSshKey({ ...SETTINGS, passphrase: "hunter2" });
+    const key = await generateSshKey({ ...SETTINGS, algorithm: "ecdsa", variant: "nistp256", passphrase: "hunter2" });
 
-    expect(() => sshpk.parsePrivateKey(key.privateKey, "ssh-private")).toThrow(sshpk.KeyEncryptedError);
-    const opened = sshpk.parsePrivateKey(key.privateKey, "ssh-private", { passphrase: "hunter2" });
-    expect(opened.fingerprint("sha256").toString()).toBe(key.fingerprint);
+    const checks = sectionOf(key.privateKey, "wrong").checks;
+    expect(checks[0]).not.toBe(checks[1]);
+    const file = readPrivateKey(key.privateKey, "hunter2");
+    expect([file.cipher, file.kdf, file.rounds]).toEqual(["aes256-ctr", "bcrypt", 16]);
+    expect(file.sectionLength % 16).toBe(0);
+    expectOnePair(file.privateKey, file.blob);
   });
 
   it("gives a different key every time it is asked", { timeout: SLOW }, async () => {
     const [first, second] = await Promise.all([generateSshKey(SETTINGS), generateSshKey(SETTINGS)]);
     expect(first.fingerprint).not.toBe(second.fingerprint);
+  });
+});
+
+describe.skipIf(spawnSync("ssh-keygen", ["-?"]).error !== undefined)("SSH keys read by ssh-keygen", () => {
+  const directory = mkdtempSync(join(tmpdir(), "keygen-"));
+  afterAll(() => rmSync(directory, { recursive: true, force: true }));
+
+  it.each([
+    ["ed25519", "", ""],
+    ["ecdsa", "nistp384", ""],
+    ["rsa", "3072", ""],
+    ["ed25519", "", "hunter2"],
+    ["rsa", "2048", "hunter2"],
+  ])("opens a %s key %s with passphrase %j", { timeout: SLOW }, async (algorithm, variant, passphrase) => {
+    const key = await generateSshKey({ ...SETTINGS, algorithm, variant, comment: "me@example.com", passphrase });
+    const path = join(directory, `${algorithm}${variant}${passphrase}`);
+    writeFileSync(path, key.privateKey, { mode: 0o600 });
+    writeFileSync(`${path}.pub`, `${key.publicKey}\n`);
+
+    const derived = execFileSync("ssh-keygen", ["-y", "-P", passphrase, "-f", path], { input: "" }).toString();
+    expect(derived.split(" ").slice(0, 2)).toEqual(key.publicKey.split(" ").slice(0, 2));
+    const listed = execFileSync("ssh-keygen", ["-l", "-E", "sha256", "-f", `${path}.pub`]).toString();
+    expect(listed.split(" ")[1]).toBe(key.fingerprint);
+    if (passphrase) {
+      expect(spawnSync("ssh-keygen", ["-y", "-P", "wrong", "-f", path], { input: "" }).status).not.toBe(0);
+    }
   });
 });
 
@@ -385,10 +427,121 @@ describe("JSON Web Keys", () => {
   });
 
   const keyIds = (set: { privateKeys: Jwk[]; publicKeys: Jwk[] }) => set.publicKeys.map((key) => key.kid);
-  const base64UrlBytes = (value: string) =>
-    Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")), (character) => character.charCodeAt(0));
+  const base64UrlBytes = (value: string) => Buffer.from(value, "base64url");
   const omit = (jwk: Jwk, member: string) =>
     Object.fromEntries(Object.entries(jwk).filter(([name]) => name !== member));
   const sha256Thumbprint = ({ crv, kty, x }: Jwk) =>
     createHash("sha256").update(JSON.stringify({ crv, kty, x })).digest("base64url");
 });
+
+const SSH_CURVES: Record<string, string> = { nistp256: "P-256", nistp384: "P-384", nistp521: "P-521" };
+
+function wire(bytes: Buffer) {
+  let at = 0;
+  const uint32 = () => bytes.readUInt32BE((at += 4) - 4);
+  const field = () => {
+    const length = uint32();
+    return bytes.subarray(at, at += length);
+  };
+  return { uint32, field, text: () => field().toString(), rest: () => [...bytes.subarray(at)] };
+}
+
+function sectionOf(pem: string, passphrase = "") {
+  const bytes = Buffer.from(pem.replace(/-----[A-Z ]+-----|\s/g, ""), "base64");
+  expect(bytes.subarray(0, 15).toString("latin1")).toBe("openssh-key-v1\0");
+  const outer = wire(bytes.subarray(15));
+  const cipher = outer.text();
+  const kdf = outer.text();
+  const options = wire(outer.field());
+  expect(outer.uint32()).toBe(1);
+  const blob = outer.field();
+  let section = outer.field();
+  let rounds = 0;
+  if (kdf === "bcrypt") {
+    const salt = options.field();
+    rounds = options.uint32();
+    const password = Buffer.from(passphrase);
+    const derived = Buffer.alloc(48);
+    bcrypt.pbkdf(password, password.length, salt, salt.length, derived, derived.length, rounds);
+    section = createDecipheriv("aes-256-ctr", derived.subarray(0, 32), derived.subarray(32)).update(section);
+  }
+  const inner = wire(section);
+  return { cipher, kdf, rounds, blob, sectionLength: section.length, checks: [inner.uint32(), inner.uint32()], inner };
+}
+
+function readPrivateKey(pem: string, passphrase = "") {
+  const { inner, checks, ...file } = sectionOf(pem, passphrase);
+  expect(checks[0]).toBe(checks[1]);
+  const privateKey = createPrivateKey({ key: secretJwk(inner), format: "jwk" });
+  return { ...file, privateKey, comment: inner.text(), padding: inner.rest() };
+}
+
+function secretJwk(inner: ReturnType<typeof wire>): Record<string, string> {
+  const type = inner.text();
+  if (type === "ssh-ed25519") {
+    const point = inner.field();
+    const secret = inner.field();
+    expect(secret.subarray(32)).toEqual(point);
+    return {
+      kty: "OKP",
+      crv: "Ed25519",
+      x: point.toString("base64url"),
+      d: secret.subarray(0, 32).toString("base64url"),
+    };
+  }
+  if (type === "ssh-rsa") {
+    const [n, e, d, qi, p, q] = Array.from({ length: 6 }, () => unsigned(inner.field()));
+    const [dp, dq] = [p, q].map((prime) => fromBigInt(toBigInt(d) % (toBigInt(prime) - 1n)));
+    const members = { n, e, d, p, q, dp, dq, qi };
+    return {
+      kty: "RSA",
+      ...Object.fromEntries(Object.entries(members).map(([name, value]) => [name, value.toString("base64url")])),
+    };
+  }
+  const point = ecPoint(inner.text(), inner.field());
+  const d = unsigned(inner.field());
+  const size = Buffer.from(point.x, "base64url").length;
+  return { ...point, d: Buffer.concat([Buffer.alloc(size - d.length), d]).toString("base64url") };
+}
+
+function publicKeyOf(blob: Buffer): KeyObject {
+  const fields = wire(blob);
+  const type = fields.text();
+  if (type === "ssh-ed25519") {
+    return createPublicKey({
+      key: { kty: "OKP", crv: "Ed25519", x: fields.field().toString("base64url") },
+      format: "jwk",
+    });
+  }
+  if (type === "ssh-rsa") {
+    const [e, n] = [unsigned(fields.field()), unsigned(fields.field())];
+    return createPublicKey({
+      key: { kty: "RSA", e: e.toString("base64url"), n: n.toString("base64url") },
+      format: "jwk",
+    });
+  }
+  return createPublicKey({ key: ecPoint(fields.text(), fields.field()), format: "jwk" });
+}
+
+function ecPoint(curve: string, point: Buffer): Record<string, string> {
+  expect(point[0]).toBe(4);
+  const size = (point.length - 1) / 2;
+  const [x, y] = [point.subarray(1, 1 + size), point.subarray(1 + size)].map((half) => half.toString("base64url"));
+  return { kty: "EC", crv: SSH_CURVES[curve], x, y };
+}
+
+function expectOnePair(privateKey: KeyObject, blob: Buffer) {
+  const data = Buffer.from("utils.plus");
+  const hash = privateKey.asymmetricKeyType === "ed25519" ? null : "sha256";
+  expect(verify(hash, data, publicKeyOf(blob), sign(hash, data, privateKey))).toBe(true);
+}
+
+function sshFingerprint(line: string): string {
+  const digest = createHash("sha256").update(Buffer.from(line.split(" ")[1], "base64")).digest("base64");
+  return `SHA256:${digest.replace(/=+$/, "")}`;
+}
+
+const unsigned = (bytes: Buffer) => (bytes[0] === 0 ? bytes.subarray(1) : bytes);
+const toBigInt = (bytes: Buffer) => BigInt(`0x${bytes.toString("hex") || "0"}`);
+const fromBigInt = (value: bigint) =>
+  Buffer.from(value.toString(16).padStart(Math.ceil(value.toString(16).length / 2) * 2, "0"), "hex");

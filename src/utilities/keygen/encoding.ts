@@ -25,6 +25,10 @@ export function toBase64(bytes: Uint8Array): string {
   return btoa(toBinary(bytes));
 }
 
+export function fromBase64Url(value = ""): Uint8Array {
+  return Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/")), (character) => character.charCodeAt(0));
+}
+
 export function toBinary(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
