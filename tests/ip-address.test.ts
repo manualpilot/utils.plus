@@ -9,6 +9,7 @@ import { administrationOf, asRangeOf, multicastGroup } from "../src/utilities/ip
 import { originsOf } from "../src/utilities/ip-address/roa";
 import { shardFor } from "../src/utilities/ip-address/shards";
 import { classify } from "../src/utilities/ip-address/special";
+import roaIndex from "../src/utilities/ip-address/tables/roa-index.json";
 import { embeddedIpv4, writeAddress, writeArpa, writeBinary, writeCidr, writeExpanded, writeHex, writeInteger, writeValue } from "../src/utilities/ip-address/write";
 
 function read(text: string, family: Family = "ipv4") {
@@ -465,9 +466,11 @@ describe("the registries a shard is fetched from", () => {
   });
 
   it("finds an authorisation signed far above the address", async () => {
-    const found = await originsOf(address("23.1.253.0"));
-    expect(found?.covering.map((roa) => roa.cidr)).toEqual(["23.0.0.0/12"]);
-    expect(found?.covering[0].origins).toEqual([20940]);
+    const found = await originsOf(address("174.184.0.1"));
+    expect(found?.covering.map((roa) => roa.cidr)).toEqual(["174.160.0.0/11"]);
+    expect(found?.covering[0].origins).toEqual([7922]);
+    const shard = (text: string) => shardFor(roaIndex.v4, address(text).value);
+    expect(shard("174.184.0.1")).toBeGreaterThan(shard("174.160.0.0"));
   });
 
   it("gathers every authorisation covering an address, and the width each reaches", async () => {

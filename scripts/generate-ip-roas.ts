@@ -7,7 +7,7 @@ import { type Index, shardCovering } from "./ip-shards.ts";
 
 const run = promisify(execFile);
 
-export const RELEASE = "2026/09/01";
+export const RELEASE = "2026/09/10";
 
 const SHAPE = 1;
 

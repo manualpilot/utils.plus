@@ -146,7 +146,7 @@
     },
     {
       "name": "@codemirror/legacy-modes",
-      "version": "6.5.3",
+      "version": "6.5.4",
       "license": "MIT",
       "publisher": "Marijn Haverbeke",
       "url": "https://code.haverbeke.berlin/codemirror/legacy-modes",
@@ -474,7 +474,7 @@
     },
     {
       "name": "@mantine/core",
-      "version": "9.6.0",
+      "version": "9.6.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -482,7 +482,7 @@
     },
     {
       "name": "@mantine/dates",
-      "version": "9.6.0",
+      "version": "9.6.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -490,7 +490,7 @@
     },
     {
       "name": "@mantine/hooks",
-      "version": "9.6.0",
+      "version": "9.6.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -498,7 +498,7 @@
     },
     {
       "name": "@mantine/spotlight",
-      "version": "9.6.0",
+      "version": "9.6.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -506,7 +506,7 @@
     },
     {
       "name": "@mantine/store",
-      "version": "9.6.0",
+      "version": "9.6.1",
       "license": "MIT",
       "publisher": "Vitaly Rtishchev",
       "url": "https://github.com/mantinedev/mantine",
@@ -562,7 +562,7 @@
     },
     {
       "name": "@sqlite.org/sqlite-wasm",
-      "version": "3.53.0-build1",
+      "version": "3.53.4-build1",
       "license": "Apache-2.0",
       "publisher": "Thomas Steiner",
       "url": "https://github.com/sqlite/sqlite-wasm",
@@ -603,7 +603,7 @@
     },
     {
       "name": "@types/react",
-      "version": "19.2.18",
+      "version": "19.3.0",
       "license": "MIT",
       "publisher": "Asana",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
@@ -816,7 +816,7 @@
     },
     {
       "name": "dompurify",
-      "version": "3.4.14",
+      "version": "3.4.15",
       "license": "(MPL-2.0 OR Apache-2.0)",
       "publisher": "Dr.-Ing. Mario Heiderich, Cure53",
       "url": "https://github.com/cure53/DOMPurify",
@@ -881,7 +881,7 @@
     },
     {
       "name": "jose",
-      "version": "6.2.10",
+      "version": "6.2.12",
       "license": "MIT",
       "publisher": "Filip Skokan",
       "url": "panva/jose",
@@ -905,7 +905,7 @@
     },
     {
       "name": "libphonenumber-js",
-      "version": "1.13.12",
+      "version": "1.13.13",
       "license": "MIT",
       "publisher": "catamphetamine",
       "url": "https://gitlab.com/catamphetamine/libphonenumber-js",
@@ -937,19 +937,11 @@
     },
     {
       "name": "marked",
-      "version": "18.0.11",
+      "version": "18.0.12",
       "license": "MIT",
       "publisher": "Christopher Jeffrey",
       "url": "https://github.com/markedjs/marked",
       "file": "marked"
-    },
-    {
-      "name": "mitt",
-      "version": "3.0.1",
-      "license": "MIT",
-      "publisher": "",
-      "url": "developit/mitt",
-      "file": "mitt"
     },
     {
       "name": "mz",
@@ -1051,7 +1043,7 @@
     },
     {
       "name": "react",
-      "version": "19.2.8",
+      "version": "19.3.0",
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
@@ -1059,7 +1051,7 @@
     },
     {
       "name": "react-dom",
-      "version": "19.2.8",
+      "version": "19.3.0",
       "license": "MIT",
       "publisher": "",
       "url": "https://github.com/react/react",
@@ -1132,10 +1124,10 @@
     },
     {
       "name": "scheduler",
-      "version": "0.27.0",
+      "version": "0.28.0",
       "license": "MIT",
       "publisher": "",
-      "url": "https://github.com/facebook/react",
+      "url": "https://github.com/react/react",
       "file": "scheduler"
     },
     {
@@ -1308,7 +1300,7 @@
     },
     {
       "name": "wouter",
-      "version": "3.10.0",
+      "version": "3.11.0",
       "license": "Unlicense",
       "publisher": "Alexey Taktarov",
       "url": "https://github.com/molefrog/wouter",

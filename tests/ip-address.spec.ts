@@ -153,11 +153,11 @@ test("an address nobody has signed for says so rather than leaving the card empt
 
 test("an authorisation signed far above the address is still found", async ({ page }) => {
   await openIpAddress(page);
-  await addressBox(page).fill("23.1.253.0");
+  await addressBox(page).fill("174.184.0.1");
 
   await expect(page.locator("[data-origin] [data-verdict]")).toHaveText("Authorised origin");
-  await expect(page.locator("[data-origin] tbody tr").first()).toContainText("23.0.0.0/12");
-  await expect(page.locator("[data-origin]")).toContainText("AS20940");
+  await expect(page.locator("[data-origin] tbody tr").first()).toContainText("174.160.0.0/11");
+  await expect(page.locator("[data-origin]")).toContainText("AS7922");
 });
 
 test("an IPv6 address is read against the same three registries", async ({ page }) => {

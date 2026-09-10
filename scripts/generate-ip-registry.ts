@@ -5,7 +5,7 @@ import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/p
 import { join } from "node:path";
 import { type Index, shard } from "./ip-shards.ts";
 
-export const RELEASE = "20260901";
+export const RELEASE = "20260910";
 
 export const IANA_RELEASE = "2026-08-20";
 
