@@ -27,7 +27,16 @@ function placeCaret(page: Page, lineNumber: number, column: number) {
   }, { lineNumber, column });
 }
 
-function decodeHash(url: string): { value?: string; indentSize?: string; showCounts?: boolean } {
+interface HashState {
+  value?: string;
+  indentSize?: string;
+  showCounts?: boolean;
+  mode?: string;
+  query?: string;
+  output?: string;
+}
+
+function decodeHash(url: string): HashState {
   let b64 = new URL(url).hash.slice(1).replace(/-/g, "+").replace(/_/g, "/");
   if (!b64) return {};
   while (b64.length % 4) b64 += "=";
@@ -325,4 +334,180 @@ test("the Show Counts box travels in the share link", async ({ page, context }) 
 
   await expect(page.getByRole("checkbox", { name: "Show Counts" })).not.toBeChecked();
   await expect.poll(() => countsShown(page)).toEqual([]);
+});
+
+declare const jsonResult: any;
+
+const readResult = (page: Page) => page.evaluate(() => (window as any).jsonResult?.state.doc.toString() ?? null);
+
+const caretAt = (page: Page, offset: number) =>
+  page.evaluate((offset) => {
+    editorView.focus();
+    editorView.dispatch({ selection: { anchor: offset } });
+  }, offset);
+
+const modeTab = (page: Page, name: string) =>
+  page.locator(".mantine-SegmentedControl-label", { hasText: name }).click();
+
+const valueOf = async (page: Page) => (await page.evaluate(readEditor)).value;
+
+test("format keeps a number JavaScript cannot hold and both entries under one key", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "{\"id\":12345678901234567890,\"a\":1,\"a\":2}");
+
+  await page.getByRole("button", { name: "Format" }).click();
+  await expect.poll(() => valueOf(page)).toBe("{\n  \"id\": 12345678901234567890,\n  \"a\": 1,\n  \"a\": 2\n}");
+});
+
+test("repair turns near-JSON into JSON and says what it fixed", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "{a: 1, // note\n b: 'x',}");
+
+  await page.getByRole("button", { name: "Transform" }).click();
+  await page.getByRole("menuitem", { name: /^Repair/ }).click();
+
+  await expect.poll(() => valueOf(page)).toBe("{\n  \"a\": 1,\n  \"b\": \"x\"\n}");
+  await expect(page.getByText(/^Repaired: 1 comment removed, 1 trailing comma removed/)).toBeVisible();
+});
+
+test("a transform that cannot run says why, until the document changes", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "{\"a\": ");
+
+  await page.getByRole("button", { name: "Minify" }).click();
+  await expect(page.getByText(/^Not valid JSON at line 1, column \d+$/)).toBeVisible();
+  expect(await valueOf(page)).toBe("{\"a\": ");
+
+  await caretAt(page, 6);
+  await page.keyboard.type("1}", { delay: 0 });
+  await expect(page.getByText(/^Not valid JSON/)).toBeHidden();
+});
+
+test("expand embedded JSON opens up a string holding a document", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, JSON.stringify({ body: JSON.stringify({ a: 1 }) }));
+
+  await page.getByRole("button", { name: "Transform" }).click();
+  await page.getByRole("menuitem", { name: /^Expand embedded JSON/ }).click();
+
+  await expect.poll(() => valueOf(page)).toBe("{\n  \"body\": {\n    \"a\": 1\n  }\n}");
+  await expect(page.getByText("Expanded 1 embedded document")).toBeVisible();
+});
+
+test("an array becomes JSON Lines and back, with no fault marked in between", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "[{\"a\":1},{\"b\":2}]");
+
+  await page.getByRole("button", { name: "Transform" }).click();
+  await page.getByRole("menuitem", { name: /^Array to JSON Lines/ }).click();
+  await expect.poll(() => valueOf(page)).toBe("{\"a\":1}\n{\"b\":2}\n");
+
+  await page.waitForTimeout(LINT_SETTLE_MS);
+  await expect(page.locator(".cm-lint-marker-error")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Transform" }).click();
+  await page.getByRole("menuitem", { name: /^JSON Lines to array/ }).click();
+  await expect.poll(() => valueOf(page)).toBe("[\n  {\n    \"a\": 1\n  },\n  {\n    \"b\": 2\n  }\n]");
+});
+
+const LINT_SETTLE_MS = 1500;
+
+test("fold shows a level at a time, and the folded lines keep their counts", async ({ page }) => {
+  await openJson(page);
+  await setDocument(page, "{\n  \"a\": {\n    \"x\": 1,\n    \"y\": 2\n  },\n  \"b\": [\n    1\n  ]\n}");
+
+  await page.getByRole("button", { name: "Fold" }).click();
+  await page.getByRole("menuitem", { name: "Show 1 level" }).click();
+  await expect(page.locator(".cm-foldPlaceholder")).toHaveCount(2);
+  await expect.poll(() => countsShown(page)).toEqual(["2 keys", "2 keys", "1 element"]);
+
+  await page.getByRole("button", { name: "Fold" }).click();
+  await page.getByRole("menuitem", { name: "Collapse all" }).click();
+  await expect(page.locator(".cm-foldPlaceholder")).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Fold" }).click();
+  await page.getByRole("menuitem", { name: "Expand all" }).click();
+  await expect(page.locator(".cm-foldPlaceholder")).toHaveCount(0);
+  expect(await valueOf(page)).toBe("{\n  \"a\": {\n    \"x\": 1,\n    \"y\": 2\n  },\n  \"b\": [\n    1\n  ]\n}");
+});
+
+test("the status bar names the path at the caret, and copies it", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await openJson(page);
+  const text = "{\"users\": [{\"name\": \"x\"}, {\"first name\": \"y\"}]}";
+  await setDocument(page, text);
+
+  await caretAt(page, text.indexOf("y\""));
+  await expect(page.getByTestId("caret-path")).toHaveText("$.users[1]['first name']");
+
+  await page.getByRole("button", { name: "Copy the path at the caret" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("$.users[1]['first name']");
+});
+
+const QUERY_DOCUMENT = "{\"users\": [{\"name\": \"x\"}, {\"name\": \"y\"}]}";
+
+async function openQuery(page: Page) {
+  await openJson(page);
+  await setDocument(page, QUERY_DOCUMENT);
+  await modeTab(page, "Query");
+  await page.getByLabel("JSONPath").fill("$.users[*].name");
+}
+
+test("a query shows its matches beside the document, and follows it as it is typed", async ({ page }) => {
+  await openQuery(page);
+
+  await expect.poll(() => readResult(page)).toBe("[\n  \"x\",\n  \"y\"\n]");
+  await expect(page.getByText("2 matches")).toBeVisible();
+
+  await setDocument(page, "{\"users\": [{\"name\": \"z\"}]}");
+  await expect.poll(() => readResult(page)).toBe("[\n  \"z\"\n]");
+  await expect(page.getByText("1 match", { exact: true })).toBeVisible();
+
+  await page.getByRole("combobox", { name: "Result" }).click();
+  await page.getByRole("option", { name: "Paths" }).click();
+  await expect.poll(() => readResult(page)).toBe("[\n  \"$['users'][0]['name']\"\n]");
+});
+
+test("the result is for reading, and cannot be typed into", async ({ page }) => {
+  await openQuery(page);
+  await expect(page.locator(".cm-content[aria-label=\"Query result\"]")).toHaveAttribute("contenteditable", "false");
+});
+
+test("a query that does not read says where, and the result waits for it", async ({ page }) => {
+  await openQuery(page);
+  await page.getByLabel("JSONPath").fill("$.users[");
+
+  await expect(page.getByText(/^expected a name, an index, a slice, \* or a filter at column 9$/)).toBeVisible();
+  await expect(page.getByText("Nothing to show until the query reads")).toBeVisible();
+});
+
+test("switching mode keeps the document's editor and its history", async ({ page }) => {
+  await openJson(page);
+  await page.evaluate(() => {
+    (window as any).firstView = editorView;
+  });
+  await placeCaret(page, 2, 1);
+  await page.keyboard.type("\"kept\": 1,", { delay: 0 });
+
+  await modeTab(page, "Query");
+  await expect.poll(() => readResult(page)).not.toBeNull();
+  await modeTab(page, "Edit");
+  await expect.poll(() => readResult(page)).toBeNull();
+
+  expect(await page.evaluate(() => (window as any).firstView === editorView)).toBe(true);
+  await page.locator(".cm-content").first().click();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect.poll(() => valueOf(page)).toBe("{\n  \"hello\": \"world\"\n}");
+});
+
+test("the link carries the query and the mode, and leaves the indent off while Query is showing", async ({ page }) => {
+  await openQuery(page);
+
+  await expect.poll(() => decodeHash(page.url())).toMatchObject({ mode: "query", query: "$.users[*].name" });
+  expect(decodeHash(page.url()).indentSize).toBeUndefined();
+
+  await page.reload();
+  await page.waitForFunction(() => (window as any).editorView !== undefined);
+  await expect(page.getByLabel("JSONPath")).toHaveValue("$.users[*].name");
+  await expect.poll(() => readResult(page)).toBe("[\n  \"x\",\n  \"y\"\n]");
 });

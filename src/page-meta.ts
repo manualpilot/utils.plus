@@ -357,9 +357,9 @@ export const PAGE_META = {
     ],
   },
   "/json": {
-    title: "JSON Formatter, Validator & Minifier",
+    title: "JSON Formatter, Validator, Repair & JSONPath",
     description:
-      "Format, minify, sort the keys of, escape and unescape JSON in an editor that marks a syntax error where it is. The document stays in the browser.",
+      "Format, minify, sort, repair and query JSON with JSONPath, without rounding a big number or dropping a duplicate key. The document stays in the browser.",
     keywords: [
       "json formatter",
       "json validator",
@@ -369,6 +369,9 @@ export const PAGE_META = {
       "sort json keys",
       "pretty print json",
       "json editor",
+      "jsonpath",
+      "json repair",
+      "json lines",
     ],
   },
   "/jwt": {

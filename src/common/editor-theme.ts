@@ -4,7 +4,7 @@ export const EDITOR_BACKGROUND = "var(--mantine-color-dark-6)";
 
 const ACTIVE_LINE_TINT = "rgba(255, 255, 255, 0.04)";
 
-const PANEL_BACKGROUND = "var(--mantine-color-dark-7)";
+export const PANEL_BACKGROUND = "var(--mantine-color-dark-7)";
 
 const MATCH_TINT = "rgba(255, 112, 67, 0.28)";
 const CURRENT_MATCH_TINT = "rgba(255, 112, 67, 0.45)";

@@ -13,6 +13,7 @@ export { default as IconAuth2fa } from "@tabler/icons-react/dist/esm/icons/IconA
 export { default as IconBinary } from "@tabler/icons-react/dist/esm/icons/IconBinary.mjs";
 export { default as IconBlockquote } from "@tabler/icons-react/dist/esm/icons/IconBlockquote.mjs";
 export { default as IconBold } from "@tabler/icons-react/dist/esm/icons/IconBold.mjs";
+export { default as IconBraces } from "@tabler/icons-react/dist/esm/icons/IconBraces.mjs";
 export { default as IconBrackets } from "@tabler/icons-react/dist/esm/icons/IconBrackets.mjs";
 export { default as IconBrandGithub } from "@tabler/icons-react/dist/esm/icons/IconBrandGithub.mjs";
 export { default as IconBrandJavascript } from "@tabler/icons-react/dist/esm/icons/IconBrandJavascript.mjs";
@@ -48,6 +49,7 @@ export { default as IconFileTypePdf } from "@tabler/icons-react/dist/esm/icons/I
 export { default as IconFlag } from "@tabler/icons-react/dist/esm/icons/IconFlag.mjs";
 export { default as IconFlipHorizontal } from "@tabler/icons-react/dist/esm/icons/IconFlipHorizontal.mjs";
 export { default as IconFlipVertical } from "@tabler/icons-react/dist/esm/icons/IconFlipVertical.mjs";
+export { default as IconFold } from "@tabler/icons-react/dist/esm/icons/IconFold.mjs";
 export { default as IconGitCompare } from "@tabler/icons-react/dist/esm/icons/IconGitCompare.mjs";
 export { default as IconGripVertical } from "@tabler/icons-react/dist/esm/icons/IconGripVertical.mjs";
 export { default as IconH1 } from "@tabler/icons-react/dist/esm/icons/IconH1.mjs";
@@ -103,5 +105,6 @@ export { default as IconTrash } from "@tabler/icons-react/dist/esm/icons/IconTra
 export { default as IconUpload } from "@tabler/icons-react/dist/esm/icons/IconUpload.mjs";
 export { default as IconViewportNarrow } from "@tabler/icons-react/dist/esm/icons/IconViewportNarrow.mjs";
 export { default as IconViewportWide } from "@tabler/icons-react/dist/esm/icons/IconViewportWide.mjs";
+export { default as IconWand } from "@tabler/icons-react/dist/esm/icons/IconWand.mjs";
 export { default as IconWorld } from "@tabler/icons-react/dist/esm/icons/IconWorld.mjs";
 export { default as IconX } from "@tabler/icons-react/dist/esm/icons/IconX.mjs";
