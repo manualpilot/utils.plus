@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { sensorListening } from "./keyboard-sensor";
 import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
@@ -200,6 +201,7 @@ test("a handle reached by keyboard reorders without a pointer", async ({ page })
 
   await page.keyboard.press("Space");
   await expect(page.getByRole("status")).toContainText("Draggable item shape");
+  await sensorListening(page);
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("status")).toContainText("droppable area colour");
   await page.keyboard.press("Space");
@@ -216,6 +218,7 @@ test("how the cards are arranged never reaches the link", async ({ page }) => {
   await page.getByRole("button", { name: "Reorder Colour" }).focus();
   await page.keyboard.press("Space");
   await expect(page.getByRole("status")).toContainText("Draggable item colour");
+  await sensorListening(page);
   await page.keyboard.press("ArrowUp");
   await expect(page.getByRole("status")).toContainText("droppable area shape");
   await page.keyboard.press("Space");

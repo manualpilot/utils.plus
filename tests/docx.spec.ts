@@ -188,7 +188,7 @@ test("nothing about a document leaves the tab", async ({ page }) => {
   const outside: string[] = [];
   await page.route("**/*", (route) => {
     const url = route.request().url();
-    if (!url.startsWith(BASE || "http://localhost:5173") && !url.startsWith("blob:") && !url.startsWith("data:")) {
+    if (!url.startsWith(BASE || "http://localhost:4173") && !url.startsWith("blob:") && !url.startsWith("data:")) {
       outside.push(url);
     }
     return route.continue();
@@ -274,6 +274,21 @@ test("closing the document puts the page back as it was found", async ({ page })
   await expect(page.locator(".docx-pane")).toHaveCount(0);
   await expect(page.getByText("Click to choose a Word document")).toBeVisible();
   expect(await page.evaluate(() => window.docxEditor)).toBeUndefined();
+});
+
+test("the screen is claimed for a document and not for the card asking for one", async ({ page }) => {
+  const articleTop = async () => (await page.locator("article.page-article").boundingBox())!.y;
+  const { height } = page.viewportSize()!;
+  await openDocx(page);
+  expect(await articleTop()).toBeLessThan(height);
+
+  await choose(page, "letter.docx", docx([paragraph("Short letter")]));
+  await expect(surface(page)).toContainText("Short letter");
+  expect(await articleTop()).toBeGreaterThan(height);
+
+  await page.getByRole("button", { name: "Close the document" }).click();
+  await expect(page.getByText("Click to choose a Word document")).toBeVisible();
+  expect(await articleTop()).toBeLessThan(height);
 });
 
 function textOf(xml: string): string {

@@ -64,7 +64,7 @@ export default function Pdf() {
   }, []);
 
   return (
-    <Stack flex={1} className="fill-screen" gap="md">
+    <Stack flex={1} className={opened ? "fill-screen" : undefined} gap="md">
       <UtilityTitle directory="pdf">PDF</UtilityTitle>
 
       {failure && (

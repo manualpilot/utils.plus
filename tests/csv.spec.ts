@@ -158,7 +158,7 @@ test("a share link opens on the same document and the same view", async ({ page,
 });
 
 test("the editor works with every third-party request blocked", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

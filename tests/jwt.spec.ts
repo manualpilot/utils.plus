@@ -311,7 +311,7 @@ test("the link carries the mode's own fields and no others", async ({ page }) =>
 });
 
 test("nothing on the page asks for another host", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

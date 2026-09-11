@@ -361,7 +361,7 @@ test("nothing about a document leaves the tab", async ({ page }) => {
   const outside: string[] = [];
   await page.route("**/*", (route) => {
     const url = route.request().url();
-    if (!url.startsWith(BASE || "http://localhost:5173") && !url.startsWith("blob:") && !url.startsWith("data:")) {
+    if (!url.startsWith(BASE || "http://localhost:4173") && !url.startsWith("blob:") && !url.startsWith("data:")) {
       outside.push(url);
     }
     return route.continue();
@@ -420,4 +420,18 @@ test("closing the PDF puts the page back as it was found", async ({ page }) => {
   await expect(page.locator(".pdf-pane")).toHaveCount(0);
   await expect(page.getByText("Click to choose a PDF")).toBeVisible();
   expect(await page.evaluate(() => window.pdfRegistry)).toBeUndefined();
+});
+
+test("the screen is claimed for a document and not for the card asking for one", async ({ page }) => {
+  const articleTop = async () => (await page.locator("article.page-article").boundingBox())!.y;
+  const { height } = page.viewportSize()!;
+  await openPdf(page);
+  expect(await articleTop()).toBeLessThan(height);
+
+  await opened(page, "letter.pdf", pdf(LETTER));
+  expect(await articleTop()).toBeGreaterThan(height);
+
+  await page.getByRole("button", { name: "Close the PDF" }).click();
+  await expect(page.getByText("Click to choose a PDF")).toBeVisible();
+  expect(await articleTop()).toBeLessThan(height);
 });

@@ -223,7 +223,7 @@ test("the link carries the AS mode and the number asked about", async ({ page })
 });
 
 test("every registry answer arrives with third-party requests blocked", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

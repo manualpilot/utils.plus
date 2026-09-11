@@ -394,7 +394,7 @@ test("a post-quantum identity made on /keygen opens what its recipient was seale
 test("a key made on /keygen opens what it was encrypted to, with third-party requests blocked", {
   tag: "@slow",
 }, async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

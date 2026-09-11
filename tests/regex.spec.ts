@@ -150,7 +150,7 @@ test("the address bar tracks the pattern, the flags and the text", async ({ page
 });
 
 test("the editors work with every third-party request blocked", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

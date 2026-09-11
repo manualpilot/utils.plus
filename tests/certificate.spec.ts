@@ -134,7 +134,7 @@ test("a binary certificate file is opened into the box as PEM", async ({ page })
 });
 
 test("everything is read with third-party requests blocked", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {
@@ -235,7 +235,7 @@ test("a leaf pasted as the issuer is refused, in the words the button would have
 });
 
 test("a certificate is made with third-party requests blocked", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

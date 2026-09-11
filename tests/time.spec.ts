@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { sensorListening } from "./keyboard-sensor";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -256,6 +257,7 @@ test("a handle reached by keyboard reorders without a pointer", async ({ page })
 
   await page.keyboard.press("Space");
   await expect(page.getByRole("status")).toContainText("Europe/Berlin");
+  await sensorListening(page);
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("status")).toContainText("droppable area UTC");
   await page.keyboard.press("Space");

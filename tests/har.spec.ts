@@ -307,7 +307,7 @@ test("nothing about a recording leaves the tab", async ({ page }) => {
   const outside: string[] = [];
   await page.route("**/*", (route) => {
     const url = route.request().url();
-    if (!url.startsWith(BASE || "http://localhost:5173") && !url.startsWith("blob:") && !url.startsWith("data:")) {
+    if (!url.startsWith(BASE || "http://localhost:4173") && !url.startsWith("blob:") && !url.startsWith("data:")) {
       outside.push(url);
     }
     return route.continue();

@@ -1,8 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
-import { resolve } from "node:path";
+import { readKey } from "openpgp";
 import { tool } from "./tool";
-
-const OPENPGP = `/@fs${resolve(import.meta.dirname, "../node_modules/openpgp/dist/openpgp.min.mjs")}`;
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -107,15 +105,10 @@ test("a PGP key needs a name, and carries it once given", { tag: "@slow" }, asyn
   await expect(privateBox(page)).toHaveValue(/^-----BEGIN PGP PRIVATE KEY BLOCK-----/, { timeout: SLOW });
   await expect(publicBox(page)).toHaveValue(/^-----BEGIN PGP PUBLIC KEY BLOCK-----/);
 
-  const armoredKey = await publicBox(page).inputValue();
-  const key = await page.evaluate(async ({ armoredKey, module }) => {
-    const openpgp = await import(module);
-    const parsed = await openpgp.readKey({ armoredKey });
-    return { fingerprint: parsed.getFingerprint().toUpperCase(), userIDs: parsed.getUserIDs() };
-  }, { armoredKey, module: OPENPGP });
+  const key = await readKey({ armoredKey: await publicBox(page).inputValue() });
 
-  expect(key.userIDs).toEqual(["Ada Lovelace <ada@example.com>"]);
-  await expect(page.getByText(key.fingerprint)).toBeVisible();
+  expect(key.getUserIDs()).toEqual(["Ada Lovelace <ada@example.com>"]);
+  await expect(page.getByText(key.getFingerprint().toUpperCase())).toBeVisible();
 });
 
 test("a JWK arrives on its own, and as a set once more than one is asked for", async ({ page }) => {
@@ -294,7 +287,7 @@ test("a random secret is there without being asked for, and follows its settings
 });
 
 test("every algorithm works with third-party requests blocked", { tag: "@slow" }, async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

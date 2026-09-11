@@ -302,7 +302,7 @@ test("the address bar tracks the document, the flavour and the view", async ({ p
 });
 
 test("the editor and the preview work with every third-party request blocked", async ({ page }) => {
-  const host = new URL(BASE || "http://localhost:5173").host;
+  const host = new URL(BASE || "http://localhost:4173").host;
   const blocked: string[] = [];
 
   await page.route("**/*", (route) => {

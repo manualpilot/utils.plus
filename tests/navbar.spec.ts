@@ -22,7 +22,7 @@ test("the first stop of the page is past the navbar", async ({ page }) => {
 });
 
 test("a Tab pressed before the application arrives ends on the first stop", async ({ page }) => {
-  await page.route("**/main.tsx", async (route) => {
+  await page.route("**/assets/index-*.js", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await route.continue();
   });
