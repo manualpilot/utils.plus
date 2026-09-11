@@ -45,7 +45,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
 
   optimizeDeps: {
-    exclude: ["@sqlite.org/sqlite-wasm", "@electric-sql/pglite"],
+    exclude: ["@sqlite.org/sqlite-wasm", "@electric-sql/pglite", "@docx-editor.dev/core", "@docx-editor.dev/fonts"],
   },
 });
 
@@ -64,6 +64,7 @@ function scopedName(name: string, chunk: Rolldown.PreRenderedChunk): string {
   if (icon) return `icons/${icon[1]}`;
   if (allFrom(chunk, "@mantine/")) return `mantine/${name}`;
   if (allFrom(chunk, "pdfmake/")) return `pdfmake/${name}`;
+  if (allFrom(chunk, "@docx-editor.dev/")) return `docx-editor/${name}`;
   return name;
 }
 

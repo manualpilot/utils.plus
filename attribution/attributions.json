@@ -233,6 +233,38 @@
       "file": "dnd-kit-utilities"
     },
     {
+      "name": "@docx-editor.dev/core",
+      "version": "2.16.1",
+      "license": "Apache-2.0",
+      "publisher": "",
+      "url": "https://github.com/eigenpal/docx-editor",
+      "file": "docx-editor.dev-core"
+    },
+    {
+      "name": "@docx-editor.dev/fonts",
+      "version": "2.16.1",
+      "license": "Apache-2.0 AND OFL-1.1 AND LicenseRef-GUST-Font-License",
+      "publisher": "Jedr Blaszyk",
+      "url": "https://github.com/eigenpal/docx-editor",
+      "file": "docx-editor.dev-fonts"
+    },
+    {
+      "name": "@docx-editor.dev/i18n",
+      "version": "2.16.1",
+      "license": "Apache-2.0",
+      "publisher": "Jedr Blaszyk",
+      "url": "https://github.com/eigenpal/docx-editor",
+      "file": "docx-editor.dev-i18n"
+    },
+    {
+      "name": "@docx-editor.dev/react",
+      "version": "2.16.1",
+      "license": "Apache-2.0",
+      "publisher": "Jedr Blaszyk",
+      "url": "https://github.com/eigenpal/docx-editor",
+      "file": "docx-editor.dev-react"
+    },
+    {
       "name": "@electric-sql/pglite",
       "version": "0.5.8",
       "license": "Apache-2.0",
@@ -247,6 +279,14 @@
       "publisher": "Toru Nagashima",
       "url": "https://github.com/eslint-community/regexpp",
       "file": "eslint-community-regexpp"
+    },
+    {
+      "name": "@expo-google-fonts/roboto",
+      "version": "0.4.3",
+      "license": "MIT AND OFL-1.1",
+      "publisher": "Expo Team",
+      "url": "https://github.com/expo/google-fonts",
+      "file": "expo-google-fonts-roboto"
     },
     {
       "name": "@floating-ui/core",
@@ -553,6 +593,223 @@
       "file": "noble-post-quantum"
     },
     {
+      "name": "@nodable/entities",
+      "version": "3.0.0",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/nodable/val-parsers",
+      "file": "nodable-entities",
+      "reconstructed": true
+    },
+    {
+      "name": "@radix-ui/number",
+      "version": "1.1.3",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-number"
+    },
+    {
+      "name": "@radix-ui/primitive",
+      "version": "1.1.7",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-primitive"
+    },
+    {
+      "name": "@radix-ui/react-arrow",
+      "version": "1.1.15",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-arrow"
+    },
+    {
+      "name": "@radix-ui/react-collection",
+      "version": "1.1.15",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-collection"
+    },
+    {
+      "name": "@radix-ui/react-compose-refs",
+      "version": "1.1.5",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-compose-refs"
+    },
+    {
+      "name": "@radix-ui/react-context",
+      "version": "1.2.2",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-context"
+    },
+    {
+      "name": "@radix-ui/react-direction",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-direction"
+    },
+    {
+      "name": "@radix-ui/react-dismissable-layer",
+      "version": "1.1.19",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-dismissable-layer"
+    },
+    {
+      "name": "@radix-ui/react-focus-guards",
+      "version": "1.1.6",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-focus-guards"
+    },
+    {
+      "name": "@radix-ui/react-focus-scope",
+      "version": "1.1.16",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-focus-scope"
+    },
+    {
+      "name": "@radix-ui/react-id",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-id"
+    },
+    {
+      "name": "@radix-ui/react-popper",
+      "version": "1.3.7",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-popper"
+    },
+    {
+      "name": "@radix-ui/react-portal",
+      "version": "1.1.17",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-portal"
+    },
+    {
+      "name": "@radix-ui/react-presence",
+      "version": "1.1.10",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-presence"
+    },
+    {
+      "name": "@radix-ui/react-primitive",
+      "version": "2.1.10",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-primitive"
+    },
+    {
+      "name": "@radix-ui/react-select",
+      "version": "2.3.7",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-select"
+    },
+    {
+      "name": "@radix-ui/react-slot",
+      "version": "1.3.3",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-slot"
+    },
+    {
+      "name": "@radix-ui/react-use-callback-ref",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-callback-ref"
+    },
+    {
+      "name": "@radix-ui/react-use-controllable-state",
+      "version": "1.2.6",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-controllable-state"
+    },
+    {
+      "name": "@radix-ui/react-use-effect-event",
+      "version": "0.0.5",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-effect-event"
+    },
+    {
+      "name": "@radix-ui/react-use-layout-effect",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-layout-effect"
+    },
+    {
+      "name": "@radix-ui/react-use-previous",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-previous"
+    },
+    {
+      "name": "@radix-ui/react-use-rect",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-rect"
+    },
+    {
+      "name": "@radix-ui/react-use-size",
+      "version": "1.1.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-use-size"
+    },
+    {
+      "name": "@radix-ui/react-visually-hidden",
+      "version": "1.2.11",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-react-visually-hidden"
+    },
+    {
+      "name": "@radix-ui/rect",
+      "version": "1.1.3",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/radix-ui/primitives",
+      "file": "radix-ui-rect"
+    },
+    {
       "name": "@scure/base",
       "version": "2.4.0",
       "license": "MIT",
@@ -608,6 +865,14 @@
       "publisher": "Asana",
       "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
       "file": "types-react"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "license": "MIT",
+      "publisher": "Asana",
+      "url": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "file": "types-react-dom"
     },
     {
       "name": "@types/trusted-types",
@@ -668,6 +933,22 @@
       "file": "any-promise"
     },
     {
+      "name": "anynum",
+      "version": "1.0.1",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/anynum",
+      "file": "anynum"
+    },
+    {
+      "name": "aria-hidden",
+      "version": "1.2.6",
+      "license": "MIT",
+      "publisher": "Anton Korzunov",
+      "url": "https://github.com/theKashey/aria-hidden",
+      "file": "aria-hidden"
+    },
+    {
       "name": "base64-js",
       "version": "0.0.8",
       "license": "MIT",
@@ -692,6 +973,14 @@
       "file": "bcryptjs"
     },
     {
+      "name": "bidi-js",
+      "version": "1.0.3",
+      "license": "MIT",
+      "publisher": "Jason Johnston",
+      "url": "https://github.com/lojjic/bidi-js",
+      "file": "bidi-js"
+    },
+    {
       "name": "brotli",
       "version": "1.3.3",
       "license": "MIT",
@@ -707,6 +996,14 @@
       "publisher": "Devon Govett",
       "url": "https://github.com/devongovett/browserify-zlib",
       "file": "browserify-zlib"
+    },
+    {
+      "name": "class-variance-authority",
+      "version": "0.7.1",
+      "license": "Apache-2.0",
+      "publisher": "Joe Bell",
+      "url": "https://github.com/joe-bell/cva",
+      "file": "class-variance-authority"
     },
     {
       "name": "clone",
@@ -798,6 +1095,14 @@
       "file": "dompurify"
     },
     {
+      "name": "emf-converter",
+      "version": "2.0.2",
+      "license": "Apache-2.0",
+      "publisher": "ChristopherVR",
+      "url": "https://github.com/ChristopherVR/emf-converter",
+      "file": "emf-converter"
+    },
+    {
       "name": "fast-deep-equal",
       "version": "3.1.3",
       "license": "MIT",
@@ -806,12 +1111,36 @@
       "file": "fast-deep-equal"
     },
     {
+      "name": "fast-xml-builder",
+      "version": "1.3.1",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/fast-xml-builder",
+      "file": "fast-xml-builder"
+    },
+    {
+      "name": "fast-xml-parser",
+      "version": "5.11.1",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/fast-xml-parser",
+      "file": "fast-xml-parser"
+    },
+    {
       "name": "fdir",
       "version": "6.5.0",
       "license": "MIT",
       "publisher": "thecodrr",
       "url": "https://github.com/thecodrr/fdir",
       "file": "fdir"
+    },
+    {
+      "name": "fflate",
+      "version": "0.8.3",
+      "license": "MIT",
+      "publisher": "Arjun Barrett",
+      "url": "https://github.com/101arrowz/fflate",
+      "file": "fflate"
     },
     {
       "name": "fontkit",
@@ -837,6 +1166,22 @@
       "publisher": "Anton Korzunov",
       "url": "git@github.com:theKashey/get-nonce",
       "file": "get-nonce"
+    },
+    {
+      "name": "harfbuzzjs",
+      "version": "1.6.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/harfbuzz/harfbuzzjs",
+      "file": "harfbuzzjs"
+    },
+    {
+      "name": "is-unsafe",
+      "version": "2.0.2",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/is-unsafe",
+      "file": "is-unsafe"
     },
     {
       "name": "jose",
@@ -919,12 +1264,28 @@
       "file": "openpgp"
     },
     {
+      "name": "orderedmap",
+      "version": "2.1.1",
+      "license": "MIT",
+      "publisher": "Marijn Haverbeke",
+      "url": "https://github.com/marijnh/orderedmap",
+      "file": "orderedmap"
+    },
+    {
       "name": "pako",
       "version": "1.0.11",
       "license": "(MIT AND Zlib)",
       "publisher": "Andrei Tuputcyn",
       "url": "nodeca/pako",
       "file": "pako"
+    },
+    {
+      "name": "path-expression-matcher",
+      "version": "1.6.2",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/path-expression-matcher",
+      "file": "path-expression-matcher"
     },
     {
       "name": "pdfkit",
@@ -965,6 +1326,54 @@
       "publisher": "Devon Govett",
       "url": "https://github.com/devongovett/png.js",
       "file": "png-js"
+    },
+    {
+      "name": "prosemirror-commands",
+      "version": "1.7.2",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://code.haverbeke.berlin/prosemirror/prosemirror-commands",
+      "file": "prosemirror-commands"
+    },
+    {
+      "name": "prosemirror-keymap",
+      "version": "1.2.3",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/prosemirror/prosemirror-keymap",
+      "file": "prosemirror-keymap"
+    },
+    {
+      "name": "prosemirror-model",
+      "version": "1.25.11",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://code.haverbeke.berlin/prosemirror/prosemirror-model",
+      "file": "prosemirror-model"
+    },
+    {
+      "name": "prosemirror-state",
+      "version": "1.4.4",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/prosemirror/prosemirror-state",
+      "file": "prosemirror-state"
+    },
+    {
+      "name": "prosemirror-transform",
+      "version": "1.12.1",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://code.haverbeke.berlin/prosemirror/prosemirror-transform",
+      "file": "prosemirror-transform"
+    },
+    {
+      "name": "prosemirror-view",
+      "version": "1.42.3",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://code.haverbeke.berlin/prosemirror/prosemirror-view",
+      "file": "prosemirror-view"
     },
     {
       "name": "pyodide",
@@ -1050,6 +1459,14 @@
       "file": "regexparam"
     },
     {
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "license": "MIT",
+      "publisher": "Vsevolod Strukchinsky",
+      "url": "floatdrop/require-from-string",
+      "file": "require-from-string"
+    },
+    {
       "name": "restructure",
       "version": "3.0.2",
       "license": "MIT",
@@ -1080,6 +1497,14 @@
       "publisher": "Cynthia Rey",
       "url": "github:squirrelchat/smol-toml",
       "file": "smol-toml"
+    },
+    {
+      "name": "strnum",
+      "version": "2.4.2",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/strnum",
+      "file": "strnum"
     },
     {
       "name": "style-mod",
@@ -1218,6 +1643,14 @@
       "file": "use-sync-external-store"
     },
     {
+      "name": "utif2",
+      "version": "4.1.0",
+      "license": "MIT",
+      "publisher": "photopea",
+      "url": "github:photopea/UTIF.js",
+      "file": "utif2"
+    },
+    {
       "name": "w3c-keyname",
       "version": "2.2.8",
       "license": "MIT",
@@ -1249,6 +1682,14 @@
       "publisher": "Einar Otto Stangvik",
       "url": "https://github.com/websockets/ws",
       "file": "ws"
+    },
+    {
+      "name": "xml-naming",
+      "version": "0.3.0",
+      "license": "MIT",
+      "publisher": "Amit Gupta",
+      "url": "https://github.com/NaturalIntelligence/xml-naming",
+      "file": "xml-naming"
     },
     {
       "name": "xmldoc",

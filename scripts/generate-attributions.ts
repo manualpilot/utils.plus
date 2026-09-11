@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -72,9 +72,11 @@ function build(): { json: string; files: Map<string, string> } {
     if (!dir) continue;
 
     const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as Manifest;
-    const file = readdirSync(dir).find((entry) => LICENSE_FILE.test(entry));
     const license = spdx(manifest);
-    const text = file ? readFileSync(join(dir, file), "utf8").trim() : fallback(license, manifest);
+    const entries = readdirSync(dir);
+    const file = entries.find((entry) => LICENSE_FILE.test(entry));
+    const primary = file ? readFileSync(join(dir, file), "utf8").trim() : fallback(license, manifest);
+    const text = [primary, ...alongside(dir, entries, file, license).map((path) => enclosed(dir, path))].join("\n\n");
     const own = fileName(name);
 
     if (files.has(own)) throw new Error(`attributions: two packages want attribution/license/${own}.txt`);
@@ -93,6 +95,28 @@ function build(): { json: string; files: Map<string, string> } {
 
   return { json: JSON.stringify({ packages }, null, 2) + "\n", files };
 }
+
+function alongside(dir: string, entries: string[], first: string | undefined, license: string): string[] {
+  const conjoined = /\bAND\b/.test(license)
+    ? entries.filter((entry) => entry !== first && LICENSE_FILE.test(entry))
+    : [];
+  const notices = entries.filter((entry) => THIRD_PARTY.test(entry));
+  const folder = entries.find((entry) => /^licen[sc]es$/i.test(entry));
+  const nested = folder && statSync(join(dir, folder)).isDirectory()
+    ? readdirSync(join(dir, folder)).filter((entry) => statSync(join(dir, folder, entry)).isFile()).map((entry) =>
+      `${folder}/${entry}`
+    )
+    : [];
+  return [...conjoined, ...notices, ...nested].sort();
+}
+
+function enclosed(dir: string, path: string): string {
+  return `${"-".repeat(RULE)}\n${path}\n${"-".repeat(RULE)}\n\n${readFileSync(join(dir, path), "utf8").trim()}`;
+}
+
+const THIRD_PARTY = /^third[_-]party[_-]notices?([._-].*)?$/i;
+
+const RULE = 72;
 
 function fileName(name: string): string {
   return name.replace(/^@/, "").replace(/\//g, "-");

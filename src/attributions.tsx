@@ -180,6 +180,36 @@ export default function Attributions() {
             </Text>
           </Box>
           <Box>
+            <Title order={4}>The faces behind DOCX</Title>
+            <Text size="sm" mt={4}>
+              <Anchor href="/docx" inherit>DOCX</Anchor>{" "}
+              measures and draws a document in faces served from this site rather than the ones it names, Word's own
+              coming with Windows and Office under licences that do not let a website serve them. Carlito, Caladea and
+              the Liberation fonts stand in for Calibri, Cambria, Times New Roman, Arial and Courier New at the same
+              widths, under the{" "}
+              <strong>SIL Open Font License 1.1</strong>, and TeX Gyre Adventor stands in for Century Gothic under the
+              {" "}
+              <strong>GUST Font License</strong>, which is the LaTeX Project Public License with a request attached. All
+              of them are served unmodified and under their own names as{" "}
+              <Anchor
+                href="https://github.com/eigenpal/docx-editor/tree/main/packages/fonts"
+                target="_blank"
+                rel="noopener noreferrer"
+                inherit
+              >
+                @docx-editor.dev/fonts
+              </Anchor>{" "}
+              ships them, and that package's entry above reproduces every one of their licences. Everything else is
+              drawn in Roboto, served there as the static instances @expo-google-fonts/roboto packages, because what
+              measures the text cannot read the variable face the rest of the site is set in. That is{" "}
+              <Anchor href="https://harfbuzz.github.io/" target="_blank" rel="noopener noreferrer" inherit>
+                HarfBuzz
+              </Anchor>, compiled to WebAssembly and shipped inside @docx-editor.dev/core under its own{" "}
+              <strong>Old MIT</strong>{" "}
+              licence, whose text and copyright holders that package's entry above carries in full.
+            </Text>
+          </Box>
+          <Box>
             <Title order={4}>Twemoji Country Flags</Title>
             <Text size="sm" mt={4}>
               The flags on <Anchor href="/countries" inherit>Countries</Anchor> are drawn from the{" "}

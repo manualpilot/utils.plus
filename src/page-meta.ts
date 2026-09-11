@@ -255,6 +255,22 @@ export const PAGE_META = {
       "myers diff",
     ],
   },
+  "/docx": {
+    label: "DOCX",
+    title: "DOCX Viewer & Word Document Editor",
+    description:
+      "Open a Word document and read it as the pages it prints on, or edit its text, tables and styles and save it back as .docx. Nothing is uploaded.",
+    keywords: [
+      "docx viewer",
+      "docx editor",
+      "word document editor",
+      "open docx online",
+      "edit word document",
+      "view docx without word",
+      "online word editor",
+      "docx reader",
+    ],
+  },
   "/har": {
     label: "HAR",
     title: "HAR Viewer & HTTP Archive Analyser",
@@ -744,7 +760,7 @@ export const CATEGORIES: readonly Category[] = [
   { name: "Network", paths: ["/curl", "/har", "/ip-address"] },
   { name: "Code", paths: ["/javascript", "/python", "/sql"] },
   { name: "Time and place", paths: ["/time", "/cron", "/countries", "/phone-number"] },
-  { name: "Everyday", paths: ["/calculator", "/converter", "/colour", "/image", "/qr-code"] },
+  { name: "Everyday", paths: ["/calculator", "/converter", "/colour", "/image", "/docx", "/qr-code"] },
 ];
 
 export interface Category {

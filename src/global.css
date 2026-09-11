@@ -899,6 +899,99 @@ svg.country-map {
   }
 }
 
+.docx-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 32rem;
+  overflow: hidden;
+}
+
+.docx-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.docx-host > .docx-editor {
+  position: absolute;
+  inset: 0;
+}
+
+.docx-host .docx-editor.dark {
+  --primary: 14 100% 63%;
+  --accent-foreground: 14 100% 63%;
+  --ring: 14 100% 63%;
+  --doc-surface: var(--mantine-color-dark-7);
+  --doc-bg: var(--mantine-color-dark-6);
+  --doc-card: var(--mantine-color-dark-6);
+  --doc-bg-subtle: var(--mantine-color-dark-5);
+  --doc-bg-hover: var(--mantine-color-dark-5);
+  --doc-bg-input: var(--mantine-color-dark-6);
+  --doc-border: var(--mantine-color-dark-4);
+  --doc-border-light: var(--mantine-color-dark-5);
+  --doc-border-input: var(--mantine-color-dark-4);
+  --doc-text: var(--mantine-color-text);
+  --doc-text-muted: var(--mantine-color-dimmed);
+  --doc-primary: var(--mantine-color-orange-6);
+  --doc-primary-hover: var(--mantine-color-orange-5);
+  --doc-primary-light: rgba(255, 112, 67, 0.18);
+  --doc-accent: var(--mantine-color-orange-6);
+  --doc-accent-bg: rgba(255, 112, 67, 0.12);
+  --doc-on-primary: #121212;
+  --doc-link: var(--mantine-color-orange-4);
+  --doc-focus-ring: rgba(255, 112, 67, 0.45);
+  --doc-selection: rgba(255, 112, 67, 0.3);
+}
+
+.docx-host:not([data-paper="dark"]) .docx-editor.dark {
+  --doc-page-bg: #ffffff;
+  --doc-page-bg-rendered: #ffffff;
+  --doc-page-text: #000000;
+  --doc-caret: #202124;
+  --doc-caret-contrast: #ffffff;
+}
+
+.docx-host:not([data-paper="dark"]) .docx-editor.dark .docx-page-content,
+.docx-host:not([data-paper="dark"]) .docx-editor.dark .docx-page-content :is(
+  [data-no-color-invert],
+  [data-highlight],
+  canvas,
+  img,
+  svg,
+  video
+) {
+  filter: none;
+}
+
+@media screen {
+  .docx-host[data-paper="dark"] .docx-page > :not(.docx-page-content, .docx-hf--placeholder, .docx-hf-edit-hint) {
+    filter: invert(1) hue-rotate(180deg) contrast(0.92);
+  }
+
+  .docx-host[data-paper="dark"] .docx-page > :not(.docx-page-content) :is(
+    [data-no-color-invert],
+    [data-highlight],
+    canvas,
+    img,
+    svg,
+    video
+  ) {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}
+
+.docx-editor :is(
+  [data-slot="review.comments"],
+  [data-slot="review.editingMode"],
+  [data-slot="review.previousChange"],
+  [data-slot="review.nextChange"],
+  [data-slot="review.acceptAllChanges"],
+  [data-slot="review.rejectAllChanges"]
+) {
+  display: none;
+}
+
 .csv-panes {
   display: flex;
   flex-direction: column;
