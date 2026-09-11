@@ -8,10 +8,16 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   outputDir: "../test-results",
-  reporter: [["html", { outputFolder: "../playwright-report" }]],
+  reporter: process.env.CI ? [["list"], ["github"]] : [["html", { outputFolder: "../playwright-report" }]],
   use: {
     baseURL: "http://localhost:5173",
     trace: "on-first-retry",
+  },
+  webServer: {
+    command: "npm run dev",
+    cwd: "..",
+    url: "http://localhost:5173",
+    reuseExistingServer: !process.env.CI,
   },
   projects: [
     {

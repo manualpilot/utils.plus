@@ -46,6 +46,7 @@ export default defineConfig({
 
   optimizeDeps: {
     exclude: ["@sqlite.org/sqlite-wasm", "@electric-sql/pglite", "@docx-editor.dev/core", "@docx-editor.dev/fonts"],
+    entries: ["index.html", "utilities/**/*.ts"],
   },
 });
 

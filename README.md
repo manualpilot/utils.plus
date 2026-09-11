@@ -25,10 +25,11 @@ npm run preview    # serve the production build
 ```sh
 npm test           # format check, typecheck, unit tests, build
 npm run vitest     # unit tests only
-npm run playwright # end-to-end tests, requires `npm run dev` running
+npm run playwright # end-to-end tests, against `npm run dev` (started for you unless it is already up)
 ```
 
-`npm test` does not run the Playwright specs — run those separately.
+`npm test` does not run the Playwright specs — run those separately. CI runs both, and installs Chromium for the
+specs with `npx playwright install --with-deps chromium`.
 
 ## Project layout
 
