@@ -530,6 +530,23 @@ export const PAGE_META = {
       "word based password",
     ],
   },
+  "/pdf": {
+    label: "PDF",
+    title: "PDF Viewer, Annotator & Signer",
+    description:
+      "Open a PDF to read it, or highlight, draw, add text, pictures and a signature, and save the marks into the file. Nothing is uploaded.",
+    keywords: [
+      "pdf viewer",
+      "pdf annotator",
+      "sign pdf online",
+      "highlight pdf",
+      "add text to pdf",
+      "draw on pdf",
+      "add image to pdf",
+      "fill pdf form",
+      "pdf editor",
+    ],
+  },
   "/phone-number": {
     label: "Phone Number",
     title: "Phone Number Validator & Lookup",
@@ -760,7 +777,7 @@ export const CATEGORIES: readonly Category[] = [
   { name: "Network", paths: ["/curl", "/har", "/ip-address"] },
   { name: "Code", paths: ["/javascript", "/python", "/sql"] },
   { name: "Time and place", paths: ["/time", "/cron", "/countries", "/phone-number"] },
-  { name: "Everyday", paths: ["/calculator", "/converter", "/colour", "/image", "/docx", "/qr-code"] },
+  { name: "Everyday", paths: ["/calculator", "/converter", "/colour", "/image", "/docx", "/pdf", "/qr-code"] },
 ];
 
 export interface Category {

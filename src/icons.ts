@@ -1,6 +1,8 @@
 export { default as IconAdjustments } from "@tabler/icons-react/dist/esm/icons/IconAdjustments.mjs";
 export { default as IconAlertTriangle } from "@tabler/icons-react/dist/esm/icons/IconAlertTriangle.mjs";
+export { default as IconArrowBackUp } from "@tabler/icons-react/dist/esm/icons/IconArrowBackUp.mjs";
 export { default as IconArrowDown } from "@tabler/icons-react/dist/esm/icons/IconArrowDown.mjs";
+export { default as IconArrowForwardUp } from "@tabler/icons-react/dist/esm/icons/IconArrowForwardUp.mjs";
 export { default as IconArrowsExchange } from "@tabler/icons-react/dist/esm/icons/IconArrowsExchange.mjs";
 export { default as IconArrowsLeftRight } from "@tabler/icons-react/dist/esm/icons/IconArrowsLeftRight.mjs";
 export { default as IconArrowsMaximize } from "@tabler/icons-react/dist/esm/icons/IconArrowsMaximize.mjs";
@@ -8,6 +10,7 @@ export { default as IconArrowsMinimize } from "@tabler/icons-react/dist/esm/icon
 export { default as IconArrowsShuffle } from "@tabler/icons-react/dist/esm/icons/IconArrowsShuffle.mjs";
 export { default as IconArrowsUpDown } from "@tabler/icons-react/dist/esm/icons/IconArrowsUpDown.mjs";
 export { default as IconArrowUp } from "@tabler/icons-react/dist/esm/icons/IconArrowUp.mjs";
+export { default as IconArrowUpRight } from "@tabler/icons-react/dist/esm/icons/IconArrowUpRight.mjs";
 export { default as IconAspectRatio } from "@tabler/icons-react/dist/esm/icons/IconAspectRatio.mjs";
 export { default as IconAuth2fa } from "@tabler/icons-react/dist/esm/icons/IconAuth2fa.mjs";
 export { default as IconBinary } from "@tabler/icons-react/dist/esm/icons/IconBinary.mjs";
@@ -27,6 +30,7 @@ export { default as IconChevronDown } from "@tabler/icons-react/dist/esm/icons/I
 export { default as IconChevronLeft } from "@tabler/icons-react/dist/esm/icons/IconChevronLeft.mjs";
 export { default as IconChevronRight } from "@tabler/icons-react/dist/esm/icons/IconChevronRight.mjs";
 export { default as IconChevronUp } from "@tabler/icons-react/dist/esm/icons/IconChevronUp.mjs";
+export { default as IconCircle } from "@tabler/icons-react/dist/esm/icons/IconCircle.mjs";
 export { default as IconCircleCheck } from "@tabler/icons-react/dist/esm/icons/IconCircleCheck.mjs";
 export { default as IconCircleX } from "@tabler/icons-react/dist/esm/icons/IconCircleX.mjs";
 export { default as IconClock } from "@tabler/icons-react/dist/esm/icons/IconClock.mjs";
@@ -59,6 +63,7 @@ export { default as IconH1 } from "@tabler/icons-react/dist/esm/icons/IconH1.mjs
 export { default as IconH2 } from "@tabler/icons-react/dist/esm/icons/IconH2.mjs";
 export { default as IconH3 } from "@tabler/icons-react/dist/esm/icons/IconH3.mjs";
 export { default as IconHash } from "@tabler/icons-react/dist/esm/icons/IconHash.mjs";
+export { default as IconHighlight } from "@tabler/icons-react/dist/esm/icons/IconHighlight.mjs";
 export { default as IconId } from "@tabler/icons-react/dist/esm/icons/IconId.mjs";
 export { default as IconIndentDecrease } from "@tabler/icons-react/dist/esm/icons/IconIndentDecrease.mjs";
 export { default as IconInfoCircle } from "@tabler/icons-react/dist/esm/icons/IconInfoCircle.mjs";
@@ -67,6 +72,7 @@ export { default as IconKey } from "@tabler/icons-react/dist/esm/icons/IconKey.m
 export { default as IconLanguage } from "@tabler/icons-react/dist/esm/icons/IconLanguage.mjs";
 export { default as IconLayoutRows } from "@tabler/icons-react/dist/esm/icons/IconLayoutRows.mjs";
 export { default as IconLetterCase } from "@tabler/icons-react/dist/esm/icons/IconLetterCase.mjs";
+export { default as IconLine } from "@tabler/icons-react/dist/esm/icons/IconLine.mjs";
 export { default as IconLink } from "@tabler/icons-react/dist/esm/icons/IconLink.mjs";
 export { default as IconList } from "@tabler/icons-react/dist/esm/icons/IconList.mjs";
 export { default as IconListCheck } from "@tabler/icons-react/dist/esm/icons/IconListCheck.mjs";
@@ -96,9 +102,11 @@ export { default as IconSearch } from "@tabler/icons-react/dist/esm/icons/IconSe
 export { default as IconSeparator } from "@tabler/icons-react/dist/esm/icons/IconSeparator.mjs";
 export { default as IconServerCog } from "@tabler/icons-react/dist/esm/icons/IconServerCog.mjs";
 export { default as IconShieldLock } from "@tabler/icons-react/dist/esm/icons/IconShieldLock.mjs";
+export { default as IconSignature } from "@tabler/icons-react/dist/esm/icons/IconSignature.mjs";
 export { default as IconSortAscendingLetters } from "@tabler/icons-react/dist/esm/icons/IconSortAscendingLetters.mjs";
 export { default as IconSourceCode } from "@tabler/icons-react/dist/esm/icons/IconSourceCode.mjs";
 export { default as IconSparkles } from "@tabler/icons-react/dist/esm/icons/IconSparkles.mjs";
+export { default as IconSquare } from "@tabler/icons-react/dist/esm/icons/IconSquare.mjs";
 export { default as IconStrikethrough } from "@tabler/icons-react/dist/esm/icons/IconStrikethrough.mjs";
 export { default as IconSun } from "@tabler/icons-react/dist/esm/icons/IconSun.mjs";
 export { default as IconTable } from "@tabler/icons-react/dist/esm/icons/IconTable.mjs";
@@ -108,9 +116,12 @@ export { default as IconTestPipe } from "@tabler/icons-react/dist/esm/icons/Icon
 export { default as IconTransform } from "@tabler/icons-react/dist/esm/icons/IconTransform.mjs";
 export { default as IconTrash } from "@tabler/icons-react/dist/esm/icons/IconTrash.mjs";
 export { default as IconTypography } from "@tabler/icons-react/dist/esm/icons/IconTypography.mjs";
+export { default as IconUnderline } from "@tabler/icons-react/dist/esm/icons/IconUnderline.mjs";
 export { default as IconUpload } from "@tabler/icons-react/dist/esm/icons/IconUpload.mjs";
 export { default as IconViewportNarrow } from "@tabler/icons-react/dist/esm/icons/IconViewportNarrow.mjs";
 export { default as IconViewportWide } from "@tabler/icons-react/dist/esm/icons/IconViewportWide.mjs";
 export { default as IconWand } from "@tabler/icons-react/dist/esm/icons/IconWand.mjs";
 export { default as IconWorld } from "@tabler/icons-react/dist/esm/icons/IconWorld.mjs";
 export { default as IconX } from "@tabler/icons-react/dist/esm/icons/IconX.mjs";
+export { default as IconZoomIn } from "@tabler/icons-react/dist/esm/icons/IconZoomIn.mjs";
+export { default as IconZoomOut } from "@tabler/icons-react/dist/esm/icons/IconZoomOut.mjs";

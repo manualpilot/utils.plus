@@ -1,6 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import { type ComponentType, lazy, type LazyExoticComponent } from "react";
-import { IconArrowsExchange, IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileCertificate, IconFileDigit, IconFileSettings, IconFileTypeCsv, IconFileTypeDocx, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLanguage, IconLetterCase, IconLock, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconTestPipe, IconWorld } from "./icons";
+import { IconArrowsExchange, IconAuth2fa, IconBinary, IconBrackets, IconBrandJavascript, IconBrandPython, IconCalculator, IconCalendarRepeat, IconCertificate, IconClock, IconDatabase, IconFileCertificate, IconFileDigit, IconFileSettings, IconFileTypeCsv, IconFileTypeDocx, IconFileTypePdf, IconFlag, IconGitCompare, IconHash, IconId, IconKey, IconLanguage, IconLetterCase, IconLock, IconMarkdown, IconNetwork, IconPalette, IconPhone, IconPhoto, IconQrcode, IconRegex, IconRulerMeasure, IconSchema, IconShieldLock, IconTerminal2, IconTestPipe, IconWorld } from "./icons";
 import { PAGE_META, type PageMeta, type UtilityPath } from "./page-meta";
 
 export { ATTRIBUTIONS_PATH } from "./page-meta";
@@ -135,6 +135,11 @@ const routes: UtilityRoute[] = [
     path: "/password",
     Icon: IconKey,
     Component: lazy(() => import("./utilities/password/password")),
+  },
+  {
+    path: "/pdf",
+    Icon: IconFileTypePdf,
+    Component: lazy(() => import("./utilities/pdf/pdf")),
   },
   {
     path: "/phone-number",

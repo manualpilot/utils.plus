@@ -65,8 +65,11 @@ function scopedName(name: string, chunk: Rolldown.PreRenderedChunk): string {
   if (allFrom(chunk, "@mantine/")) return `mantine/${name}`;
   if (allFrom(chunk, "pdfmake/")) return `pdfmake/${name}`;
   if (allFrom(chunk, "@docx-editor.dev/")) return `docx-editor/${name}`;
+  if (allFrom(chunk, "@embedpdf/")) return `embedpdf/${name.replace(EMBEDPDF, "")}`;
   return name;
 }
+
+const EMBEDPDF = /^embedpdf-/;
 
 const CODEMIRROR = /^codemirror(?:[-_](.+))?$/;
 

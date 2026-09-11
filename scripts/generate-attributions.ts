@@ -97,9 +97,9 @@ function build(): { json: string; files: Map<string, string> } {
 }
 
 function alongside(dir: string, entries: string[], first: string | undefined, license: string): string[] {
-  const conjoined = /\bAND\b/.test(license)
-    ? entries.filter((entry) => entry !== first && LICENSE_FILE.test(entry))
-    : [];
+  const conjoined = /\bOR\b/.test(license)
+    ? []
+    : entries.filter((entry) => entry !== first && LICENSE_FILE.test(entry));
   const notices = entries.filter((entry) => THIRD_PARTY.test(entry));
   const folder = entries.find((entry) => /^licen[sc]es$/i.test(entry));
   const nested = folder && statSync(join(dir, folder)).isDirectory()
@@ -142,6 +142,7 @@ function shipped(): Set<string> {
   const names = new Set<string>();
   (function walk(node: Installed): void {
     for (const [name, child] of Object.entries(node.dependencies ?? {})) {
+      if (UNSERVED.has(name)) continue;
       names.add(name);
       walk(child);
     }
@@ -149,6 +150,8 @@ function shipped(): Set<string> {
 
   return names;
 }
+
+const UNSERVED = new Set(["preact", "svelte", "vue"]);
 
 function locate(dir: string, scope: string | null, found: Record<string, string>): Record<string, string> {
   if (!existsSync(dir)) return found;

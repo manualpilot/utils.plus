@@ -273,6 +273,190 @@
       "file": "electric-sql-pglite"
     },
     {
+      "name": "@embedpdf/core",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "",
+      "file": "embedpdf-core"
+    },
+    {
+      "name": "@embedpdf/engines",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "Bob Singor, Ji Chang",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-engines"
+    },
+    {
+      "name": "@embedpdf/fonts-arabic",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-arabic"
+    },
+    {
+      "name": "@embedpdf/fonts-hebrew",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-hebrew"
+    },
+    {
+      "name": "@embedpdf/fonts-jp",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-jp"
+    },
+    {
+      "name": "@embedpdf/fonts-kr",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-kr"
+    },
+    {
+      "name": "@embedpdf/fonts-latin",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-latin"
+    },
+    {
+      "name": "@embedpdf/fonts-sc",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-sc"
+    },
+    {
+      "name": "@embedpdf/fonts-tc",
+      "version": "1.0.0",
+      "license": "OFL-1.1",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-fonts-tc"
+    },
+    {
+      "name": "@embedpdf/models",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "Bob Singor, Ji Chang",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-models"
+    },
+    {
+      "name": "@embedpdf/pdfium",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "Bob Singor, Ji Chang",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-pdfium"
+    },
+    {
+      "name": "@embedpdf/plugin-annotation",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-annotation"
+    },
+    {
+      "name": "@embedpdf/plugin-document-manager",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-document-manager"
+    },
+    {
+      "name": "@embedpdf/plugin-export",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-export"
+    },
+    {
+      "name": "@embedpdf/plugin-history",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-history"
+    },
+    {
+      "name": "@embedpdf/plugin-interaction-manager",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-interaction-manager"
+    },
+    {
+      "name": "@embedpdf/plugin-render",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-render"
+    },
+    {
+      "name": "@embedpdf/plugin-scroll",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-scroll"
+    },
+    {
+      "name": "@embedpdf/plugin-selection",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-selection"
+    },
+    {
+      "name": "@embedpdf/plugin-signature",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-signature"
+    },
+    {
+      "name": "@embedpdf/plugin-viewport",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-viewport"
+    },
+    {
+      "name": "@embedpdf/plugin-zoom",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-plugin-zoom"
+    },
+    {
+      "name": "@embedpdf/utils",
+      "version": "2.15.0",
+      "license": "MIT",
+      "publisher": "Bob Singor",
+      "url": "https://github.com/embedpdf/embed-pdf-viewer",
+      "file": "embedpdf-utils"
+    },
+    {
       "name": "@eslint-community/regexpp",
       "version": "4.12.2",
       "license": "MIT",
@@ -327,6 +511,14 @@
       "publisher": "atomiks",
       "url": "https://github.com/floating-ui/floating-ui",
       "file": "floating-ui-utils"
+    },
+    {
+      "name": "@fontsource-variable/dancing-script",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "publisher": "Google Inc.",
+      "url": "https://github.com/fontsource/font-files",
+      "file": "fontsource-variable-dancing-script"
     },
     {
       "name": "@fontsource-variable/roboto",

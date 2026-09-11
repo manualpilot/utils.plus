@@ -210,6 +210,47 @@ export default function Attributions() {
             </Text>
           </Box>
           <Box>
+            <Title order={4}>PDFium</Title>
+            <Text size="sm" mt={4}>
+              <Anchor href="/pdf" inherit>PDF</Anchor> reads, draws and writes a document with{" "}
+              <Anchor href="https://pdfium.googlesource.com/pdfium/" target="_blank" rel="noopener noreferrer" inherit>
+                PDFium
+              </Anchor>, the engine Chrome reads PDFs with, compiled to WebAssembly by EmbedPDF and served here as the
+              unmodified file{" "}
+              <Anchor
+                href="https://github.com/embedpdf/embed-pdf-viewer/tree/v2/packages/pdfium"
+                target="_blank"
+                rel="noopener noreferrer"
+                inherit
+              >
+                @embedpdf/pdfium
+              </Anchor>
+              {pdfium && ` ${pdfium.version}`} ships. PDFium is under the{" "}
+              <strong>BSD 3-Clause licence</strong>, with parts under the{" "}
+              <strong>Apache License 2.0</strong>, and that package's entry above carries both texts after the wrapper's
+              own MIT licence. Compiled into the same file are the libraries PDFium builds with:{" "}
+              <strong>FreeType</strong>, for the fonts a document embeds, under the FreeType License;{" "}
+              <strong>Little CMS</strong>, for its colour profiles, under the MIT licence;{" "}
+              <strong>OpenJPEG</strong>, for JPEG 2000 pictures, under the BSD 2-Clause licence; and{" "}
+              <strong>libpng</strong> and{" "}
+              <strong>zlib</strong>, under their own licences. Portions of this software are copyright © The FreeType
+              Project (
+              <Anchor href="https://freetype.org/" target="_blank" rel="noopener noreferrer" inherit>
+                www.freetype.org
+              </Anchor>
+              ). All rights reserved. A typed signature there is drawn in{" "}
+              <Anchor
+                href="https://github.com/googlefonts/DancingScript"
+                target="_blank"
+                rel="noopener noreferrer"
+                inherit
+              >
+                Dancing Script
+              </Anchor>, self-hosted under the <strong>SIL Open Font License 1.1</strong>{" "}
+              and served unmodified and under its own name as @fontsource-variable/dancing-script packages it.
+            </Text>
+          </Box>
+          <Box>
             <Title order={4}>Twemoji Country Flags</Title>
             <Text size="sm" mt={4}>
               The flags on <Anchor href="/countries" inherit>Countries</Anchor> are drawn from the{" "}
@@ -340,10 +381,9 @@ export default function Attributions() {
                 libphonenumber-js
               </Anchor>
               {libphonenumberJs && ` ${libphonenumberJs.version}`}, which is listed above under its own{" "}
-              <strong>MIT licence</strong>{" "}
-              and whose own file says nothing about the plans inside it. The geocoding, carrier and timezone maps are
-              taken unmodified from that repository's published releases at build time and served here as files of their
-              own, which is why no package above names them.
+              <strong>MIT licence</strong>, with the Apache text it ships for the plans inside it beside that. The
+              geocoding, carrier and timezone maps are taken unmodified from that repository's published releases at
+              build time and served here as files of their own, which is why no package above names them.
             </Text>
           </Box>
           <Box>
@@ -497,6 +537,7 @@ const pyodide = packages.find((pkg) => pkg.name === "pyodide");
 const pglite = packages.find((pkg) => pkg.name === "@electric-sql/pglite");
 const worldCountries = packages.find((pkg) => pkg.name === "world-countries");
 const libphonenumberJs = packages.find((pkg) => pkg.name === "libphonenumber-js");
+const pdfium = packages.find((pkg) => pkg.name === "@embedpdf/pdfium");
 
 const summary = Object.entries(
   packages.reduce<Record<string, number>>((counts, pkg) => {
