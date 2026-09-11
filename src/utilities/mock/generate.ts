@@ -1,7 +1,9 @@
-import { type JsonValue, lookup, type Schema, type SchemaDocument } from "../../common/schema/ir";
+import { conditional, type JsonValue, lookup, type ObjectSchema, type Schema, type SchemaDocument, type UnionSchema } from "../../common/schema/ir";
+import { accepts, compiled, validate } from "../../common/schema/validate";
 import { detectField } from "./detect";
 import { type Field, FIELDS } from "./fields";
 import { type Locale, type LocaleId, LOCALES } from "./locales";
+import { merge } from "./merge";
 import { stringFromPattern } from "./pattern";
 import { type Rng, rowRng } from "./seed";
 
@@ -59,6 +61,55 @@ interface Context {
 }
 
 function build(schema: Schema, name: string, context: Context, rng: Rng, depth: number): Built {
+  if (conditional(schema) || schema.kind === "intersection") return buildChecked(schema, name, context, rng, depth);
+  return construct(schema, name, context, rng, depth);
+}
+
+function buildChecked(schema: Schema, name: string, context: Context, rng: Rng, depth: number): Built {
+  let last: Built = OMIT;
+  for (let attempt = 0; attempt < TRIES; attempt++) {
+    const merged = merge(partsOf(schema, context, rng, new Set()), context.doc, rng);
+    const target = merged?.kind === "unknown" && attempt > 0 ? rng.pick(ANY_KIND) : merged;
+    const value = target ? construct(target, name, context, rng, depth) : loose(schema, name, context, rng, depth);
+    if (value === OMIT) break;
+    if (accepts(value, schema, context.doc)) return value;
+    last = value;
+  }
+  if (last !== OMIT) unmet(last, schema, context);
+  return last;
+}
+
+function partsOf(schema: Schema, context: Context, rng: Rng, seen: Set<string>): Schema[] {
+  const target = schema.kind === "ref" && !seen.has(schema.name) ? lookup(context.doc, schema.name) : undefined;
+  if (schema.kind === "ref" && target) seen.add(schema.name);
+  const own = target
+    ? partsOf(target, context, rng, seen)
+    : schema.kind === "intersection"
+    ? schema.parts.flatMap((part) => partsOf(part, context, rng, seen))
+    : [schema];
+  if (!schema.if) return own;
+  const sides = [[schema.if, ...schema.then ? [schema.then] : []], schema.else ? [schema.else] : []];
+  return [...own, ...rng.pick(sides)];
+}
+
+function loose(schema: Schema, name: string, context: Context, rng: Rng, depth: number): Built {
+  const parts = schema.kind === "intersection" ? schema.parts : [schema];
+  const built = schema.kind === "intersection"
+    ? parts.map((part) => build(part, name, context, rng, depth))
+    : [construct(schema, name, context, rng, depth)];
+  if (built.some((part) => part === OMIT)) return OMIT;
+  const values = built as JsonValue[];
+  if (values.every(isRecord)) return joined(values);
+  return values.find((value) => parts.every((part) => accepts(value, part, context.doc))) ?? values[0] ?? null;
+}
+
+function unmet(value: JsonValue, schema: Schema, context: Context) {
+  for (const { keyword } of validate(value, { root: schema, defs: context.doc.defs })) {
+    context.notes.add(`Nothing this page built satisfied the schema's \`${keyword}\`, so some rows fail it.`);
+  }
+}
+
+function construct(schema: Schema, name: string, context: Context, rng: Rng, depth: number): Built {
   switch (schema.kind) {
     case "null":
       return null;
@@ -108,6 +159,7 @@ function build(schema: Schema, name: string, context: Context, rng: Rng, depth: 
       const nullable = schema.options.some((option) => option.kind === "null");
       const options = schema.options.filter((option) => option.kind !== "null");
       if (options.length === 0) return null;
+      if (schema.exclusive) return buildExclusive(schema, options, nullable, name, context, rng, depth);
       if (context.optional === "sometimes" && nullable && rng.chance(NULL_CHANCE)) return null;
 
       for (const option of rng.shuffled(options)) {
@@ -117,22 +169,44 @@ function build(schema: Schema, name: string, context: Context, rng: Rng, depth: 
       return nullable ? null : OMIT;
     }
 
-    case "intersection": {
-      const built = schema.parts.map((part) => build(part, name, context, rng, depth));
-      if (built.some((part) => part === OMIT)) return OMIT;
-      const parts = built as JsonValue[];
-      if (parts.every(isRecord)) return Object.assign({}, ...parts);
-      return parts[0] ?? null;
-    }
+    case "intersection":
+      return loose(schema, name, context, rng, depth);
   }
 }
 
-function buildObject(schema: Schema & { kind: "object" }, context: Context, rng: Rng, depth: number): JsonValue {
-  const out: { [key: string]: JsonValue } = {};
+function buildExclusive(
+  schema: UnionSchema,
+  options: Schema[],
+  nullable: boolean,
+  name: string,
+  context: Context,
+  rng: Rng,
+  depth: number,
+): Built {
+  if (context.optional === "sometimes" && nullable && rng.chance(NULL_CHANCE) && accepts(null, schema, context.doc)) {
+    return null;
+  }
+  let last: Built = OMIT;
+  for (const option of rng.shuffled(options)) {
+    for (let attempt = 0; attempt < TRIES_PER_BRANCH; attempt++) {
+      const value = build(option, name, context, rng, depth);
+      if (value === OMIT) break;
+      if (accepts(value, schema, context.doc)) return value;
+      last = value;
+    }
+  }
+  if (last === OMIT) return nullable ? null : OMIT;
+  unmet(last, schema, context);
+  return last;
+}
+
+function buildObject(schema: ObjectSchema, context: Context, rng: Rng, depth: number): JsonValue {
+  const out = record();
 
   for (const property of schema.properties) {
     if (!property.required && !includeOptional(context, rng)) continue;
-    const value = build(property.schema, property.name, context, rng, depth + 1);
+    const value = valueFor(schema, property.name, property.name, context, rng, depth);
+    if (value === REFUSED) continue;
     if (value === OMIT) {
       if (!property.required) continue;
       context.notes.add(
@@ -144,17 +218,102 @@ function buildObject(schema: Schema & { kind: "object" }, context: Context, rng:
     out[property.name] = value;
   }
 
-  if (schema.properties.length === 0 && schema.additional && depth <= MAX_DEPTH) {
-    const additional = schema.additional;
+  if (schema.properties.length === 0 && (schema.additional || schema.patterns) && depth <= MAX_DEPTH) {
     for (let i = 0; i < rng.between(2, 4); i++) {
-      const drawn = schema.keyPattern ? stringFromPattern(rng, schema.keyPattern) : null;
-      const key = drawn ?? `${valueOf(FIELDS.word, context, rng)}_${i}`;
-      const value = build(additional, "value", context, rng, depth + 1);
-      if (value !== OMIT) out[key] = value;
+      const key = freshKey(schema, context, rng, i);
+      if (key === null) continue;
+      const value = valueFor(schema, key, "value", context, rng, depth);
+      if (value !== OMIT && value !== REFUSED) out[key] = value;
     }
   }
 
+  if (schema.dependencies || schema.minProperties !== undefined || schema.maxProperties !== undefined) {
+    settle(out, schema, context, rng, depth);
+  }
   return out;
+}
+
+function valueFor(
+  schema: ObjectSchema,
+  key: string,
+  name: string,
+  context: Context,
+  rng: Rng,
+  depth: number,
+): Built | typeof REFUSED {
+  const declared = schema.properties.find((property) => property.name === key)?.schema;
+  const patterned = (schema.patterns ?? []).filter(({ pattern }) => compiled(pattern)?.test(key) ?? false);
+  const own = declared ?? (patterned.length > 0 ? undefined : schema.additional ?? UNKNOWN);
+  if (own === false) return REFUSED;
+  const parts = [...own ? [own] : [], ...patterned.map((entry) => entry.schema)];
+  return build(parts.length === 1 ? parts[0] : { kind: "intersection", parts }, name, context, rng, depth + 1);
+}
+
+function freshKey(schema: ObjectSchema, context: Context, rng: Rng, index: number): string | null {
+  const draws: (() => string | null)[] = (schema.patterns ?? []).map(({ pattern }) => () =>
+    stringFromPattern(rng, pattern)
+  );
+  if (schema.additional !== false) {
+    const drawn = () => (schema.keyPattern ? stringFromPattern(rng, schema.keyPattern) : null);
+    draws.push(() => drawn() ?? `${valueOf(FIELDS.word, context, rng)}_${index}`);
+  }
+  if (draws.length === 0) return null;
+  const key = (draws.length === 1 ? draws[0] : rng.pick(draws))();
+  if (key === null || schema.keyPattern === undefined) return key;
+  return compiled(schema.keyPattern)?.test(key) ?? true ? key : null;
+}
+
+function settle(out: Mapping, schema: ObjectSchema, context: Context, rng: Rng, depth: number) {
+  const has = (key: string) => Object.hasOwn(out, key);
+  const count = () => Object.keys(out).length;
+  const required = (key: string) => schema.properties.some((property) => property.name === key && property.required);
+  const neededBy = (key: string) =>
+    (schema.dependencies ?? []).some(({ name, requires }) => has(name) && requires.includes(key));
+  const put = (key: string) => {
+    const value = valueFor(schema, key, key, context, rng, depth);
+    if (value === OMIT || value === REFUSED) return false;
+    out[key] = value;
+    return true;
+  };
+
+  const bring = () => {
+    for (let round = 0; round <= (schema.dependencies?.length ?? 0); round++) {
+      let changed = false;
+      for (const { name, requires } of schema.dependencies ?? []) {
+        for (const needed of requires) {
+          if (!has(name) || has(needed)) continue;
+          if (put(needed)) changed = true;
+          else if (required(name)) context.notes.add(DEPENDENCY_UNMET);
+          else changed = delete out[name];
+        }
+      }
+      if (!changed) return;
+    }
+  };
+
+  bring();
+  const least = schema.minProperties ?? 0;
+  if (count() < least) {
+    for (const property of rng.shuffled(schema.properties)) {
+      if (count() >= least) break;
+      if (!has(property.name)) put(property.name);
+    }
+    for (let tries = 0; count() < least && tries < TRIES * least; tries++) {
+      const key = freshKey(schema, context, rng, count());
+      if (key !== null && !has(key)) put(key);
+    }
+    bring();
+    if (count() < least) context.notes.add(MIN_PROPERTIES_UNMET);
+  }
+
+  const most = schema.maxProperties;
+  if (most !== undefined && count() > most) {
+    for (const key of rng.shuffled(Object.keys(out))) {
+      if (count() <= most) break;
+      if (has(key) && !required(key) && !neededBy(key)) delete out[key];
+    }
+    if (count() > most) context.notes.add(MAX_PROPERTIES_UNMET);
+  }
 }
 
 function buildArray(schema: Schema & { kind: "array" }, name: string, context: Context, rng: Rng, depth: number) {
@@ -181,6 +340,46 @@ function buildArray(schema: Schema & { kind: "array" }, name: string, context: C
     items.push(value);
   }
 
+  if (schema.contains) return withContains(schema, items, name, context, rng, depth);
+  return items;
+}
+
+function withContains(
+  schema: Schema & { kind: "array" },
+  items: JsonValue[],
+  name: string,
+  context: Context,
+  rng: Rng,
+  depth: number,
+): JsonValue[] {
+  const contains = schema.contains ?? UNKNOWN;
+  const fixed = schema.prefix?.length ?? 0;
+  const counts = (item: JsonValue) => accepts(item, contains, context.doc);
+  const both: Schema = { kind: "intersection", parts: [schema.items, contains] };
+  let counted = items.filter(counts).length;
+
+  for (let tries = 0; counted < (schema.minContains ?? 1) && tries < TRIES; tries++) {
+    const value = build(both, name, context, rng, depth + 1);
+    if (value === OMIT || !counts(value)) continue;
+    if (schema.uniqueItems && items.some((item) => JSON.stringify(item) === JSON.stringify(value))) continue;
+    if (schema.maxItems === undefined || items.length < schema.maxItems) {
+      items.splice(rng.between(fixed, items.length), 0, value);
+    } else {
+      const spare = items.findIndex((item, index) => index >= fixed && !counts(item));
+      if (spare === -1) break;
+      items[spare] = value;
+    }
+    counted++;
+  }
+
+  const most = schema.maxContains;
+  for (let index = items.length - 1; most !== undefined && counted > most && index >= fixed; index--) {
+    if (!counts(items[index]) || items.length <= (schema.minItems ?? 0)) continue;
+    items.splice(index, 1);
+    counted--;
+  }
+
+  if (!accepts(items, schema, context.doc)) unmet(items, schema, context);
   return items;
 }
 
@@ -269,13 +468,43 @@ function follow(schema: Schema, doc: SchemaDocument): Schema {
   return current;
 }
 
-function isRecord(value: JsonValue): value is { [key: string]: JsonValue } {
+function record(): Mapping {
+  return Object.create(null);
+}
+
+function joined(values: Mapping[]): Mapping {
+  const out = record();
+  for (const value of values) for (const key of Object.keys(value)) out[key] = value[key];
+  return out;
+}
+
+function isRecord(value: JsonValue): value is Mapping {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 const OMIT = Symbol("omit");
 
 type Built = JsonValue | typeof OMIT;
+
+type Mapping = { [key: string]: JsonValue };
+
+const REFUSED = Symbol("refused");
+
+const UNKNOWN: Schema = { kind: "unknown" };
+
+const ANY_KIND: Schema[] = [UNKNOWN, { kind: "number", integer: true }, { kind: "boolean" }, { kind: "null" }];
+
+const TRIES = 16;
+
+const TRIES_PER_BRANCH = 6;
+
+const DEPENDENCY_UNMET = "`dependentRequired` asks for a key the object does not allow, so some objects break it.";
+
+const MIN_PROPERTIES_UNMET =
+  "`minProperties` asks for more keys than the schema lets this page write, so some objects fall short of it.";
+
+const MAX_PROPERTIES_UNMET =
+  "`maxProperties` allows fewer keys than the object requires, so some objects carry more than it allows.";
 
 const MAX_DEPTH = 6;
 

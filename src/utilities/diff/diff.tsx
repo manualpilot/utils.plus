@@ -118,7 +118,7 @@ export default function Diff() {
   const rightExtensions = useMemo(() => paneExtensions(RIGHT_MARKS.extension, languageSupport), [languageSupport]);
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle directory="diff">Diff</UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">

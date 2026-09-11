@@ -89,7 +89,7 @@ export default function Json() {
   const queryError = answer && !answer.ok && answer.in === "query" ? answer.error : undefined;
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle
         directory="json"
         control={

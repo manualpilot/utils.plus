@@ -1,6 +1,6 @@
 import type { Fact } from "../../common/fact-table";
 import { graphemes } from "../../common/graphemes";
-import { splitLines } from "./lines";
+import { documentLines } from "./lines";
 
 export function counts(text: string): Fact[] {
   const characters = [...text].length;
@@ -11,7 +11,7 @@ export function counts(text: string): Fact[] {
     { label: "Graphemes", value: clusters === characters ? "" : String(clusters) },
     { label: "Without spaces", value: String([...text.replace(/\s/gu, "")].length) },
     { label: "Words", value: String(trimmed === "" ? 0 : trimmed.split(/\s+/u).length) },
-    { label: "Lines", value: String(text === "" ? 0 : splitLines(text).length) },
+    { label: "Lines", value: String(text === "" ? 0 : documentLines(text).length) },
     { label: "Bytes (UTF-8)", value: String(new TextEncoder().encode(text).length) },
   ];
 }

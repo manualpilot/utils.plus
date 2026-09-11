@@ -11,12 +11,12 @@ import { UtilityTitle } from "../../common/utility-title";
 import { IconAdjustments, IconCheck, IconChevronRight, IconCopy, IconCrop, IconDownload, IconFlipHorizontal, IconFlipVertical, IconGripVertical, IconLink, IconMapPin, IconPhoto, IconRestore, IconRotate2, IconRotateClockwise, IconTags, IconTrash, IconUpload, IconX } from "../../icons";
 import { formatBytes } from "./container";
 import { ASPECTS, clampRect, CORNERS, CURSORS, dragRect, fitAspect, fitPreview, type Handle, handleAt, isWhole, localPoint, moveRect, ratioOf, resizeRect, turnTransform, wholeImage } from "./crop";
-import { applyEdits, type Edits, editsFrom, locationProblem, NO_EDITS, problem, rewrite, sameEdits, withMetadata } from "./edits";
+import { applyEdits, type Edits, editsFrom, locationProblem, markedBoxes, NO_EDITS, problem, rewrite, sameEdits, withheldBecause, withMetadata } from "./edits";
 import { carriesExif, CONTAINER_LABELS } from "./embed";
 import { countEntries } from "./exif";
 import { exifGroups, fileFacts, locationFacts, otherFacts } from "./facts";
 import { type Adjustments, cssFilter, isNeutral, matchPreset, NEUTRAL, PRESETS, SLIDERS } from "./filters";
-import { encodable, formatFor, type OutputFormat } from "./formats";
+import { arrivedFormat, encodable, formatFor, type OutputFormat } from "./formats";
 import { PANEL_ORDER, panelTitle, reorderPanels, togglePanel } from "./panels";
 import { encode, type Geometry, outputSize, type Rect, render } from "./render";
 import { ACCEPT, load, loadBytes, type Loaded, MAX_BYTES, readDataUri, stem, toDataUri } from "./source";
@@ -55,13 +55,14 @@ export default function ImageTool() {
   const [adjustments, setAdjustments] = useState<Adjustments>({ ...NEUTRAL, ...initialState?.adjustments });
 
   const [formats] = useState(encodable);
-  const [format, setFormat] = useState(() => pickFormat(initialState?.format, formats));
+  const [chosen, setChosen] = useState(() => pickFormat(initialState?.format, formats));
   const [quality, setQuality] = useState(clampNumber(initialState?.quality, 1, 100, 85));
   const [matte, setMatte] = useState(initialState?.matte ?? "#ffffff");
   const [keepMetadata, setKeepMetadata] = useState(initialState?.keep !== false);
 
   const [edits, setEdits] = useState<Edits>(NO_EDITS);
   const [strip, setStrip] = useState(initialState?.strip === true);
+  const [asked, setAsked] = useState(false);
 
   const [order, setOrder] = useState(PANEL_ORDER);
   const [closed, setClosed] = useState<string[]>([]);
@@ -75,6 +76,7 @@ export default function ImageTool() {
   const [rendering, setRendering] = useState(false);
   const [uri, setUri] = useState("");
 
+  const format = chosen ?? arrivedFormat(loaded?.type ?? "", formats).value;
   const spec = formatFor(format);
   const natural = loaded ? { width: loaded.element.naturalWidth, height: loaded.element.naturalHeight } : null;
   const original = useMemo(() => (loaded ? editsFrom(loaded.exif) : NO_EDITS), [loaded]);
@@ -83,7 +85,7 @@ export default function ImageTool() {
 
   useRegisterShareState(() => ({
     view: view === "metadata" ? view : undefined,
-    format,
+    format: chosen ?? undefined,
     quality: spec.lossy ? quality : undefined,
     matte: needsMatte ? matte : undefined,
     aspect: aspect === "free" ? undefined : aspect,
@@ -104,6 +106,7 @@ export default function ImageTool() {
     setWidth(next.element.naturalWidth);
     setHeight(next.element.naturalHeight);
     setEdits(editsFrom(next.exif));
+    setAsked(false);
     setUri("");
   }, []);
 
@@ -210,6 +213,8 @@ export default function ImageTool() {
   ]);
 
   const editing = !sameEdits(edits, original) || strip;
+  const marked = useMemo(() => (strip ? [] : markedBoxes(edits, original)), [edits, original, strip]);
+  const withheld = keepMetadata && !strip ? marked : [];
   const rewritten = useMemo(() => {
     if (!loaded || !editing) return null;
     return rewrite(loaded.bytes, loaded.info.container, strip ? null : applyEdits(loaded.exif, edits), strip);
@@ -256,11 +261,15 @@ export default function ImageTool() {
 
   const save = () => {
     if (!result || !loaded) return;
+    setAsked(true);
+    if (withheld.length > 0) return;
     download(`${stem(loaded.name)}.${spec.extension}`, result.blob);
   };
 
   const saveMetadata = () => {
     if (!rewritten || !loaded) return;
+    setAsked(true);
+    if (marked.length > 0) return;
     const type = loaded.type;
     download(
       `${stem(loaded.name)}.${extensionOf(loaded.name, loaded.info.container)}`,
@@ -270,14 +279,17 @@ export default function ImageTool() {
 
   const makeUri = async () => {
     if (!result) return;
-    setUri(await toDataUri(result.blob));
+    setAsked(true);
+    if (withheld.length > 0) return;
+    const text = await toDataUri(result.blob);
+    if (urls.current.output === result.url) setUri(text);
   };
 
   const output = outputSize(geometry);
   const groups = useMemo(() => exifGroups(loaded?.exif ?? null), [loaded]);
   const others = useMemo(() => (loaded ? otherFacts(loaded) : []), [loaded]);
   const places = useMemo(() => locationFacts(loaded?.exif ?? null), [loaded]);
-  const [latitudeError, longitudeError] = locationProblem(edits.latitude, edits.longitude);
+  const [latitudeError, longitudeError] = locationProblem(edits.latitude, edits.longitude, asked);
   const writable = loaded ? carriesExif(loaded.info.container) : false;
 
   const reorderCards = ({ active, over }: DragEndEvent) => {
@@ -520,6 +532,7 @@ export default function ImageTool() {
                     urls.current = { source: null, output: null };
                     setLoaded(null);
                     setResult(null);
+                    setAsked(false);
                     setUri("");
                   }}
                 >
@@ -648,7 +661,7 @@ export default function ImageTool() {
                   description={formats.length < 4 ? "Only what this browser will encode" : undefined}
                   data={formats.map(({ value, label }) => ({ value, label }))}
                   value={format}
-                  onChange={(value) => value && setFormat(value)}
+                  onChange={(value) => value && setChosen(value)}
                   allowDeselect={false}
                 />
                 {spec.lossy && (
@@ -707,6 +720,7 @@ export default function ImageTool() {
                   leftSection={<IconLink size="0.9rem" />}
                   onClick={() => void makeUri()}
                   disabled={!result}
+                  loading={rendering}
                 >
                   Make a data URI
                 </Button>
@@ -716,6 +730,13 @@ export default function ImageTool() {
                   </Text>
                 )}
               </Group>
+
+              {asked && withheld.length > 0 && (
+                <Text size="sm" c="red">
+                  Nothing is saved while {withheldBecause(withheld)} on the Metadata tab. Put{" "}
+                  {withheld.length === 1 ? "it" : "them"} right there, or switch Carry the metadata over off.
+                </Text>
+              )}
 
               {uri !== "" && (
                 <Box className="image-data-uri" pos="relative">
@@ -783,7 +804,14 @@ export default function ImageTool() {
               )}
 
               {FIELD_ROWS.map((row) => (
-                <FieldRow key={row[0]} names={row} edits={edits} onEdit={setEdits} disabled={strip} />
+                <FieldRow
+                  key={row[0]}
+                  names={row}
+                  edits={edits}
+                  arrived={original}
+                  onEdit={setEdits}
+                  disabled={strip}
+                />
               ))}
 
               <Box
@@ -842,13 +870,21 @@ export default function ImageTool() {
                 >
                   Put it back
                 </Button>
-                <Text size="xs" c="dimmed">
-                  {!editing
-                    ? "Nothing has changed yet."
-                    : rewritten
-                    ? `${formatBytes(rewritten.length)} — the pixels are untouched, only the metadata is rewritten.`
-                    : `${CONTAINER_LABELS[loaded.info.container]} cannot be rewritten here.`}
-                </Text>
+                {asked && marked.length > 0
+                  ? (
+                    <Text size="xs" c="red">
+                      Nothing is written while {withheldBecause(marked)}.
+                    </Text>
+                  )
+                  : (
+                    <Text size="xs" c="dimmed">
+                      {!editing
+                        ? "Nothing has changed yet."
+                        : rewritten
+                        ? `${formatBytes(rewritten.length)} — the pixels are untouched, only the metadata is rewritten.`
+                        : `${CONTAINER_LABELS[loaded.info.container]} cannot be rewritten here.`}
+                    </Text>
+                  )}
               </Group>
             </Stack>
           </Card>
@@ -1087,8 +1123,8 @@ interface PanelProps {
   children: ReactNode;
 }
 
-function FieldRow({ names, edits, onEdit, disabled }: FieldRowProps) {
-  const errors = names.map((name) => problem(name, edits.fields[name] ?? ""));
+function FieldRow({ names, edits, arrived, onEdit, disabled }: FieldRowProps) {
+  const errors = names.map((name) => problem(name, edits.fields[name] ?? "", arrived.fields[name]));
   const erroring = errors.some(Boolean);
   return (
     <Box
@@ -1138,6 +1174,7 @@ interface StageProps {
 interface FieldRowProps {
   names: string[];
   edits: Edits;
+  arrived: Edits;
   onEdit: (edits: Edits) => void;
   disabled: boolean;
 }
@@ -1180,8 +1217,8 @@ function clampNumber(value: number | undefined, low: number, high: number, fallb
   return Math.max(low, Math.min(high, Math.round(value!)));
 }
 
-function pickFormat(value: string | undefined, formats: OutputFormat[]): string {
-  return formats.some((format) => format.value === value) ? value! : "png";
+function pickFormat(value: string | undefined, formats: OutputFormat[]): string | null {
+  return formats.some((format) => format.value === value) ? value! : null;
 }
 
 function extensionOf(name: string, container: string): string {

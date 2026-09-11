@@ -19,15 +19,22 @@ export interface MatchResult {
 
 const MAX_MATCHES = 5000;
 
+export function compileError(source: string, flags: string): string | null {
+  try {
+    new RegExp(source, flags);
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+}
+
 export function findMatches(source: string, flags: string, text: string): MatchResult {
   if (!source) return { matches: [], error: null, truncated: false };
 
-  let regex: RegExp;
-  try {
-    regex = new RegExp(source, flags.includes("d") ? flags : `${flags}d`);
-  } catch (error) {
-    return { matches: [], error: error instanceof Error ? error.message : String(error), truncated: false };
-  }
+  const error = compileError(source, flags);
+  if (error) return { matches: [], error, truncated: false };
+
+  const regex = new RegExp(source, flags.includes("d") ? flags : `${flags}d`);
 
   const matches: MatchSpan[] = [];
   const repeat = regex.global || regex.sticky;

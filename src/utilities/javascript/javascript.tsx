@@ -11,7 +11,7 @@ import { type Scope, Variables } from "../../common/variables-panel";
 import { IconPlayerPlay, IconPlayerStop } from "../../icons";
 import { EDITOR_EXTENSIONS } from "./editor";
 import type { Language } from "./engine";
-import { COULD_NOT_START, FUNCTIONS, LANGUAGE_NAMES, MARKS, type Mode, runMessage, sessionMessage, STOPPED_NOTE } from "./messages";
+import { COULD_NOT_START, FUNCTIONS, LANGUAGE_NAMES, MARKS, type Mode, OUT_OF_MEMORY, OUT_OF_MEMORY_NOTE, runMessage, sessionMessage, STOPPED_NOTE } from "./messages";
 import { SAMPLES } from "./samples";
 import { unfinished } from "./syntax";
 import type { Message, Request } from "./worker";
@@ -154,6 +154,12 @@ export default function JavaScript() {
     endSession(STOPPED_NOTE);
   }, [draw, endSession, stopWorker]);
 
+  const handleExhausted = useCallback(() => {
+    stopWorker();
+    setRun({ state: "failed", message: OUT_OF_MEMORY });
+    endSession(OUT_OF_MEMORY_NOTE);
+  }, [endSession, stopWorker]);
+
   const handleRun = useCallback(async () => {
     const id = ++runId.current;
     const booting = workerRef.current === null;
@@ -175,10 +181,11 @@ export default function JavaScript() {
       setRun({ state: "failed", message: answer.failed });
       return;
     }
+    if (answer.exhausted) return handleExhausted();
 
     setScope(answer.scope ?? null);
     setRun({ state: "finished", seconds: answer.seconds ?? 0 });
-  }, [ask, draw, language, stopWorker]);
+  }, [ask, draw, handleExhausted, language, stopWorker]);
 
   const handleEnter = useCallback(async (text: string) => {
     const block: Entry = {
@@ -206,11 +213,12 @@ export default function JavaScript() {
       endSession(answer.failed);
       return;
     }
+    if (answer.exhausted) return handleExhausted();
 
     setRun(IDLE);
     setSession((session) => ({ entries: [...session.entries, session.current ?? block], current: null }));
     setSessionScope(answer.scope ?? null);
-  }, [ask, draw, endSession, language, session, stopWorker]);
+  }, [ask, draw, endSession, handleExhausted, language, session, stopWorker]);
 
   const handleAbandon = useCallback(() => {
     setLine("");
@@ -225,7 +233,7 @@ export default function JavaScript() {
   const spoken = LANGUAGE_NAMES[language];
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle
         directory="javascript"
         control={

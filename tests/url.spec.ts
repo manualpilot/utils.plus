@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -122,7 +123,7 @@ test("a percent escape that opens nothing is shown as it was written", async ({ 
   await address(page).fill("https://example.com/x?discount=100%zz");
 
   await expect(value(page, 1)).toHaveValue("100%zz");
-  await expect(page.getByText("A percent escape here opens nothing")).toBeVisible();
+  await expect(tool(page).getByText("A percent escape here opens nothing")).toBeVisible();
 });
 
 test("the address is what the share link carries", async ({ page }) => {

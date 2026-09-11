@@ -22,7 +22,8 @@
     "data": "npm run phone-geo && npm run country-shapes && npm run unicode && npm run ip-registry && npm run ip-roas",
     "outdated": "node scripts/outdated.ts",
     "check": "npm run data && npm run fmt:check && npm run typecheck && npm run attributions:check",
-    "test": "npm run check && npm run vitest && npm run build"
+    "test": "npm run check && npm run vitest && npm run build",
+    "og-image": "node scripts/generate-og-image.ts"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",

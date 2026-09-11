@@ -16,6 +16,8 @@ export class ScriptEngine {
     return new ScriptEngine(runtime, write);
   }
 
+  exhausted = false;
+
   private session: Session | null = null;
   private sessionNames = new Set<string>();
 
@@ -148,9 +150,10 @@ export class ScriptEngine {
   }
 
   private read(session: Session, names: string[]): Scope | null {
+    if (this.spent(session)) return null;
     const wanted = names.filter((name) => !name.startsWith("__"));
     const payload = this.callGuest(session.context, "__snapshot", session.context.newString(JSON.stringify(wanted)));
-    if (payload === null) return null;
+    if (payload === null || this.spent(session)) return null;
 
     try {
       const parsed = JSON.parse(payload) as Scope;
@@ -158,6 +161,11 @@ export class ScriptEngine {
     } catch {
       return null;
     }
+  }
+
+  private spent(session: Session): boolean {
+    this.exhausted ||= this.callGuest(session.context, "__exhausted") === "true";
+    return this.exhausted;
   }
 
   private report(context: QuickJSContext, error: QuickJSHandle) {
@@ -286,6 +294,6 @@ const TYPESCRIPT = {
 };
 
 const MEMORY_LIMIT = 256 * 1024 * 1024;
-const STACK_LIMIT = 2 * 1024 * 1024;
+const STACK_LIMIT = 96 * 1024;
 
 const MAX_WAIT = 250;

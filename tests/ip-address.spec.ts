@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -131,6 +132,29 @@ test("the registries say who administers the block and who it was delegated to",
   await expect(fact(page, "registry", "Delegated to")).toHaveText("ARIN");
   await expect(fact(page, "registry", "Country")).toContainText("US");
   await expect(fact(page, "registry", "Delegated block")).toHaveText("8.8.8.0 – 8.8.8.255");
+});
+
+test("a block IANA set aside is what the Registry card names, rather than the registry around it", async ({ page }) => {
+  await openIpAddress(page);
+  const registry = tool(page).locator("[data-registry]");
+  const row = (label: string) => registry.locator(`[data-fact="${label}"] td`).last();
+
+  await expect(row("Set aside for")).toHaveText("Private-Use");
+  await expect(row("Defined in")).toHaveText("RFC 1918");
+  await expect(row("IANA block")).toHaveText("192.168.0.0/16");
+  await expect(registry).toContainText("no regional registry administers it");
+  await expect(registry).not.toContainText("ARIN");
+  await expect(registry.locator("[data-fact=\"Delegated to\"]")).toHaveCount(0);
+
+  await addressBox(page).fill("2001:db8::1");
+  await expect(row("Set aside for")).toHaveText("Documentation");
+  await expect(row("IANA block")).toHaveText("2001:db8::/32");
+  await expect(registry).not.toContainText("APNIC");
+
+  await addressBox(page).fill("100.64.0.1");
+  await expect(row("Set aside for")).toHaveText("Shared Address Space");
+  await expect(row("IANA block")).toHaveText("100.64.0.0/10");
+  await expect(registry).not.toContainText("ARIN");
 });
 
 test("a signed authorisation names the AS allowed to originate the prefix", async ({ page }) => {

@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -80,7 +81,7 @@ test("says where a document it cannot read stopped making sense, and writes noth
   await replaceDocument(page, "source", "a: 1\na: 2\n");
   await page.getByRole("button", { name: /^Convert to / }).click();
 
-  await expect(page.getByText("Nothing was written")).toBeVisible();
+  await expect(tool(page).getByText("Nothing was written")).toBeVisible();
   await expect(page.getByText(/line 2, column 1/)).toBeVisible();
   expect(await documentOf(page, "target")).toBe(before);
 });

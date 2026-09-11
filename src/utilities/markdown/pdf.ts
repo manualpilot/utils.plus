@@ -3,19 +3,21 @@ import type { Content, ContentText, CustomTableLayout, Margins, TDocumentDefinit
 import { type FlavourId, flavourOptions } from "./flavours";
 
 export async function pdfDocument(text: string, flavour: FlavourId, title: string): Promise<Blob> {
-  const pdfMake = await writer();
+  const [pdfMake, definition] = await Promise.all([writer(), pdfDefinition(text, flavour, title)]);
+  return pdfMake.createPdf(definition).getBlob();
+}
+
+export async function pdfDefinition(text: string, flavour: FlavourId, title: string): Promise<TDocumentDefinitions> {
   const tokens = marked.lexer(text, flavourOptions(flavour));
   const pictures = await fetchPictures(tokens);
 
-  const document: TDocumentDefinitions = {
+  return {
     info: { title },
     pageSize: "A4",
     pageMargins: [MARGIN, MARGIN, MARGIN, MARGIN],
     defaultStyle: { font: "Roboto", fontSize: 10.5, lineHeight: 1.35, color: "#1a1b1e" },
     content: blocks(tokens, pictures),
   };
-
-  return pdfMake.createPdf(document).getBlob();
 }
 
 async function writer() {
@@ -190,6 +192,8 @@ function runs(tokens: Token[] | undefined, pictures: Pictures, style: Style = {}
         return runs(token.tokens, pictures, { ...style, link: token.href, color: LINK, decoration: "underline" });
       case "br":
         return [{ ...style, text: "\n" }];
+      case "html":
+        return BREAK_TAG.test(token.raw) ? [{ ...style, text: "\n" }] : [];
       case "image":
         return [{ ...style, text: token.text || token.title || "", italics: true }];
       case "escape":
@@ -289,6 +293,8 @@ type Picture = ({ image: string } | { svg: string }) & { width: number };
 type Pictures = Map<string, Picture>;
 
 type Style = Omit<ContentText, "text">;
+
+const BREAK_TAG = /^<br\s*\/?>$/i;
 
 const MARGIN = 52;
 const MEASURE = 595.28 - MARGIN * 2;

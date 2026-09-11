@@ -7,6 +7,7 @@ export interface Special {
   name: string;
   rfc: string;
   reach: Reach;
+  allocated?: boolean;
 }
 
 const IPV4: Special[] = [
@@ -42,7 +43,7 @@ const IPV6: Special[] = [
   { cidr: "64:ff9b::/96", name: "IPv4-IPv6 Translation", rfc: "RFC 6052", reach: "global" },
   { cidr: "64:ff9b:1::/48", name: "IPv4-IPv6 Translation (local)", rfc: "RFC 8215", reach: "special" },
   { cidr: "100::/64", name: "Discard-Only", rfc: "RFC 6666", reach: "special" },
-  { cidr: "2000::/3", name: "Global Unicast", rfc: "RFC 4291", reach: "global" },
+  { cidr: "2000::/3", name: "Global Unicast", rfc: "RFC 4291", reach: "global", allocated: true },
   { cidr: "2001::/23", name: "IETF Protocol Assignments", rfc: "RFC 2928", reach: "special" },
   { cidr: "2001::/32", name: "TEREDO", rfc: "RFC 4380", reach: "special" },
   { cidr: "2001:1::1/128", name: "Port Control Protocol Anycast", rfc: "RFC 7723", reach: "global" },
@@ -54,7 +55,7 @@ const IPV6: Special[] = [
   { cidr: "2001:30::/28", name: "Drone Remote ID", rfc: "RFC 9374", reach: "global" },
   { cidr: "2001:db8::/32", name: "Documentation", rfc: "RFC 3849", reach: "special" },
   { cidr: "2002::/16", name: "6to4", rfc: "RFC 3056", reach: "special" },
-  { cidr: "2620:4f:8000::/48", name: "Direct Delegation AS112", rfc: "RFC 7534", reach: "global" },
+  { cidr: "2620:4f:8000::/48", name: "Direct Delegation AS112", rfc: "RFC 7534", reach: "global", allocated: true },
   { cidr: "3fff::/20", name: "Documentation", rfc: "RFC 9637", reach: "special" },
   { cidr: "5f00::/16", name: "Segment Routing SIDs", rfc: "RFC 9602", reach: "special" },
   { cidr: "fc00::/7", name: "Unique Local", rfc: "RFC 4193", reach: "private" },
@@ -63,7 +64,7 @@ const IPV6: Special[] = [
 ];
 
 const UNREGISTERED: Record<Family, Special> = {
-  ipv4: { cidr: "0.0.0.0/0", name: "Global unicast", rfc: "RFC 1122", reach: "global" },
+  ipv4: { cidr: "0.0.0.0/0", name: "Global unicast", rfc: "RFC 1122", reach: "global", allocated: true },
   ipv6: { cidr: "::/0", name: "Unassigned", rfc: "RFC 4291", reach: "special" },
 };
 
@@ -72,6 +73,17 @@ export function classify({ family, value }: Address): Special {
     if (value >= range.start && value <= range.end) return range.special;
   }
   return UNREGISTERED[family];
+}
+
+export function reservationOf(address: Address): Special | undefined {
+  const special = classify(address);
+  return special.allocated || special === UNREGISTERED[address.family] ? undefined : special;
+}
+
+export function reservations(): { family: Family; start: bigint; end: bigint; special: Special }[] {
+  return FAMILIES.flatMap((family) =>
+    RANGES[family].filter(({ special }) => !special.allocated).map((range) => ({ family, ...range }))
+  );
 }
 
 export const REACH_COLOUR: Record<Reach, string> = { global: "teal", private: "blue", special: "orange" };
@@ -102,3 +114,5 @@ function ranges(family: Family, specials: Special[]): Range[] {
 }
 
 const RANGES: Record<Family, Range[]> = { ipv4: ranges("ipv4", IPV4), ipv6: ranges("ipv6", IPV6) };
+
+const FAMILIES: Family[] = ["ipv4", "ipv6"];

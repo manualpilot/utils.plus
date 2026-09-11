@@ -208,7 +208,7 @@ export default function Sql() {
   const status = starting ? startingMessage(mode, loaded && datasetNamed(loaded).label) : engine?.version;
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle
         directory="sql"
         control={

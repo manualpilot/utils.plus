@@ -5,10 +5,10 @@ export function tagName(ifd: IfdName, tag: number): string {
   return table[tag] ?? `Tag ${hex(tag)}`;
 }
 
-export function tagText(ifd: IfdName, entry: ExifEntry): string {
+export function tagText(ifd: IfdName, entry: ExifEntry, little = true): string {
   const special = SPECIAL[`${ifd}:${entry.tag}`];
   if (special) {
-    const text = special(entry.value);
+    const text = special(entry.value, little);
     if (text !== null) return text;
   }
   const named = NAMED_VALUES[`${ifd}:${entry.tag}`];
@@ -28,19 +28,22 @@ export function ratio(value: Rational): number {
   return value.d === 0 ? NaN : value.n / value.d;
 }
 
-export function readComment(value: ExifValue): string {
+export function readComment(value: ExifValue, little = true): string {
   if (typeof value === "string") return value;
   if (!(value instanceof Uint8Array) || value.length < 8) return "";
-  const charset = LATIN1.decode(value.subarray(0, 8)).replace(/\0+$/, "");
+  const charset = LATIN1.decode(value.subarray(0, 8)).replace(/[\0 ]+$/, "");
   const body = value.subarray(8);
-  if (charset === "UNICODE") return decodeUtf16(body);
-  return LATIN1.decode(body).replace(/\0+$/, "").trim();
+  if (charset === "UNICODE") return decodeUtf16(body, little);
+  if (charset === "JIS") return decodeJis(body);
+  return decodeLoose(body);
 }
 
 export function writeComment(text: string): Uint8Array {
-  const out = new Uint8Array(8 + text.length);
-  out.set([0x41, 0x53, 0x43, 0x49, 0x49, 0, 0, 0]);
-  for (let index = 0; index < text.length; index++) out[8 + index] = text.charCodeAt(index) & 0xff;
+  if (!/[^\x00-\x7f]/.test(text)) return Uint8Array.from([...ASCII_CODE, ...Array.from(text, (c) => c.charCodeAt(0))]);
+  const out = new Uint8Array(8 + text.length * 2);
+  out.set(UNICODE_CODE);
+  const view = new DataView(out.buffer);
+  for (let index = 0; index < text.length; index++) view.setUint16(8 + index * 2, text.charCodeAt(index), true);
   return out;
 }
 
@@ -85,11 +88,36 @@ function bytesText(value: Uint8Array): string {
   return `${value.length} bytes`;
 }
 
-function decodeUtf16(body: Uint8Array): string {
+function decodeUtf16(body: Uint8Array, little: boolean): string {
+  const mark = (body[0] << 8) | body[1];
+  const order = mark === 0xfffe ? true : mark === 0xfeff ? false : little;
   const view = new DataView(body.buffer, body.byteOffset, body.byteLength);
   let text = "";
-  for (let at = 0; at + 1 < body.length; at += 2) text += String.fromCharCode(view.getUint16(at, true));
+  for (let at = mark === 0xfffe || mark === 0xfeff ? 2 : 0; at + 1 < body.length; at += 2) {
+    text += String.fromCharCode(view.getUint16(at, order));
+  }
   return text.replace(/\0+$/, "");
+}
+
+function decodeJis(body: Uint8Array): string {
+  const text = trimNuls(body);
+  if (text.includes(0x1b)) return new TextDecoder("iso-2022-jp").decode(text);
+  return new TextDecoder("euc-jp").decode(text.map((byte) => (byte >= 0x21 && byte <= 0x7e ? byte | 0x80 : byte)));
+}
+
+function decodeLoose(body: Uint8Array): string {
+  const text = trimNuls(body);
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(text).trim();
+  } catch {
+    return LATIN1.decode(text).trim();
+  }
+}
+
+function trimNuls(body: Uint8Array): Uint8Array {
+  let end = body.length;
+  while (end > 0 && body[end - 1] === 0) end--;
+  return body.subarray(0, end);
 }
 
 function hex(tag: number): string {
@@ -103,6 +131,9 @@ function first(value: ExifValue): Rational | number | null {
 const LATIN1 = new TextDecoder("latin1");
 
 const CONTROL = /[\x00-\x08\x0e-\x1f\x7f]/;
+
+const ASCII_CODE = [0x41, 0x53, 0x43, 0x49, 0x49, 0, 0, 0];
+const UNICODE_CODE = [0x55, 0x4e, 0x49, 0x43, 0x4f, 0x44, 0x45, 0];
 
 const NAMED_VALUES: Record<string, Record<number, string>> = {
   "image:274": {
@@ -160,7 +191,7 @@ const NAMED_VALUES: Record<string, Record<number, string>> = {
   "gps:23": { 84: "True north", 77: "Magnetic north" },
 };
 
-const SPECIAL: Record<string, (value: ExifValue) => string | null> = {
+const SPECIAL: Record<string, (value: ExifValue, little: boolean) => string | null> = {
   "exif:33434": (value) => {
     const seconds = first(value);
     if (seconds === null || typeof seconds === "number") return null;
@@ -192,7 +223,7 @@ const SPECIAL: Record<string, (value: ExifValue) => string | null> = {
     return Number.isFinite(stops) ? `${stops > 0 ? "+" : ""}${trim(stops)} EV` : null;
   },
   "exif:34855": (value) => (Array.isArray(value) ? `ISO ${value.map(one).join(", ")}` : null),
-  "exif:37510": (value) => readComment(value) || null,
+  "exif:37510": (value, little) => readComment(value, little) || null,
   "exif:36864": (value) => versionText(value),
   "exif:40960": (value) => versionText(value),
   "exif:37377": (value) => {

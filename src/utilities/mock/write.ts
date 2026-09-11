@@ -84,7 +84,7 @@ function columnsOf(rows: Record<string, JsonValue | undefined>[]): string[] {
 function flatten(row: JsonValue, name: string, separator: string): Record<string, JsonValue> {
   if (typeof row !== "object" || row === null || Array.isArray(row)) return { [identifierFor(name)]: row };
 
-  const out: Record<string, JsonValue> = {};
+  const out: Record<string, JsonValue> = Object.create(null);
   const walk = (value: JsonValue, prefix: string) => {
     if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       const keys = Object.keys(value);

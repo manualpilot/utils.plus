@@ -21,6 +21,20 @@ test("the first stop of the page is past the navbar", async ({ page }) => {
   expect(new URL(page.url()).hash).toBe("");
 });
 
+test("a Tab pressed before the application arrives ends on the first stop", async ({ page }) => {
+  await page.route("**/main.tsx", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "commit" });
+  await expect(page.locator(".page-fallback")).toBeVisible();
+
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => document.activeElement?.closest(".page-fallback") !== null)).toBe(true);
+
+  await expect(page.getByRole("button", { name: "Skip to the utility" })).toBeFocused();
+});
+
 test("the navbar scrolls to its last link without moving the page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 400 });
   await page.goto("/");
@@ -73,7 +87,7 @@ test("a collapsed navbar stays collapsed on the next page", async ({ page }) => 
   await page.goto("/codec");
 
   await page.getByRole("button", { name: "Hide the navigation" }).click();
-  await page.getByText("utils+").click();
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "utils+" }).click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("button", { name: "Show the navigation" })).toBeVisible();

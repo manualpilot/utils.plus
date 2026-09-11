@@ -2,7 +2,7 @@ import type { JsonValue } from "../../common/schema/ir";
 import { CARD_BRANDS, eanDigit, IBAN_COUNTRIES, ibanCheckDigits, luhnDigit } from "./checksums";
 import type { Locale } from "./locales";
 import type { Rng } from "./seed";
-import { COLOUR_NAMES, COMPANY_STEMS, CURRENCIES, DEPARTMENTS, FILE_EXTENSIONS, GENERIC_TLDS, HTTP_METHODS, HTTP_STATUSES, JOB_TITLES, LANGUAGE_TAGS, LOREM, MAIL_DOMAINS, MIME_TYPES, PRODUCT_ADJECTIVES, PRODUCT_NOUNS, STATUSES, TIMEZONES, USER_AGENTS } from "./words";
+import { COLOUR_NAMES, COMPANY_STEMS, CURRENCIES, DEPARTMENTS, FILE_EXTENSIONS, HTTP_METHODS, HTTP_STATUSES, JOB_TITLES, LANGUAGE_TAGS, LOREM, MAIL_DOMAINS, MIME_TYPES, PRODUCT_ADJECTIVES, PRODUCT_NOUNS, RESERVED_DOMAINS, STATUSES, TIMEZONES, USER_AGENTS } from "./words";
 
 export type Produces = "string" | "integer" | "number" | "boolean";
 
@@ -34,11 +34,15 @@ const TABLE = {
   department: { produces: "string", generate: (rng) => rng.pick(DEPARTMENTS) },
   gender: { produces: "string", generate: (rng) => rng.pick(["female", "male", "non-binary", "prefer not to say"]) },
   age: { produces: "integer", generate: (rng) => rng.between(18, 79) },
-  birthDate: { produces: "string", generate: (rng) => isoDate(rng.between(ANCHOR - YEAR * 80, ANCHOR - YEAR * 18)) },
+  birthDate: { produces: "string", generate: (rng) => isoDate(bornAt(rng)) },
+  birthDateTime: { produces: "string", generate: (rng) => isoDateTime(bornAt(rng)) },
 
   street: { produces: "string", generate: address },
   city: { produces: "string", generate: (rng, locale) => rng.pick(locale.cities) },
-  postcode: { produces: "string", generate: (rng, locale) => fromPattern(rng, rng.pick(locale.postcodes)) },
+  postcode: {
+    produces: "string",
+    generate: (rng, locale) => fromPattern(rng, rng.pick(locale.postcodes), locale.postcodeLetters),
+  },
   region: { produces: "string", generate: (rng, locale) => rng.pick(locale.regions) },
   country: { produces: "string", generate: (_rng, locale) => locale.country },
   countryCode: { produces: "string", generate: (_rng, locale) => locale.countryCode },
@@ -68,19 +72,18 @@ const TABLE = {
   dateTime: { produces: "string", generate: (rng) => isoDateTime(anyInstant(rng)) },
   date: { produces: "string", generate: (rng) => isoDate(anyInstant(rng)) },
   time: { produces: "string", generate: (rng) => isoDateTime(anyInstant(rng)).slice(11) },
-  pastDateTime: { produces: "string", generate: (rng) => isoDateTime(rng.between(ANCHOR - YEAR * 5, ANCHOR)) },
-  futureDateTime: { produces: "string", generate: (rng) => isoDateTime(rng.between(ANCHOR, ANCHOR + YEAR * 5)) },
+  pastDateTime: { produces: "string", generate: (rng) => isoDateTime(pastInstant(rng)) },
+  pastDate: { produces: "string", generate: (rng) => isoDate(pastInstant(rng)) },
+  futureDateTime: { produces: "string", generate: (rng) => isoDateTime(futureInstant(rng)) },
+  futureDate: { produces: "string", generate: (rng) => isoDate(futureInstant(rng)) },
   epochSeconds: { produces: "integer", generate: (rng) => Math.floor(anyInstant(rng) / 1000) },
   duration: { produces: "string", generate: (rng) => `P${rng.between(1, 30)}DT${rng.between(0, 23)}H` },
 
-  url: { produces: "string", generate: (rng, locale) => `https://${domain(rng, locale)}/${slug(rng)}` },
+  url: { produces: "string", generate: (rng) => `https://${domain(rng)}/${slug(rng)}` },
   domain: { produces: "string", generate: domain },
   imageUrl: { produces: "string", generate: (rng) => `https://example.com/images/${slug(rng)}.jpg` },
   slug: { produces: "string", generate: slug },
-  ipv4: {
-    produces: "string",
-    generate: (rng) => `${rng.between(1, 223)}.${rng.below(256)}.${rng.below(256)}.${rng.between(1, 254)}`,
-  },
+  ipv4: { produces: "string", generate: (rng) => `${rng.pick(DOCUMENTATION_IPV4)}.${rng.between(1, 254)}` },
   ipv6: { produces: "string", generate: ipv6 },
   mac: { produces: "string", generate: mac },
   uuid: { produces: "string", generate: uuid },
@@ -112,11 +115,11 @@ const TABLE = {
 
 export const FIELDS: Record<FieldId, Field> = TABLE;
 
-export function fromPattern(rng: Rng, pattern: string): string {
+export function fromPattern(rng: Rng, pattern: string, letters = LETTERS): string {
   let out = "";
   for (const character of pattern) {
     if (character === "#") out += rng.below(10);
-    else if (character === "?") out += LETTERS[rng.below(LETTERS.length)];
+    else if (character === "?") out += letters[rng.below(letters.length)];
     else out += character;
   }
   return out;
@@ -182,9 +185,8 @@ function asciiSlug(text: string): string {
   return stripped.replace(/[^a-z0-9.]+/g, "").replace(/^\.+|\.+$/g, "");
 }
 
-function domain(rng: Rng, locale: Locale): string {
-  const tld = rng.chance(0.6) ? rng.pick(GENERIC_TLDS) : locale.tld;
-  return `${rng.pick(COMPANY_STEMS).toLowerCase()}.${tld}`;
+function domain(rng: Rng): string {
+  return `${rng.pick(COMPANY_STEMS).toLowerCase()}.${rng.pick(RESERVED_DOMAINS)}`;
 }
 
 function slug(rng: Rng): string {
@@ -238,6 +240,18 @@ function anyInstant(rng: Rng): number {
   return rng.between(ANCHOR - YEAR * 5, ANCHOR + YEAR * 5);
 }
 
+function pastInstant(rng: Rng): number {
+  return rng.between(ANCHOR - YEAR * 5, ANCHOR);
+}
+
+function futureInstant(rng: Rng): number {
+  return rng.between(ANCHOR, ANCHOR + YEAR * 5);
+}
+
+function bornAt(rng: Rng): number {
+  return rng.between(ANCHOR - YEAR * 80, ANCHOR - YEAR * 18);
+}
+
 function isoDateTime(instant: number): string {
   return new Date(instant).toISOString().replace(/\.\d{3}Z$/, "Z");
 }
@@ -255,6 +269,8 @@ const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const DIGITS = "0123456789";
 
 const HEX = "0123456789abcdef";
+
+const DOCUMENTATION_IPV4 = ["192.0.2", "198.51.100", "203.0.113"];
 
 const TOKEN_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 

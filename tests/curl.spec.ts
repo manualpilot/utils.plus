@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -143,6 +144,41 @@ test("an option the builder has no field for is carried through anyway", async (
   expect(await readCommand(page)).toContain("--tr-encoding");
 });
 
+test("a command copied for cmd is read into the fields and written back for cmd", async ({ page }) => {
+  await openCurl(page);
+
+  await replaceCommand(
+    page,
+    [
+      "curl --url ^\"https://example.com/api/items?page=2^&sort=name^\" ^",
+      "  -H ^\"accept: application/json^\" ^",
+      "  --data-raw ^\"^{^\\^\"name^\\^\":^\\^\"widget^\\^\"^}^\"",
+    ].join("\n"),
+  );
+
+  await expect(page.getByLabel("URL 1", { exact: true })).toHaveValue("https://example.com/api/items?page=2&sort=name");
+  await expect(page.getByLabel("Header 1", { exact: true })).toHaveValue("accept: application/json");
+  await expect(page.getByLabel("Data, raw 1", { exact: true })).toHaveValue("{\"name\":\"widget\"}");
+
+  await page.getByLabel("Header 1", { exact: true }).fill("accept: */*");
+
+  const command = await readCommand(page);
+  expect(command).toContain("-H ^\"accept: */*^\"");
+  expect(command).toContain("--url ^\"https://example.com/api/items?page=2^&sort=name^\" ^\n");
+  expect(command).not.toContain("\\\n");
+});
+
+test("a variable in double quotes still expands after another field is edited", async ({ page }) => {
+  await openCurl(page);
+
+  await replaceCommand(page, "curl https://api.example.com -H \"Authorization: Bearer $TOKEN\" -d '$literal'");
+  await page.getByLabel("URL 1", { exact: true }).fill("https://api.example.com/v2");
+
+  expect(await readCommand(page)).toBe(
+    "curl \\\n  https://api.example.com/v2 \\\n  -H \"Authorization: Bearer $TOKEN\" \\\n  -d '$literal'",
+  );
+});
+
 test("the address carries the command and the layout", async ({ page }) => {
   await openCurl(page);
   expect(decodeHash(page.url()).command).toBeUndefined();
@@ -207,7 +243,8 @@ test("what a browser cannot do is on screen before anything is sent", async ({ p
 
   await replaceCommand(page, "curl -k https://example.com --resolve example.com:443:127.0.0.1");
 
-  await expect(page.getByText("A browser will not skip its certificate checks for a page that asks")).toBeVisible();
+  await expect(tool(page).getByText("A browser will not skip its certificate checks for a page that asks"))
+    .toBeVisible();
   await expect(page.getByText("The browser makes the connection and takes no instructions about it")).toBeVisible();
 });
 

@@ -81,6 +81,12 @@ describe("the picker's search", () => {
     expect(search("+61")[0]).toBe("AU");
   });
 
+  it("reads UK as the United Kingdom, ahead of the country whose name it begins", () => {
+    const uk = search("uk");
+    expect(uk[0]).toBe("GB");
+    expect(uk).toContain("UA");
+  });
+
   it("prefers a name that begins with what was typed to one that merely holds it", () => {
     const indian = search("india");
     expect(indian[0]).toBe("IN");

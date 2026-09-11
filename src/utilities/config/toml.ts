@@ -4,7 +4,7 @@ import { type ConfigValue, describe, isRecord, type ReadResult, readValue, unrea
 
 export function readToml(text: string): ReadResult {
   try {
-    return readValue(normalise(parse(text)));
+    return readValue(normalise(parse(text, { integersAsBigInt: "asNeeded" })));
   } catch (error) {
     if (!(error instanceof TomlError)) return unreadable(error instanceof Error ? error.message : String(error));
     return unreadable(error.message.split("\n")[0].trim(), { line: error.line, column: error.column });
@@ -34,7 +34,7 @@ function normalise(node: unknown): ConfigValue {
 }
 
 function withoutNulls(node: ConfigValue, path: string[], lost: string[]): ConfigValue | undefined {
-  if (node === null) {
+  if (node === null || (typeof node === "bigint" && (node < MIN_INTEGER || node > MAX_INTEGER))) {
     lost.push(displayPath(path));
     return undefined;
   }
@@ -61,3 +61,6 @@ function withoutNulls(node: ConfigValue, path: string[], lost: string[]): Config
 
   return node;
 }
+
+const MIN_INTEGER = -(2n ** 63n);
+const MAX_INTEGER = 2n ** 63n - 1n;

@@ -5,7 +5,7 @@ import { FactTable } from "../../common/fact-table";
 import { InfoMark } from "../../common/info-mark";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
-import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageRows, nativeNameRows } from "./facts";
+import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, isoCodes, languageRows, nativeNameRows } from "./facts";
 import { borderCountries, type Country, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry, VIEW_OPTIONS } from "./list";
 import { flight, type Framing, mapOf, type Place, prepare, VIEW_BOX } from "./map";
 import { type Boundaries, DEFAULT_VIEW, pickView, useBoundaries } from "./shapes";
@@ -71,9 +71,7 @@ export default function Countries() {
             <Title order={4}>Codes</Title>
             <FactTable
               rows={[
-                { label: "ISO 3166-1 alpha-2", value: country.cca2 },
-                { label: "ISO 3166-1 alpha-3", value: country.cca3 },
-                { label: "ISO 3166-1 numeric", value: country.ccn3 },
+                ...isoCodes(country),
                 { label: "Olympic (IOC)", value: country.cioc },
                 { label: "Internet domain", value: country.tld.join(", ") },
                 { label: "Calling code", value: inlinePrefixes(prefixes) || country.idd.root },

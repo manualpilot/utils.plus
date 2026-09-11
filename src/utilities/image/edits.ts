@@ -15,7 +15,7 @@ export function editsFrom(exif: Exif | null): Edits {
   const fields: Record<string, string> = {};
   for (const [key, field] of Object.entries(EDITABLE)) {
     const entry = exif && findEntry(exif.ifds[field.ifd], field.tag);
-    fields[key] = !entry ? "" : key === "comment" ? readComment(entry.value) : plainText(entry.value);
+    fields[key] = !entry ? "" : key === "comment" ? readComment(entry.value, exif.little) : plainText(entry.value);
   }
 
   const orientation = exif && findEntry(exif.ifds.image, ORIENTATION_TAG);
@@ -51,9 +51,12 @@ export function sameEdits(left: Edits, right: Edits): boolean {
 
 export function applyEdits(exif: Exif | null, edits: Edits): Exif {
   const out = exif ? clone(exif) : emptyExif();
+  const arrived = editsFrom(exif);
 
   for (const [key, field] of Object.entries(EDITABLE)) {
     const text = (edits.fields[key] ?? "").trim();
+    if (key !== "comment" && text === arrived.fields[key]) continue;
+    if (problem(key, text) !== null) continue;
     out.ifds[field.ifd] = setEntry(out.ifds[field.ifd], field.tag, text === "" ? null : entryFor(key, field.tag, text));
   }
 
@@ -65,9 +68,11 @@ export function applyEdits(exif: Exif | null, edits: Edits): Exif {
 
   const latitude = Number(edits.latitude);
   const longitude = Number(edits.longitude);
+  const moved = edits.latitude !== arrived.latitude || edits.longitude !== arrived.longitude;
+  if (!moved || locationProblem(edits.latitude, edits.longitude, true).some(Boolean)) return out;
   if (edits.latitude.trim() === "" && edits.longitude.trim() === "") {
     out.ifds.gps = [];
-  } else if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+  } else {
     out.ifds.gps = setEntry(out.ifds.gps, 1, { tag: 1, type: 2, value: latitude < 0 ? "S" : "N" });
     out.ifds.gps = setEntry(out.ifds.gps, 2, { tag: 2, type: 5, value: toCoordinate(latitude) });
     out.ifds.gps = setEntry(out.ifds.gps, 3, { tag: 3, type: 2, value: longitude < 0 ? "W" : "E" });
@@ -85,26 +90,49 @@ export function rewrite(bytes: Uint8Array, container: Container, exif: Exif | nu
   return writeExifBlock(bytes, container, block);
 }
 
-export function problem(key: string, value: string): string | null {
+export function problem(key: string, value: string, arrived = ""): string | null {
   const text = value.trim();
-  if (text === "") return null;
+  if (text === "" || text === arrived) return null;
   if (DATE_FIELDS.includes(key) && !DATE_PATTERN.test(text)) return "YYYY:MM:DD HH:MM:SS";
-  if (key !== "comment" && /[^\x00-\xff]/.test(text)) return "Only Latin-1 characters are kept";
+  const outside = key === "comment" ? null : /[^\x00-\x7f]/u.exec(text);
+  if (outside) return `Only ASCII can be written here, and ${outside[0]} is not`;
   return null;
 }
 
-export function locationProblem(latitude: string, longitude: string): [string | null, string | null] {
+export function locationProblem(latitude: string, longitude: string, asked: boolean): [string | null, string | null] {
   const pair: [string | null, string | null] = [null, null];
   const blank = latitude.trim() === "" && longitude.trim() === "";
   if (blank) return pair;
-  pair[0] = degreeProblem(latitude, 90, "A latitude runs from -90 to 90");
-  pair[1] = degreeProblem(longitude, 180, "A longitude runs from -180 to 180");
+  pair[0] = degreeProblem(latitude, 90, "A latitude runs from -90 to 90", asked);
+  pair[1] = degreeProblem(longitude, 180, "A longitude runs from -180 to 180", asked);
   return pair;
 }
 
-function degreeProblem(value: string, limit: number, message: string): string | null {
+export interface Marked {
+  label: string;
+  message: string;
+}
+
+export function markedBoxes(edits: Edits, arrived: Edits): Marked[] {
+  const marked: Marked[] = [];
+  for (const [key, field] of Object.entries(EDITABLE)) {
+    const message = problem(key, edits.fields[key] ?? "", arrived.fields[key]);
+    if (message) marked.push({ label: field.label, message });
+  }
+  const [latitude, longitude] = locationProblem(edits.latitude, edits.longitude, true);
+  if (latitude) marked.push({ label: "Latitude", message: latitude });
+  if (longitude) marked.push({ label: "Longitude", message: longitude });
+  return marked;
+}
+
+export function withheldBecause(marked: Marked[]): string {
+  const labels = new Intl.ListFormat("en", { type: "conjunction" }).format(marked.map(({ label }) => label));
+  return `${labels} ${marked.length === 1 ? "is" : "are"} marked`;
+}
+
+function degreeProblem(value: string, limit: number, message: string, asked: boolean): string | null {
   const text = value.trim();
-  if (text === "") return "Both halves of a coordinate, or neither";
+  if (text === "") return asked ? "Both halves of a coordinate, or neither" : null;
   const degrees = Number(text);
   return Number.isFinite(degrees) && Math.abs(degrees) <= limit ? null : message;
 }

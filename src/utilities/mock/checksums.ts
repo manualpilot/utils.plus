@@ -1,6 +1,7 @@
 export interface Check {
   valid: boolean;
   normalised: string;
+  found: string;
   expected?: string;
   detail?: string;
 }
@@ -38,6 +39,7 @@ export function checkCard(value: string): Check | null {
   return {
     valid: luhnHolds(normalised) && brand !== null,
     normalised,
+    found: normalised.slice(-1),
     expected: luhnHolds(normalised) ? undefined : expected,
     detail: brand ? brand.label : "No issuer claims this prefix and length",
   };
@@ -65,11 +67,13 @@ export function checkIban(value: string): Check | null {
   const expected = IBAN_COUNTRIES[country];
   const bban = normalised.slice(4);
   const holds = ibanRemainder(`${bban}${normalised.slice(0, 4)}`) === 1;
+  const found = normalised.slice(2, 4);
 
   if (expected && normalised.length !== expected.length) {
     return {
       valid: false,
       normalised,
+      found,
       detail: `${expected.name} IBANs are ${expected.length} characters, and this is ${normalised.length}`,
     };
   }
@@ -77,6 +81,7 @@ export function checkIban(value: string): Check | null {
   return {
     valid: holds && expected !== undefined,
     normalised,
+    found,
     expected: holds ? undefined : ibanCheckDigits(country, bban),
     detail: expected ? expected.name : `No country uses the code ${country}`,
   };
@@ -103,6 +108,7 @@ export function checkIsbn(value: string): Check | null {
     return {
       valid: normalised[9] === expected,
       normalised,
+      found: normalised[9],
       expected: normalised[9] === expected ? undefined : expected,
       detail: `ISBN-10, registration group ${normalised[0]}`,
     };
@@ -113,6 +119,7 @@ export function checkIsbn(value: string): Check | null {
     return {
       valid: normalised[12] === expected,
       normalised,
+      found: normalised[12],
       expected: normalised[12] === expected ? undefined : expected,
       detail: `ISBN-13, prefix ${normalised.slice(0, 3)}`,
     };
@@ -127,8 +134,14 @@ export function checkEan(value: string): Check | null {
   if (!kind || !/^\d+$/.test(normalised)) return null;
 
   const expected = eanDigit(normalised.slice(0, -1));
-  const actual = normalised[normalised.length - 1];
-  return { valid: actual === expected, normalised, expected: actual === expected ? undefined : expected, detail: kind };
+  const found = normalised.slice(-1);
+  return {
+    valid: found === expected,
+    normalised,
+    found,
+    expected: found === expected ? undefined : expected,
+    detail: kind,
+  };
 }
 
 export function checkImei(value: string): Check | null {
@@ -139,6 +152,7 @@ export function checkImei(value: string): Check | null {
   return {
     valid: luhnHolds(normalised),
     normalised,
+    found: normalised.slice(-1),
     expected: luhnHolds(normalised) ? undefined : expected,
     detail: `Reporting body identifier ${normalised.slice(0, 2)}`,
   };
@@ -154,6 +168,8 @@ export function identify(value: string): Candidate[] {
     return result ? [{ format, ...result }] : [];
   });
 }
+
+export const EXAMPLE_NUMBER = "4111 1111 1111 1111";
 
 const CHECKERS: { format: string; check: (value: string) => Check | null }[] = [
   { format: "Payment card", check: checkCard },

@@ -19,22 +19,25 @@ export function generateUUIDv4(): string {
   return id;
 }
 
-let lastTime = 0;
-let clockSequence = 0;
+const TICKS_PER_MS = 10000;
+let lastTime = -1;
+let ticks = 0;
+let clockSequence = crypto.getRandomValues(new Uint16Array(1))[0] & 0x3fff;
 const node = new Uint8Array(6);
 crypto.getRandomValues(node);
 node[0] |= 0x01;
 
 function getG1582(): { time: bigint; seq: number } {
-  const now = Date.now();
-  let time = BigInt(now) * 10000n + 122192928000000000n;
+  let now = Date.now();
   if (now === lastTime) {
+    ticks++;
+    while (ticks === TICKS_PER_MS && now <= lastTime) now = Date.now();
+  } else if (now < lastTime) {
     clockSequence = (clockSequence + 1) & 0x3fff;
-    time += BigInt(clockSequence);
-  } else {
-    lastTime = now;
-    clockSequence = (crypto.getRandomValues(new Uint16Array(1))[0]) & 0x3fff;
   }
+  if (now !== lastTime) ticks = 0;
+  lastTime = now;
+  const time = BigInt(now) * 10000n + 122192928000000000n + BigInt(ticks);
   return { time, seq: clockSequence };
 }
 
@@ -131,10 +134,20 @@ export function generateUUIDv7(): string {
   return formatUUID(uuidV7Bytes());
 }
 
+const V7_COUNTER_LIMIT = 2 ** 42;
+let v7LastTime = -1;
+let v7Counter = 0;
+
 function uuidV7Bytes(): Uint8Array {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
-  const time = Date.now();
+  let time = Date.now();
+  if (time === v7LastTime) {
+    v7Counter++;
+    while (v7Counter === V7_COUNTER_LIMIT && time <= v7LastTime) time = Date.now();
+  }
+  if (time !== v7LastTime) v7Counter = randomBelow(2 ** 21) * 2 ** 20 + randomBelow(2 ** 20);
+  v7LastTime = time;
 
   bytes[0] = Math.floor(time / 2 ** 40) & 0xff;
   bytes[1] = Math.floor(time / 2 ** 32) & 0xff;
@@ -143,8 +156,12 @@ function uuidV7Bytes(): Uint8Array {
   bytes[4] = Math.floor(time / 2 ** 8) & 0xff;
   bytes[5] = time & 0xff;
 
-  bytes[6] = (bytes[6] & 0x0f) | 0x70;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  bytes[6] = 0x70 | Math.floor(v7Counter / 2 ** 38);
+  bytes[7] = Math.floor(v7Counter / 2 ** 30) & 0xff;
+  bytes[8] = 0x80 | (Math.floor(v7Counter / 2 ** 24) & 0x3f);
+  bytes[9] = Math.floor(v7Counter / 2 ** 16) & 0xff;
+  bytes[10] = Math.floor(v7Counter / 2 ** 8) & 0xff;
+  bytes[11] = v7Counter & 0xff;
   return bytes;
 }
 
@@ -207,8 +224,23 @@ function cuid2Entropy(length: number): string {
 
 const ENCODING = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const ENCODING_LEN = ENCODING.length;
+const ulidRandom = new Uint8Array(16);
+let ulidLastTime = -1;
+
 export function generateULID(): string {
-  const now = Date.now();
+  let now = Date.now();
+  if (now === ulidLastTime) {
+    let i = ulidRandom.length - 1;
+    while (i >= 0 && ulidRandom[i] === ENCODING_LEN - 1) ulidRandom[i--] = 0;
+    if (i >= 0) ulidRandom[i]++;
+    while (i < 0 && now <= ulidLastTime) now = Date.now();
+  }
+  if (now !== ulidLastTime) {
+    crypto.getRandomValues(ulidRandom);
+    for (let i = 0; i < ulidRandom.length; i++) ulidRandom[i] %= ENCODING_LEN;
+  }
+  ulidLastTime = now;
+
   let timeStr = "";
   let t = now;
   for (let i = 0; i < 10; i++) {
@@ -218,10 +250,7 @@ export function generateULID(): string {
   }
 
   let randomStr = "";
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  for (let i = 0; i < 16; i++) {
-    randomStr += ENCODING.charAt(bytes[i] % ENCODING_LEN);
-  }
+  for (const digit of ulidRandom) randomStr += ENCODING.charAt(digit);
 
   return timeStr + randomStr;
 }

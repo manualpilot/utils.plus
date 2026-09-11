@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -22,8 +23,8 @@ function chooseView(page: Page, view: string) {
   return page.locator("label", { hasText: view }).first().click();
 }
 
-const headings = (page: Page) => page.locator("thead th");
-const bodyRows = (page: Page) => page.locator("tbody tr");
+const headings = (page: Page) => tool(page).locator("thead th");
+const bodyRows = (page: Page) => tool(page).locator("tbody tr");
 
 function decodeHash(url: string): { value?: string; delimiter?: string; header?: boolean; view?: string } {
   let b64 = new URL(url).hash.slice(1).replace(/-/g, "+").replace(/_/g, "/");

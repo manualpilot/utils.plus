@@ -237,7 +237,9 @@ function encodeValue(entry: ExifEntry): Uint8Array {
   const { type, value } = entry;
   if (typeof value === "string") {
     const out = new Uint8Array(value.length + 1);
-    for (let index = 0; index < value.length; index++) out[index] = value.charCodeAt(index) & 0xff;
+    for (let index = 0; index < value.length; index++) {
+      out[index] = WINDOWS_1252.get(value[index]) ?? value.charCodeAt(index) & 0xff;
+    }
     return out;
   }
   if (value instanceof Uint8Array) return value;
@@ -265,6 +267,10 @@ function encodeValue(entry: ExifEntry): Uint8Array {
 }
 
 const LATIN1 = new TextDecoder("latin1");
+
+const WINDOWS_1252 = new Map(
+  Array.from({ length: 32 }, (_, at) => [LATIN1.decode(Uint8Array.of(0x80 + at)), 0x80 + at]),
+);
 
 const HEADER_SIZE = 8;
 

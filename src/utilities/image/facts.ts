@@ -43,7 +43,7 @@ export function exifGroups(exif: Exif | null): Group[] {
     if (entries.length === 0) continue;
     groups.push({
       title,
-      rows: entries.map((entry) => ({ label: tagName(name, entry.tag), value: tagText(name, entry) })),
+      rows: entries.map((entry) => ({ label: tagName(name, entry.tag), value: tagText(name, entry, exif.little) })),
     });
   }
   return groups;

@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -71,7 +72,7 @@ test("matching documents say so and are left unmarked", async ({ page }) => {
   await setDocuments(page, "one\ntwo\n", "one\ntwo\n");
   await clickDiff(page);
 
-  await expect(page.getByText("The documents are identical")).toBeVisible();
+  await expect(tool(page).getByText("The documents are identical")).toBeVisible();
   await expect(page.locator(".cm-diff-removed")).toHaveCount(0);
   await expect(page.locator(".cm-diff-added")).toHaveCount(0);
 });
@@ -87,7 +88,7 @@ test("editing either side drops the marks until the diff is asked for again", as
 
   await expect(page.locator(".cm-diff-removed")).toHaveCount(0);
   await expect(page.locator(".cm-diff-added")).toHaveCount(0);
-  await expect(page.getByText("1 line removed, 1 line added")).toHaveCount(0);
+  await expect(tool(page).getByText("1 line removed, 1 line added")).toHaveCount(0);
 });
 
 test("swap exchanges the two documents", async ({ page }) => {

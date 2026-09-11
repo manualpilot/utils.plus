@@ -212,7 +212,7 @@ export default function Python() {
   const busy = isWorking(run);
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle
         directory="python"
         control={

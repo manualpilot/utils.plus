@@ -87,7 +87,7 @@ export default function Markdown() {
   );
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle directory="markdown">Markdown</UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">

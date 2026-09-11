@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -172,11 +173,25 @@ test("checks a number and names the digit that would have held", async ({ page }
   await expect(page.locator("[data-verdict='IBAN']")).toContainText("United Kingdom");
   await expect(page.locator("[data-verdict='IBAN']")).toContainText("Valid");
 
+  await number.fill("GB82 WEST 1234 5698 7654 33");
+  await expect(tool(page).locator("[data-verdict='IBAN']")).toContainText(
+    "The check digits here are 82, where 55 is what would hold.",
+  );
+
   await number.fill("978-0-306-40615-7");
   await expect(page.locator("[data-verdict='ISBN']")).toContainText("Valid");
 
   await number.fill("nonsense");
   await expect(page.getByText("Nothing recognised")).toBeVisible();
+});
+
+test("offers a placeholder the check accepts", async ({ page }) => {
+  await page.goto(`${BASE}/mock`);
+  await tool(page).getByText("Check", { exact: true }).click();
+
+  const number = tool(page).getByRole("textbox", { name: "Number", exact: true });
+  await number.fill(await number.getAttribute("placeholder") ?? "");
+  await expect(tool(page).locator("[data-verdict='Payment card']")).toContainText("Valid");
 });
 
 test("carries the batch in the link, and the link alone rebuilds it", async ({ page }) => {

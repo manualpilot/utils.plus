@@ -115,7 +115,7 @@ export function parseJson(text: string): ParseResult {
   };
 
   const parseObject = (pointer: string): JsonValue => {
-    const out: { [key: string]: JsonValue } = {};
+    const out: { [key: string]: JsonValue } = Object.create(null);
     expect("{");
     skipSpace();
     if (text[at] === "}") {

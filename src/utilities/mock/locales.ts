@@ -8,6 +8,7 @@ export interface Locale {
   streets: string[];
   addressFormat: string;
   postcodes: string[];
+  postcodeLetters?: string;
   regions: string[];
   regionLabel: string;
   country: string;
@@ -15,7 +16,6 @@ export interface Locale {
   phones: string[];
   currency: string;
   iban?: string;
-  tld: string;
   companySuffixes: string[];
 }
 
@@ -154,7 +154,6 @@ export const LOCALES: Record<LocaleId, Locale> = {
     countryCode: "US",
     phones: ["+1 2## 555-01##", "+1 3## 555-01##", "+1 4## 555-01##"],
     currency: "USD",
-    tld: "us",
     companySuffixes: ["Inc.", "LLC", "Corp.", "Holdings", "Group"],
   },
   "en-GB": {
@@ -265,7 +264,56 @@ export const LOCALES: Record<LocaleId, Locale> = {
       "York Road",
     ],
     addressFormat: "{number} {street}",
-    postcodes: ["?# #??", "?## #??", "??# #??", "??## #??"],
+    postcodes: [
+      "E1 #??",
+      "E14 #??",
+      "E1W #??",
+      "N1 #??",
+      "N16 #??",
+      "N1C #??",
+      "NW3 #??",
+      "NW10 #??",
+      "SE1 #??",
+      "SE15 #??",
+      "W2 #??",
+      "W12 #??",
+      "W1D #??",
+      "SW1A #??",
+      "SW1P #??",
+      "EC1A #??",
+      "EC4M #??",
+      "WC1B #??",
+      "WC2N #??",
+      "M1 #??",
+      "M14 #??",
+      "B1 #??",
+      "B15 #??",
+      "LS1 #??",
+      "LS11 #??",
+      "G1 #??",
+      "G12 #??",
+      "L1 #??",
+      "L17 #??",
+      "BS1 #??",
+      "BS16 #??",
+      "S1 #??",
+      "S10 #??",
+      "EH1 #??",
+      "EH10 #??",
+      "CF10 #??",
+      "CF24 #??",
+      "NG1 #??",
+      "NE1 #??",
+      "NE15 #??",
+      "BN1 #??",
+      "LE1 #??",
+      "LE11 #??",
+      "OX1 #??",
+      "OX14 #??",
+      "CB1 #??",
+      "CB22 #??",
+    ],
+    postcodeLetters: "ABDEFGHJLNPQRSTUWXYZ",
     regions: [
       "Greater London",
       "Greater Manchester",
@@ -285,12 +333,11 @@ export const LOCALES: Record<LocaleId, Locale> = {
       "Somerset",
     ],
     regionLabel: "County",
-    phones: ["+44 7700 900###", "+44 20 7946 0###"],
+    phones: ["+44 7700 900###", "+44 20 7946 0###", "+44 161 496 0###"],
     country: "United Kingdom",
     countryCode: "GB",
     currency: "GBP",
     iban: "GB",
-    tld: "co.uk",
     companySuffixes: ["Ltd", "PLC", "LLP", "Group", "Holdings"],
   },
   "de-DE": {
@@ -423,10 +470,17 @@ export const LOCALES: Record<LocaleId, Locale> = {
     regionLabel: "Bundesland",
     country: "Deutschland",
     countryCode: "DE",
-    phones: ["+49 30 9########", "+49 89 9#######", "+49 151 9#######"],
+    phones: [
+      "+49 30 23125 ###",
+      "+49 69 90009 ###",
+      "+49 40 66969 ###",
+      "+49 221 4710 ###",
+      "+49 89 99998 ###",
+      "+49 171 39200 ##",
+      "+49 176 040690 ##",
+    ],
     currency: "EUR",
     iban: "DE",
-    tld: "de",
     companySuffixes: ["GmbH", "AG", "GmbH & Co. KG", "SE", "e.K."],
   },
   "fr-FR": {
@@ -559,10 +613,16 @@ export const LOCALES: Record<LocaleId, Locale> = {
     regionLabel: "Région",
     country: "France",
     countryCode: "FR",
-    phones: ["+33 1 ## ## ## ##", "+33 4 ## ## ## ##", "+33 6 ## ## ## ##"],
+    phones: [
+      "+33 1 99 00 ## ##",
+      "+33 2 61 91 ## ##",
+      "+33 3 53 01 ## ##",
+      "+33 4 65 71 ## ##",
+      "+33 5 36 49 ## ##",
+      "+33 6 39 98 ## ##",
+    ],
     currency: "EUR",
     iban: "FR",
-    tld: "fr",
     companySuffixes: ["SARL", "SA", "SAS", "SCI", "EURL"],
   },
   "es-ES": {
@@ -695,10 +755,9 @@ export const LOCALES: Record<LocaleId, Locale> = {
     regionLabel: "Comunidad",
     country: "España",
     countryCode: "ES",
-    phones: ["+34 9## ## ## ##", "+34 6## ## ## ##", "+34 7## ## ## ##"],
+    phones: ["+34 3## ## ## ##", "+34 3## ### ###"],
     currency: "EUR",
     iban: "ES",
-    tld: "es",
     companySuffixes: ["S.L.", "S.A.", "S.L.U.", "S.Coop.", "S.C."],
   },
   "it-IT": {
@@ -831,10 +890,9 @@ export const LOCALES: Record<LocaleId, Locale> = {
     regionLabel: "Regione",
     country: "Italia",
     countryCode: "IT",
-    phones: ["+39 0# #### ####", "+39 3## ### ####"],
+    phones: ["+39 2## ### ####", "+39 6## ### ####", "+39 9## ### ####"],
     currency: "EUR",
     iban: "IT",
-    tld: "it",
     companySuffixes: ["S.r.l.", "S.p.A.", "S.n.c.", "S.a.s.", "S.r.l.s."],
   },
   "ja-JP": {
@@ -968,9 +1026,8 @@ export const LOCALES: Record<LocaleId, Locale> = {
     regionLabel: "都道府県",
     country: "日本",
     countryCode: "JP",
-    phones: ["+81 3-####-####", "+81 6-####-####", "+81 90-####-####"],
+    phones: ["+81 3-0###-####", "+81 30-####-####", "+81 40-####-####"],
     currency: "JPY",
-    tld: "jp",
     companySuffixes: ["株式会社", "有限会社", "合同会社"],
   },
 };

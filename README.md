@@ -34,10 +34,14 @@ npm run playwright # end-to-end tests, requires `npm run dev` running
 
 - [src/utilities/](src/utilities/) — a directory per utility: the page named after it holds the components, and the
   modules beside it hold the parsing, formatting and generating the page reads
-- [src/utility-registry.ts](src/utility-registry.ts) — the list the router, navbar and random picker all read; adding a
-  utility is one entry here
-- [src/page-meta.ts](src/page-meta.ts) — the title, description and keywords of every page, read by the browser and by
-  the build that writes a document per address, the sitemap and the robots.txt
+- [src/utility-registry.ts](src/utility-registry.ts) — the list the router, navbar and welcome page all read; adding a
+  utility is one entry here, its words in `page-meta.ts` and its article in `page-content/`
+- [src/page-meta.ts](src/page-meta.ts) — the label, title, description and keywords of every page and the groups the
+  utilities are listed under, read by the browser and by the build that writes a document per address and the sitemap
+- [src/page-content/](src/page-content/) — the article under each utility: how it works, examples, common problems,
+  questions, related tools and references, written into the document the build emits and drawn under the tool
+- [src/page-document.ts](src/page-document.ts) — the markup written from those two: each document's head, its
+  structured data, and the body a reader with no script is handed
 - [src/common/](src/common/) — shared hooks and helpers
 - [src/global.css](src/global.css) — layout classes shared across utilities
 - [tests/](tests/) — `*.test.ts` are Vitest, `*.spec.ts` are Playwright

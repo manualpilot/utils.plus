@@ -9,7 +9,7 @@ export const RELEASE = "20260910";
 
 export const IANA_RELEASE = "2026-08-20";
 
-const SHAPE = 2;
+const SHAPE = 3;
 
 const PER_SHARD = 2048;
 
@@ -27,6 +27,8 @@ const NOTABLE_V4 = [
   ["233.252.0.0", "233.252.0.255"],
   ["239.255.255.250", "239.255.255.255"],
 ];
+
+const HELD = ["rir", "country", "date", "status", "holder"] as const;
 
 const cache = join(import.meta.dirname, "../.build", `ip-registry-${RELEASE}-${IANA_RELEASE}`);
 const utility = join(import.meta.dirname, "../src/utilities/ip-address");
@@ -134,11 +136,11 @@ async function writeDelegations(): Promise<DelegationIndex> {
 
   for (const line of lines) {
     if (!line || line.startsWith("#")) continue;
-    const [rir, country, type, start, count, date, status] = line.split("|");
+    const [rir, country, type, start, count, date, status, holder] = line.split("|");
     if (!status || status === "summary" || start === "*") continue;
     if (status === "reserved" || status === "available") continue;
 
-    const held: Held = { rir: index(rirs, rir), country: index(countries, country), date, status };
+    const held: Held = { rir: index(rirs, rir), country: index(countries, country), date, status, holder };
     if (type === "asn") asn.push({ ...held, start: BigInt(start), end: BigInt(start) + BigInt(count) - 1n });
     else if (type === "ipv4") v4.push({ ...held, start: ipv4(start), end: ipv4(start) + BigInt(count) - 1n });
     else if (type === "ipv6") v6.push({ ...held, start: ipv6(start), prefix: Number(count) });
@@ -169,6 +171,7 @@ interface Held {
   country: number;
   date: string;
   status: string;
+  holder: string;
 }
 
 interface Range extends Held {
@@ -206,7 +209,7 @@ function merge(rows: Range[]): Range[] {
   const merged: Range[] = [];
   for (const row of rows) {
     const previous = merged.at(-1);
-    const same = previous && previous.rir === row.rir && previous.country === row.country && previous.date === row.date;
+    const same = previous && HELD.every((field) => previous[field] === row[field]);
     if (same && previous.end + 1n === row.start) previous.end = row.end;
     else merged.push({ ...row });
   }

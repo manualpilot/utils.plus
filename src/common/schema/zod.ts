@@ -1,6 +1,6 @@
 import { typescriptLanguage } from "@codemirror/lang-javascript";
 import type { SyntaxNode } from "@lezer/common";
-import { type Definition, type JsonValue, type ObjectSchema, type Property, type ReadResult, type Schema, type SchemaDocument, type SourceError, union } from "./ir";
+import { type Definition, type JsonValue, type ObjectSchema, own, type Property, type ReadResult, type Schema, type SchemaDocument, type SourceError, union } from "./ir";
 
 export function readZod(text: string): ReadResult {
   const errors: SourceError[] = [];
@@ -491,14 +491,30 @@ function objectFrom(node: SyntaxNode | undefined, context: Context): ObjectSchem
 
     const parts = kids(member);
     const colon = parts.findIndex((part) => part.name === ":");
-    const name = keyName(context.text, parts[0]);
+    const name = memberName(context.text, parts);
     if (colon === -1 || name === undefined || !parts[colon + 1]) continue;
+    if (setsPrototype(context.text, parts)) {
+      context.errors.push({
+        ...where(member),
+        message: "A bare `__proto__:` sets the shape's prototype, so it is no key",
+      });
+      continue;
+    }
 
     const read = readExpression(parts[colon + 1], context);
     properties.push({ name, schema: read.schema, required: !read.optional });
   }
 
   return { kind: "object", properties };
+}
+
+function memberName(text: string, parts: SyntaxNode[]): string | undefined {
+  if (parts[0]?.name === "[") return parts[1]?.name === "String" ? jsString(textOf(text, parts[1])) : undefined;
+  return keyName(text, parts[0]);
+}
+
+function setsPrototype(text: string, parts: SyntaxNode[]): boolean {
+  return parts[0]?.name !== "[" && keyName(text, parts[0]) === "__proto__";
 }
 
 function keyName(text: string, node: SyntaxNode | undefined): string | undefined {
@@ -542,15 +558,15 @@ function staticValue(node: SyntaxNode | undefined, context: Context): JsonValue 
       return out;
     }
     case "ObjectExpression": {
-      const out: { [key: string]: JsonValue } = {};
+      const out: { [key: string]: JsonValue } = Object.create(null);
       for (const member of kids(node)) {
         if (member.name !== "Property") continue;
         const parts = kids(member);
         const colon = parts.findIndex((part) => part.name === ":");
-        const name = keyName(text, parts[0]);
+        const name = memberName(text, parts);
         const value = colon === -1 ? undefined : staticValue(parts[colon + 1], context);
         if (name === undefined || value === undefined) return undefined;
-        out[name] = value;
+        if (!setsPrototype(text, parts)) out[name] = value;
       }
       return out;
     }
@@ -718,7 +734,7 @@ function expressionFor(schema: Schema, depth: number): string {
     }
 
     case "string": {
-      out = schema.format !== undefined ? ZOD_FORMATS[schema.format] ?? "z.string()" : "z.string()";
+      out = schema.format !== undefined ? own(ZOD_FORMATS, schema.format) ?? "z.string()" : "z.string()";
       if (schema.minLength !== undefined && schema.minLength === schema.maxLength) {
         out += `.length(${schema.minLength})`;
       } else {
@@ -797,6 +813,7 @@ function regexLiteral(pattern: string): string {
 }
 
 function propertyKey(name: string): string {
+  if (name === "__proto__") return `[${JSON.stringify(name)}]`;
   return IDENTIFIER.test(name) ? name : JSON.stringify(name);
 }
 

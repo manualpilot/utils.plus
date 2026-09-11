@@ -6,23 +6,30 @@ export interface Meta {
   default?: JsonValue;
 }
 
-export interface UnknownSchema extends Meta {
+export interface Applicators {
+  not?: Schema;
+  if?: Schema;
+  then?: Schema;
+  else?: Schema;
+}
+
+export interface UnknownSchema extends Meta, Applicators {
   kind: "unknown";
 }
 
-export interface NeverSchema extends Meta {
+export interface NeverSchema extends Meta, Applicators {
   kind: "never";
 }
 
-export interface NullSchema extends Meta {
+export interface NullSchema extends Meta, Applicators {
   kind: "null";
 }
 
-export interface BooleanSchema extends Meta {
+export interface BooleanSchema extends Meta, Applicators {
   kind: "boolean";
 }
 
-export interface NumberSchema extends Meta {
+export interface NumberSchema extends Meta, Applicators {
   kind: "number";
   integer?: boolean;
   minimum?: number;
@@ -32,7 +39,7 @@ export interface NumberSchema extends Meta {
   multipleOf?: number;
 }
 
-export interface StringSchema extends Meta {
+export interface StringSchema extends Meta, Applicators {
   kind: "string";
   minLength?: number;
   maxLength?: number;
@@ -40,23 +47,26 @@ export interface StringSchema extends Meta {
   format?: string;
 }
 
-export interface LiteralSchema extends Meta {
+export interface LiteralSchema extends Meta, Applicators {
   kind: "literal";
   value: JsonValue;
 }
 
-export interface EnumSchema extends Meta {
+export interface EnumSchema extends Meta, Applicators {
   kind: "enum";
   values: JsonValue[];
 }
 
-export interface ArraySchema extends Meta {
+export interface ArraySchema extends Meta, Applicators {
   kind: "array";
   items: Schema;
   prefix?: Schema[];
   minItems?: number;
   maxItems?: number;
   uniqueItems?: boolean;
+  contains?: Schema;
+  minContains?: number;
+  maxContains?: number;
 }
 
 export interface Property {
@@ -65,24 +75,39 @@ export interface Property {
   required: boolean;
 }
 
-export interface ObjectSchema extends Meta {
+export interface ObjectSchema extends Meta, Applicators {
   kind: "object";
   properties: Property[];
   additional?: Schema | false;
   keyPattern?: string;
+  patterns?: PatternProperty[];
+  minProperties?: number;
+  maxProperties?: number;
+  dependencies?: Dependency[];
 }
 
-export interface UnionSchema extends Meta {
+export interface PatternProperty {
+  pattern: string;
+  schema: Schema;
+}
+
+export interface Dependency {
+  name: string;
+  requires: string[];
+}
+
+export interface UnionSchema extends Meta, Applicators {
   kind: "union";
   options: Schema[];
+  exclusive?: boolean;
 }
 
-export interface IntersectionSchema extends Meta {
+export interface IntersectionSchema extends Meta, Applicators {
   kind: "intersection";
   parts: Schema[];
 }
 
-export interface RefSchema extends Meta {
+export interface RefSchema extends Meta, Applicators {
   kind: "ref";
   name: string;
 }
@@ -143,7 +168,7 @@ export function resolve(schema: Schema, doc: SchemaDocument): Schema {
 export function union(options: Schema[]): Schema {
   const flat: Schema[] = [];
   for (const option of options) {
-    if (option.kind === "union") flat.push(...option.options);
+    if (option.kind === "union" && !option.exclusive && !conditional(option)) flat.push(...option.options);
     else if (option.kind !== "never") flat.push(option);
   }
 
@@ -155,6 +180,20 @@ export function union(options: Schema[]): Schema {
   if (unique.length === 0) return { kind: "never" };
   if (unique.length === 1) return unique[0];
   return { kind: "union", options: unique };
+}
+
+export function exclusive(options: Schema[]): Schema {
+  if (options.length === 0) return { kind: "never" };
+  if (options.length === 1) return options[0];
+  return { kind: "union", options, exclusive: true };
+}
+
+export function conditional(schema: Schema): boolean {
+  return schema.not !== undefined || schema.if !== undefined;
+}
+
+export function own<T>(table: { [key: string]: T }, key: string): T | undefined {
+  return Object.hasOwn(table, key) ? table[key] : undefined;
 }
 
 export function nullable(schema: Schema): Schema {

@@ -20,10 +20,14 @@
 
     .page-fallback {
       font-family: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+      line-height: 1.55;
       margin: 0 auto;
-      max-width: 40rem;
-      padding: 6rem 1rem;
-      text-align: center;
+      max-width: 48rem;
+      padding: 2rem 1rem;
+    }
+
+    .page-fallback a {
+      color: #FF8A65;
     }
 
     .page-fallback h1 {
@@ -32,13 +36,103 @@
       line-height: 1.2;
     }
 
-    .page-fallback p {
-      margin-top: 1rem;
+    .page-fallback h2 {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+    }
+
+    .page-fallback h3 {
+      font-size: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .page-fallback .page-lede,
+    .page-fallback footer {
       color: #909296;
+    }
+
+    .page-fallback code,
+    .page-fallback pre {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.875em;
+      background-color: #1E1E1E;
+      border-radius: 4px;
+    }
+
+    .page-fallback code {
+      padding: 0.1em 0.3em;
+    }
+
+    .page-fallback pre {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+
+    .page-fallback pre code {
+      padding: 0;
+    }
+
+    .page-fallback .page-table {
+      overflow-x: auto;
+    }
+
+    .page-fallback table {
+      border-collapse: collapse;
+    }
+
+    .page-fallback th,
+    .page-fallback td {
+      border: 1px solid #2C2C2C;
+      padding: 0.25rem 0.5rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .page-crumbs ol {
+      display: flex;
+      gap: 0.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .page-crumbs li + li::before {
+      content: "›";
+      margin-right: 0.5rem;
+      color: #909296;
+    }
+
+    .page-directory ul,
+    .page-footer-directory ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .page-directory li {
+      margin-bottom: 0.75rem;
+    }
+
+    .page-directory strong,
+    .page-directory span {
+      display: block;
+    }
+
+    .page-directory span {
+      color: #909296;
+    }
+
+    .page-footer {
+      margin-top: 3rem;
+      border-top: 1px solid #2C2C2C;
+    }
+
+    .page-footer-directory {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+      column-gap: 1rem;
     }
   </style>
   <!--page-head-->
-  <script type="module" vite-ignore src="/utils-metadata.ts"></script>
 </head>
 
 <body>

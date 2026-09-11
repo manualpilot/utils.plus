@@ -1,5 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -125,7 +126,7 @@ test("a key that no longer fits the cipher says so and is left where it is", asy
   const written = await box(page, "Key").inputValue();
 
   await choose(page, "Key size", "128 bits");
-  await expect(page.getByText("Needs 16 bytes, and this is 32")).toBeVisible();
+  await expect(tool(page).getByText("Needs 16 bytes, and this is 32")).toBeVisible();
   await expect(box(page, "Key")).toHaveValue(written);
 
   await choose(page, "Algorithm", "ChaCha20-Poly1305");
@@ -161,7 +162,7 @@ test("a ciphertext that was sealed under another key says so rather than showing
   await expect(box(page, "Message")).toHaveValue(MESSAGE);
 
   await box(page, "Key").fill("00".repeat(32));
-  await expect(page.getByText(/did not decrypt/)).toBeVisible();
+  await expect(tool(page).getByText(/did not decrypt/)).toBeVisible();
   await expect(box(page, "Message")).toHaveValue("");
 });
 

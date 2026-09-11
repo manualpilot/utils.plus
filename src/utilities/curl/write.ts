@@ -1,14 +1,16 @@
 import { bundledLetter, type Entry } from "./entries";
 import { findLong } from "./options";
-import { quoteWord } from "./shell";
+import { quoteCmd, quoteWord, type Shell } from "./shell";
 
-const CONTINUATION = " \\\n  ";
+const CONTINUATION: Record<Shell, string> = { bash: " \\\n  ", cmd: " ^\n  " };
 
-export function writeCurl(entries: Entry[], wrapped: boolean): string {
-  return ["curl", ...writeWords(entries)].join(wrapped ? CONTINUATION : " ");
+const QUOTE: Record<Shell, Quote> = { bash: quoteWord, cmd: quoteCmd };
+
+export function writeCurl(entries: Entry[], wrapped: boolean, shell: Shell = "bash"): string {
+  return ["curl", ...writeWords(entries, QUOTE[shell])].join(wrapped ? CONTINUATION[shell] : " ");
 }
 
-function writeWords(entries: Entry[]): string[] {
+function writeWords(entries: Entry[], quote: Quote): string[] {
   const words: string[] = [];
   let bundle: number | null = null;
 
@@ -16,7 +18,7 @@ function writeWords(entries: Entry[]): string[] {
     const letter = bundledLetter(entry);
 
     if (letter === null) {
-      words.push(writeEntry(entry));
+      words.push(writeEntry(entry, quote));
       bundle = null;
       continue;
     }
@@ -33,16 +35,18 @@ function writeWords(entries: Entry[]): string[] {
   return words;
 }
 
-function writeEntry(entry: Entry): string {
+function writeEntry(entry: Entry, quote: Quote): string {
   if (entry.kind === "unknown") return entry.flag;
 
   if (entry.kind === "url") {
-    const value = quoteWord(entry.value);
+    const value = quote(entry.value, entry.variables);
     return entry.flag ? `${entry.flag} ${value}` : value;
   }
 
   const spec = findLong(entry.name);
   if (spec?.value === "none") return entry.flag;
 
-  return `${entry.flag} ${quoteWord(entry.value)}`;
+  return `${entry.flag} ${quote(entry.value, entry.variables)}`;
 }
+
+type Quote = (value: string, variables?: readonly string[]) => string;

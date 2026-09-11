@@ -5,6 +5,8 @@ import { EDITOR_STYLE } from "../../common/editor-theme";
 import type { ReadResult } from "../../common/schema/ir";
 import { isLanguage, LANGUAGE_OPTIONS, type LanguageId, LANGUAGES } from "../../common/schema/languages";
 import { type ParsedJson, parseJson } from "../../common/schema/locate";
+import type { Problem } from "../../common/schema/validate";
+import { validate } from "../../common/schema/validate";
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconAlertTriangle, IconArrowsLeftRight, IconCheck, IconSparkles, IconTransform } from "../../icons";
@@ -12,8 +14,6 @@ import { type Mark, PAYLOAD_EXTENSIONS, replaceDoc, schemaExtensions, setMarks }
 import { inferSchema } from "./infer";
 import { samplePayload } from "./sample";
 import { SAMPLE_JSON_SCHEMA, SAMPLE_PAYLOAD, SAMPLE_PYDANTIC, SAMPLE_ZOD } from "./samples";
-import type { Problem } from "./validate";
-import { validate } from "./validate";
 
 export default function Schema() {
   const initialState = useInitialHashState<{
@@ -189,7 +189,7 @@ export default function Schema() {
     : `Generate ${LANGUAGES[language].label}`;
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle directory="schema">Schema</UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">
@@ -389,7 +389,7 @@ function Pane({ label, order, editorKey, value, extensions, onCreateEditor, onCh
 function markFor(problem: Problem, parsed: ParsedJson): Mark {
   const key = parsed.keys.get(problem.pointer);
   const value = parsed.spans.get(problem.pointer);
-  const span = (problem.onKey ? key : problem.keyword === "required" ? key ?? value : value) ?? key
+  const span = (problem.onKey ? key : MISSING.has(problem.keyword) ? key ?? value : value) ?? key
     ?? { from: 0, to: 0 };
   return { from: span.from, to: span.to, message: problem.message };
 }
@@ -421,6 +421,8 @@ const OTHER_LANGUAGE: Record<LanguageId, LanguageId> = {
 };
 
 const MAX_LISTED = 50;
+
+const MISSING = new Set(["required", "dependentRequired"]);
 
 declare global {
   var schemaEditors: { source: EditorView; second: EditorView } | undefined;

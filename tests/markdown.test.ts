@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatEdit, type FormatKind } from "../src/utilities/markdown/format";
+import { pdfDefinition } from "../src/utilities/markdown/pdf";
 import { renderMarkdown } from "../src/utilities/markdown/render";
 import { documentTitle, fileName, standaloneDocument } from "../src/utilities/markdown/save";
 
@@ -146,7 +147,64 @@ describe("renderMarkdown", () => {
     expect(html).toContain("target=\"_blank\"");
     expect(html).toContain("rel=\"noopener noreferrer\"");
   });
+
+  it("takes out what would reach past the preview, keeping the text inside it", () => {
+    const html = preview(
+      "<style>body { display: none }</style>\n\n<svg><style>*{color:red}</style></svg>\n\n"
+        + "<form action=\"https://example.com\"><input name=\"q\" value=\"typed\"><button>Send</button>"
+        + "<select><option>one</option></select><textarea>notes</textarea><label for=\"x\">Label</label></form>\n\n"
+        + "<p style=\"position: fixed; inset: 0\">covered</p>",
+    );
+    for (const tag of ["style", "form", "input", "button", "select", "option", "textarea", "label"]) {
+      expect(html.querySelector(tag), tag).toBeNull();
+    }
+    expect(html.querySelector("[style]")).toBeNull();
+    expect(html.body.textContent).not.toContain("display");
+    expect(html.body.textContent).toContain("covered");
+    expect(html.body.textContent).toContain("Send");
+  });
+
+  it("keeps a task list's boxes, which are disabled checkboxes and nothing else", () => {
+    const html = preview("- [x] done\n- [ ] to do");
+    const boxes = [...html.querySelectorAll("input")];
+    expect(boxes.map((box) => [box.type, box.disabled, box.checked])).toEqual([
+      ["checkbox", true, true],
+      ["checkbox", true, false],
+    ]);
+    expect(preview("<input type=\"checkbox\">").querySelector("input")).toBeNull();
+  });
 });
+
+function preview(text: string): Document {
+  return new DOMParser().parseFromString(renderMarkdown(text, "gfm"), "text/html");
+}
+
+describe("the PDF's document definition", () => {
+  it("drops an inline tag and keeps the words inside it", async () => {
+    expect(await typeset("Press <kbd>Ctrl</kbd> and <b>C</b>, <!-- not this --> then **<em>let go</em>**."))
+      .toBe("Press Ctrl and C,  then let go.");
+  });
+
+  it("breaks the line where an inline break tag stood", async () => {
+    expect(await typeset("one<br>two<br/>three")).toBe("one\ntwo\nthree");
+  });
+
+  it("drops a block of HTML whole", async () => {
+    expect(await typeset("<div>\nblock\n</div>\n\nafter")).toBe("after");
+  });
+});
+
+async function typeset(text: string): Promise<string> {
+  const drawn = (content: unknown): string => {
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) return content.map(drawn).join("");
+    if (typeof content !== "object" || content === null) return "";
+    return Object.entries(content).map(([key, value]) => DRAWN.has(key) ? drawn(value) : "").join("");
+  };
+  return drawn((await pdfDefinition(text, "gfm", "Test")).content);
+}
+
+const DRAWN = new Set(["text", "stack", "ul", "ol", "columns", "table", "body"]);
 
 describe("what a saved document is called", () => {
   it("takes the heading the document opens with", () => {

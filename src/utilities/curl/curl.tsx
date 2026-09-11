@@ -35,9 +35,9 @@ export default function Curl() {
     stopRef.current?.abort();
   }, []);
 
-  const { entries, error } = useMemo(() => parseCurl(command), [command]);
+  const { entries, error, shell } = useMemo(() => parseCurl(command), [command]);
   const parts = useMemo(() => arrange(entries), [entries]);
-  const plan = useMemo(() => (error ? null : planRequest(entries)), [entries, error]);
+  const plan = useMemo(() => (error ? null : planRequest(entries, self.location.protocol)), [entries, error]);
   const addable = useMemo(() => addableOptions(optionNames(entries)), [entries]);
   const fields = useMemo(
     () => parts.singles.flatMap((block) => block.slots.map((slot) => ({ spec: block.spec, slot }))),
@@ -51,12 +51,12 @@ export default function Curl() {
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: text } });
   }, []);
 
-  const apply = useCallback((next: Entry[]) => place(writeCurl(next, wrapped)), [place, wrapped]);
+  const apply = useCallback((next: Entry[]) => place(writeCurl(next, wrapped, shell)), [place, wrapped, shell]);
 
   const handleLayout = (value: string) => {
     const next = value === WRAPPED;
     setWrapped(next);
-    if (!error) place(writeCurl(entries, next));
+    if (!error) place(writeCurl(entries, next, shell));
   };
 
   const handleAdd = () => {

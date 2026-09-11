@@ -52,7 +52,12 @@ const ZONE_TERMS = new Map(TIME_ZONES.map((zone) => [zone, zoneTerms(zone)]));
 function zoneTerms(zone: string): ZoneTerms {
   const name = zoneFold(zone);
   const facts = ZONE_FACTS.get(zone);
-  if (!facts) return { search: { name, codes: new Set([name]), rest: [name] }, places: [] };
+  if (!facts) {
+    return {
+      search: { name, codes: new Set([name]), whole: new Set([name]), aliases: new Set(), rest: [name] },
+      places: [],
+    };
+  }
 
   const cities = facts.name === zone ? facts.mainCities : [];
 
@@ -68,6 +73,8 @@ function zoneTerms(zone: string): ZoneTerms {
     search: {
       name,
       codes: new Set([zoneFold(facts.abbreviation)]),
+      whole: new Set([name, ...name.split("/")]),
+      aliases: new Set([facts.countryName, ...cities].map(zoneFold)),
       rest: bands.map((band) => zoneFold(band.join(" "))),
     },
     places: places(bands.flat(), name),

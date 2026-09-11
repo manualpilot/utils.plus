@@ -7,8 +7,9 @@ import { UtilityTitle } from "../../common/utility-title";
 import { groupColour, MATCH_COLOUR, PATTERN_EXTENSIONS, PATTERN_SETUP, setMatches, SUBJECT_EXTENSIONS } from "./editor";
 import { type CaptureGroup, type ExplainNode, explainPattern } from "./explain";
 import { chooseFlags, FLAGS, normaliseFlags } from "./flags";
-import { findMatches, type MatchSpan, summarise } from "./match";
+import { compileError, type MatchSpan, summarise } from "./match";
 import { SAMPLE_FLAGS, SAMPLE_PATTERN, SAMPLE_TEXT } from "./sample";
+import { matchesOf, type Outcome, SearchThread } from "./thread";
 
 export default function Regex() {
   const initialState = useInitialHashState<{
@@ -26,17 +27,30 @@ export default function Regex() {
   const patternEditor = useRef<EditorView | null>(null);
   const subjectEditor = useRef<EditorView | null>(null);
 
-  const result = useMemo(() => findMatches(pattern, flags, text), [pattern, flags, text]);
-  const standingMatches = useRef<MatchSpan[]>(result.matches);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const thread = useRef<SearchThread | null>(null);
+  const matches = matchesOf(outcome);
+  const standingMatches = useRef<MatchSpan[]>(matches);
   const explanation = useMemo(() => explainPattern(pattern, flags), [pattern, flags]);
-  const error = result.error ?? explanation.error;
+  const compiled = useMemo(() => compileError(pattern, flags), [pattern, flags]);
+  const error = compiled ?? explanation.error ?? (outcome?.kind === "stopped" ? outcome.reason : null);
 
   useRegisterShareState(() => ({ pattern, flags, text }));
 
   useEffect(() => {
-    standingMatches.current = result.matches;
-    subjectEditor.current?.dispatch({ effects: setMatches.of(result.matches) });
-  }, [result]);
+    const opened = new SearchThread(setOutcome);
+    thread.current = opened;
+    return () => opened.close();
+  }, []);
+
+  useEffect(() => {
+    thread.current?.search({ pattern, flags, text });
+  }, [pattern, flags, text]);
+
+  useEffect(() => {
+    standingMatches.current = matches;
+    subjectEditor.current?.dispatch({ effects: setMatches.of(matches) });
+  }, [matches]);
 
   useEffect(() => () => {
     self.regexEditors = undefined;
@@ -102,7 +116,9 @@ export default function Regex() {
       <Stack gap="xs">
         <Group justify="space-between" gap="sm" wrap="nowrap">
           <Text size="sm" fw={500}>Text</Text>
-          {!error && pattern && <Text size="sm" c="dimmed">{summarise(result)}</Text>}
+          {!error && pattern && outcome?.kind === "found" && (
+            <Text size="sm" c="dimmed">{summarise(outcome.result)}</Text>
+          )}
         </Group>
 
         <Paper withBorder shadow="sm" radius="md" className="regex-subject">

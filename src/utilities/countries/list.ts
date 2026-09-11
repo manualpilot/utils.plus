@@ -46,10 +46,13 @@ function searchTerms(country: Country): SearchTerms {
     ...Object.values(country.translations).flatMap((name) => [name.common, name.official]),
   ];
   const codes = [country.cca2, country.cca3, country.ccn3, country.cioc].filter(Boolean);
+  const name = fold(country.name.common);
 
   return {
-    name: fold(country.name.common),
+    name,
     codes: new Set(codes.map(fold)),
+    whole: new Set([name]),
+    aliases: new Set(rest.map(fold)),
     rest: [fold([country.name.common, ...codes, ...rest].join(" "))],
   };
 }

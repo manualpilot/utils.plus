@@ -9,11 +9,15 @@ export function mapLines(text: string, fn: (line: string) => string): string {
   return splitLines(text).map(fn).join("\n");
 }
 
-export function withLines(text: string, fn: (lines: string[]) => string[]): string {
+export function documentLines(text: string): string[] {
   const lines = splitLines(text);
-  const trailing = lines.length > 1 && lines[lines.length - 1] === "";
-  if (trailing) lines.pop();
-  return fn(lines).join("\n") + (trailing ? "\n" : "");
+  if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+  return lines;
+}
+
+export function withLines(text: string, fn: (lines: string[]) => string[]): string {
+  const trailing = /[\r\n]$/.test(text);
+  return fn(documentLines(text)).join("\n") + (trailing ? "\n" : "");
 }
 
 export function sortLines(text: string, variant: string): string {

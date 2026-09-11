@@ -129,6 +129,25 @@ test("a script in the document is not run", async ({ page }) => {
   expect(dialogs).toEqual([]);
 });
 
+test("a stylesheet in the document changes nothing outside the preview", async ({ page }) => {
+  await openMarkdown(page);
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const before = await background();
+
+  await replaceDocument(
+    page,
+    "# Styled\n\n<style>body { background: rgb(255, 0, 0) !important } header { display: none !important }</style>\n\n"
+      + "<p style=\"position: fixed; inset: 0\">covered</p>\n\n- [x] done\n- [ ] to do",
+  );
+
+  await expect(page.locator(".markdown-preview h1")).toHaveText("Styled");
+  await expect(page.locator(".markdown-preview style")).toHaveCount(0);
+  expect(await background()).toBe(before);
+  await expect(page.locator("header").first()).toBeVisible();
+  await expect(page.locator(".markdown-preview p", { hasText: "covered" })).toHaveCSS("position", "static");
+  await expect(page.locator(".markdown-preview input[type=checkbox][disabled]")).toHaveCount(2);
+});
+
 const GROUP_MS = 600;
 
 test("a chosen file becomes the document, and the editor can take it back", async ({ page }) => {

@@ -217,10 +217,11 @@ function parsePiece(piece: string, spec: FieldSpec, quartz: boolean): PieceResul
   }
 
   if (base === "*") {
+    const values = expand(spec, spec.min, spec.max, step, false);
     const term: Term = step === 1
       ? { kind: "all" }
-      : { kind: "step", from: spec.min, to: spec.max, step, whole: true };
-    return { term, values: expand(spec, spec.min, spec.max, step, false) };
+      : stepped({ kind: "step", from: spec.min, to: spec.max, step, whole: true }, values);
+    return { term, values };
   }
 
   const dash = base.indexOf("-");
@@ -233,19 +234,22 @@ function parsePiece(piece: string, spec: FieldSpec, quartz: boolean): PieceResul
     if (wrap && !(quartz && (spec.key === "month" || spec.key === "dow"))) {
       return { error: `${spec.label} ranges run upwards` };
     }
+    const values = expand(spec, from, to, step, wrap);
     const term: Term = step === 1
       ? { kind: "range", from, to }
-      : { kind: "step", from, to, step, whole: from === spec.min && to === spec.max };
-    return { term, values: expand(spec, from, to, step, wrap) };
+      : stepped({ kind: "step", from, to, step, whole: from === spec.min && to === spec.max }, values);
+    return { term, values };
   }
 
   const value = readValue(base, spec);
   if (typeof value === "string") return { error: value };
   if (slash === -1) return { term: { kind: "value", value }, values: [normalise(spec, value)] };
-  return {
-    term: { kind: "step", from: value, to: spec.max, step, whole: false },
-    values: expand(spec, value, spec.max, step, false),
-  };
+  const values = expand(spec, value, spec.max, step, false);
+  return { term: stepped({ kind: "step", from: value, to: spec.max, step, whole: false }, values), values };
+}
+
+function stepped(term: Extract<Term, { kind: "step" }>, values: number[]): Term {
+  return new Set(values).size === 1 ? { kind: "value", value: term.from } : term;
 }
 
 function readValue(text: string, spec: FieldSpec): number | string {

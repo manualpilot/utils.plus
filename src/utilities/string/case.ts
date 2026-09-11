@@ -20,15 +20,20 @@ export function toIdentifierCase(text: string, operation: string): string {
 }
 
 export function toTitleCase(text: string, variant: string): string {
-  return mapLines(text, (line) => {
-    const last = (line.match(TITLE_WORD) ?? []).length - 1;
-    let index = 0;
-    return line.replace(TITLE_WORD, (word) => {
-      const position = index++;
-      const lower = word.toLowerCase();
-      if (variant === "headline" && position !== 0 && position !== last && MINOR.has(lower)) return lower;
-      return capitalise(lower);
-    });
+  return mapLines(
+    text,
+    (line) => line.split(PHRASE_BREAK).map((piece, index) => index % 2 ? piece : titlePhrase(piece, variant)).join(""),
+  );
+}
+
+function titlePhrase(phrase: string, variant: string): string {
+  const last = (phrase.match(TITLE_WORD) ?? []).length - 1;
+  let index = 0;
+  return phrase.replace(TITLE_WORD, (word) => {
+    const position = index++;
+    const lower = word.toLowerCase();
+    if (variant === "headline" && position !== 0 && position !== last && MINOR.has(lower)) return lower;
+    return capitalise(lower);
   });
 }
 
@@ -46,6 +51,8 @@ function words(line: string): string[] {
 }
 
 const TITLE_WORD = /[\p{L}\p{M}\p{N}'’]+/gu;
+
+const PHRASE_BREAK = /([:?!]+)/u;
 
 const SENTENCE_START = /(^[^\p{L}]*|[.!?…]["'’)\]]*\s+)(\p{L})/gu;
 

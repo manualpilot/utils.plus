@@ -3,9 +3,9 @@ import type { JsonValue, SchemaDocument } from "../src/common/schema/ir";
 import { writeJsonSchema } from "../src/common/schema/json-schema";
 import { type LanguageId, LANGUAGES } from "../src/common/schema/languages";
 import { parseJson, pointerOf } from "../src/common/schema/locate";
+import { validate } from "../src/common/schema/validate";
 import { inferSchema } from "../src/utilities/schema/infer";
 import { samplePayload } from "../src/utilities/schema/sample";
-import { validate } from "../src/utilities/schema/validate";
 
 function read(language: LanguageId, source: string): SchemaDocument {
   const { document, errors } = LANGUAGES[language].read(source);
@@ -18,6 +18,15 @@ function check(language: LanguageId, source: string, payload: JsonValue): string
     `${problem.pointer || "(root)"}: ${problem.message}`
   );
 }
+
+function checkText(language: LanguageId, source: string, payload: string): string[] {
+  const parsed = parseJson(payload);
+  if (!parsed.ok) throw new Error(parsed.error.message);
+  return check(language, source, parsed.parsed.value);
+}
+
+const notes = (language: LanguageId, source: string) =>
+  LANGUAGES[language].read(source).errors.map((error) => error.message);
 
 const convert = (from: LanguageId, to: LanguageId, source: string) => LANGUAGES[to].write(read(from, source));
 
@@ -207,6 +216,109 @@ describe("checking a payload against a schema", () => {
       ]);
   });
 
+  it("holds oneOf to exactly one of its options, where anyOf is happy with several", () => {
+    const schema = holding("{ \"oneOf\": [{ \"type\": \"integer\" }, { \"type\": \"number\" }] }");
+    expect(check("json-schema", schema, { value: 5 })).toEqual([
+      "/value: Must match exactly one of an integer or a number, but matches 2",
+    ]);
+    expect(check("json-schema", schema, { value: 5.5 })).toEqual([]);
+    expect(check("json-schema", schema, { value: "x" })).toEqual([
+      "/value: Expected an integer or a number, found a string",
+    ]);
+    expect(check("json-schema", holding("{ \"anyOf\": [{ \"type\": \"integer\" }, { \"type\": \"number\" }] }"), {
+      value: 5,
+    })).toEqual([]);
+  });
+
+  it("keeps a oneOf inside another union as the one branch it is", () => {
+    const schema = holding(
+      "{ \"anyOf\": [{ \"oneOf\": [{ \"type\": \"integer\" }, { \"type\": \"number\" }] }, { \"type\": \"string\" }] }",
+    );
+    expect(check("json-schema", schema, { value: 5.5 })).toEqual([]);
+    expect(check("json-schema", schema, { value: 5 })).not.toEqual([]);
+  });
+
+  it("holds a value to then when if accepts it, and to else when it does not", () => {
+    const schema = `{
+      "type": "object",
+      "properties": { "country": { "type": "string" }, "postcode": { "type": "string" } },
+      "if": { "properties": { "country": { "const": "US" } }, "required": ["country"] },
+      "then": { "properties": { "postcode": { "pattern": "^[0-9]{5}$" } } },
+      "else": { "properties": { "postcode": { "pattern": "^[A-Z0-9 ]+$" } } }
+    }`;
+    expect(check("json-schema", schema, { country: "US", postcode: "12345" })).toEqual([]);
+    expect(check("json-schema", schema, { country: "US", postcode: "SW1A 1AA" })).toEqual([
+      "/postcode: Must match /^[0-9]{5}$/",
+    ]);
+    expect(check("json-schema", schema, { country: "GB", postcode: "sw1a" })).toEqual([
+      "/postcode: Must match /^[A-Z0-9 ]+$/",
+    ]);
+  });
+
+  it("counts the items contains accepts against minContains and maxContains", () => {
+    expect(check("json-schema", holding("{ \"type\": \"array\", \"contains\": { \"const\": \"admin\" } }"), {
+      value: ["user"],
+    })).toEqual(["/value: Must have at least 1 item that is \"admin\", found 0"]);
+
+    const bounded = holding(
+      "{ \"type\": \"array\", \"contains\": { \"type\": \"integer\", \"minimum\": 10 }, "
+        + "\"minContains\": 2, \"maxContains\": 3 }",
+    );
+    expect(check("json-schema", bounded, { value: [10, 1, 11] })).toEqual([]);
+    expect(check("json-schema", bounded, { value: [10, 1] })).toEqual([
+      "/value: Must have at least 2 items that `contains` accepts, found 1",
+    ]);
+    expect(check("json-schema", bounded, { value: [10, 11, 12, 13] })).toEqual([
+      "/value: Must have at most 3 items that `contains` accepts, found 4",
+    ]);
+    expect(check("json-schema", holding("{ \"contains\": { \"type\": \"string\" }, \"minContains\": 0 }"), {
+      value: [],
+    })).toEqual([]);
+  });
+
+  it("counts the properties of an object", () => {
+    const schema = "{ \"type\": \"object\", \"minProperties\": 2, \"maxProperties\": 3 }";
+    expect(check("json-schema", schema, { a: 1 })).toEqual(["(root): Must have at least 2 properties, found 1"]);
+    expect(check("json-schema", schema, { a: 1, b: 2 })).toEqual([]);
+    expect(check("json-schema", schema, { a: 1, b: 2, c: 3, d: 4 })).toEqual([
+      "(root): Must have at most 3 properties, found 4",
+    ]);
+  });
+
+  it("names the property another one requires beside it, in either spelling", () => {
+    for (const keyword of ["dependentRequired", "dependencies"]) {
+      const schema = `{ "type": "object", "${keyword}": { "card": ["billing", "name"] } }`;
+      expect(check("json-schema", schema, { card: "4242", name: "Ada" })).toEqual([
+        "(root): Missing property \"billing\", which \"card\" requires",
+      ]);
+      expect(check("json-schema", schema, { name: "Ada" })).toEqual([]);
+    }
+  });
+
+  it("refuses what not accepts, whatever else the schema says beside it", () => {
+    expect(check("json-schema", holding("{ \"type\": \"string\", \"not\": { \"const\": \"root\" } }"), {
+      value: "root",
+    })).toEqual(["/value: Must not be \"root\""]);
+    expect(check("json-schema", holding("{ \"not\": { \"type\": \"string\", \"minLength\": 3 } }"), {
+      value: "abcd",
+    })).toEqual(["/value: Must not match the schema under `not`"]);
+    expect(check("json-schema", holding("{ \"not\": { \"type\": \"string\", \"minLength\": 3 } }"), { value: "ab" }))
+      .toEqual([]);
+    expect(check("json-schema", holding("{ \"not\": {} }"), { value: 1 })).toEqual(["/value: Nothing is allowed here"]);
+  });
+
+  it("holds each key a pattern matches to that pattern's schema, and none of them is additional", () => {
+    const schema = `{
+      "type": "object",
+      "patternProperties": { "^x-": { "type": "string" } },
+      "additionalProperties": false
+    }`;
+    expect(check("json-schema", schema, { "x-a": "ok", "x-b": 1, y: 2 })).toEqual([
+      "/x-b: Expected a string, found an integer",
+      "/y: Unexpected property \"y\"",
+    ]);
+  });
+
   it("reads the draft-07 spellings of a tuple and of the definitions beside it", () => {
     const schema = `{
       "type": "object",
@@ -215,6 +327,141 @@ describe("checking a payload against a schema", () => {
     }`;
     expect(check("json-schema", schema, { value: ["a"] })).toEqual([]);
     expect(check("json-schema", schema, { value: ["a", "b"] })).toEqual(["/value/1: Nothing is allowed here"]);
+  });
+});
+
+describe("keys named after what every object inherits", () => {
+  it("still reports one that is required and not there", () => {
+    const schema = "{ \"type\": \"object\", \"required\": [\"toString\", \"constructor\", \"__proto__\"] }";
+    expect(checkText("json-schema", schema, "{}")).toEqual([
+      "(root): Missing required property \"toString\"",
+      "(root): Missing required property \"constructor\"",
+      "(root): Missing required property \"__proto__\"",
+    ]);
+    expect(checkText("json-schema", schema, "{\"toString\": 1, \"constructor\": 2, \"__proto__\": 3}")).toEqual([]);
+  });
+
+  it("reads a __proto__ key as the key it is, so a closed object still refuses it", () => {
+    const parsed = parseJson("{\"__proto__\": {\"x\": 1}}");
+    if (!parsed.ok) throw new Error(parsed.error.message);
+    expect(Object.keys(parsed.parsed.value as object)).toEqual(["__proto__"]);
+
+    const closed = "{ \"type\": \"object\", \"properties\": { \"a\": {} }, \"additionalProperties\": false }";
+    expect(checkText("json-schema", closed, "{\"__proto__\": {\"x\": 1}}")).toEqual([
+      "/__proto__: Unexpected property \"__proto__\"",
+    ]);
+    const typed = "{ \"type\": \"object\", \"properties\": { \"__proto__\": { \"type\": \"string\" } } }";
+    expect(checkText("json-schema", typed, "{\"__proto__\": 1}")).toEqual([
+      "/__proto__: Expected a string, found an integer",
+    ]);
+  });
+
+  it("carries one through every conversion and back", () => {
+    const schema = `{
+      "type": "object",
+      "properties": { "toString": { "type": "string" }, "constructor": { "type": "integer" } },
+      "required": ["toString", "constructor"]
+    }`;
+    for (const language of ["zod", "pydantic", "json-schema"] as const) {
+      const written = convert("json-schema", language, schema);
+      expect(checkText(language, written, "{}")).toEqual([
+        "(root): Missing required property \"toString\"",
+        "(root): Missing required property \"constructor\"",
+      ]);
+      expect(checkText(language, written, "{\"toString\": 1, \"constructor\": \"x\"}")).toEqual([
+        "/toString: Expected a string, found an integer",
+        "/constructor: Expected an integer, found a string",
+      ]);
+    }
+  });
+
+  it("writes a Zod key called __proto__ so that it is one, and reads it back", () => {
+    const schema = "{ \"type\": \"object\", \"properties\": { \"__proto__\": { \"type\": \"string\" } } }";
+    const written = convert("json-schema", "zod", schema);
+    expect(written).toContain("[\"__proto__\"]: z.string().optional(),");
+    expect(checkText("zod", written, "{\"__proto__\": 1}")).toEqual([
+      "/__proto__: Expected a string, found an integer",
+    ]);
+  });
+
+  it("builds a payload with such a key in it rather than setting its prototype", () => {
+    const document = read(
+      "json-schema",
+      "{ \"type\": \"object\", \"properties\": { \"__proto__\": { \"type\": \"string\" } } }",
+    );
+    expect(JSON.stringify(samplePayload(document))).toBe("{\"__proto__\":\"\"}");
+  });
+
+  it("reads a format or a type named after one as a name nobody here knows", () => {
+    expect(convert("json-schema", "zod", holding("{ \"type\": \"string\", \"format\": \"constructor\" }"))).toContain(
+      "value: z.string().optional(),",
+    );
+    expect(notes("pydantic", "from pydantic import BaseModel\n\nclass S(BaseModel):\n    a: constructor\n")).toContain(
+      "constructor is not a type this page knows how to read",
+    );
+  });
+});
+
+describe("what a note says a conversion does", () => {
+  it("says of each keyword it checks that Zod and Pydantic leave out, and says it once", () => {
+    const schema = `{
+      "type": "object",
+      "properties": {
+        "a": { "not": { "type": "null" } },
+        "b": { "not": { "const": 1 } },
+        "c": { "type": "array", "contains": { "type": "string" } }
+      },
+      "patternProperties": { "^x-": {} },
+      "minProperties": 1,
+      "dependentRequired": { "a": ["b"] },
+      "if": { "required": ["a"] },
+      "then": { "required": ["c"] }
+    }`;
+    expect(notes("json-schema", schema)).toEqual([
+      "`not` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+      "`contains` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+      "`patternProperties` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+      "`minProperties` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+      "`dependentRequired` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+      "`if` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+    ]);
+  });
+
+  it("says oneOf is loosened into a union, which is what the other two write", () => {
+    expect(notes("json-schema", holding("{ \"oneOf\": [{ \"type\": \"integer\" }, { \"type\": \"number\" }] }")))
+      .toEqual([
+        "`oneOf` is checked as exactly one, but converting to Zod or Pydantic writes it as a union that allows several",
+      ]);
+  });
+
+  it("is true of every conversion it describes", () => {
+    const schema = `{
+      "type": "object",
+      "properties": {
+        "a": { "type": "string", "not": { "const": "root" } },
+        "b": { "type": "array", "contains": { "const": 1 }, "maxContains": 1 },
+        "c": { "oneOf": [{ "type": "integer" }, { "type": "number" }] }
+      },
+      "patternProperties": { "^x-": { "type": "string" } },
+      "maxProperties": 4,
+      "dependentRequired": { "a": ["b"] },
+      "if": { "required": ["a"] },
+      "then": { "required": ["c"] },
+      "else": { "required": ["b"] }
+    }`;
+    const payload = { a: "root", b: [1, 1], c: 5, "x-y": 1, z: 1 };
+    const expected = check("json-schema", schema, payload);
+    expect(expected).toEqual([
+      "/a: Must not be \"root\"",
+      "/b: Must have at most 1 item that is 1, found 2",
+      "/c: Must match exactly one of an integer or a number, but matches 2",
+      "(root): Must have at most 4 properties, found 5",
+      "/x-y: Expected a string, found an integer",
+    ]);
+    expect(check("json-schema", convert("json-schema", "json-schema", schema), payload)).toEqual(expected);
+    for (const language of ["zod", "pydantic"] as const) {
+      expect(check(language, convert("json-schema", language, schema), payload)).toEqual([]);
+    }
   });
 });
 
@@ -508,6 +755,64 @@ class Node(BaseModel):
     const written = JSON.parse(convert("pydantic", "json-schema", source));
     expect(written.$ref).toBe("#/$defs/Node");
     expect(written.$defs.Node.properties.child).toBeDefined();
+  });
+});
+
+describe("a key Pydantic cannot take as a field name", () => {
+  const ODD = `{
+    "type": "object",
+    "properties": {
+      "_id": { "type": "string" },
+      "__proto__": { "type": "integer" },
+      "class": { "type": "string" },
+      "first-name": { "type": "string" },
+      "id": { "type": "integer" }
+    },
+    "required": ["_id", "__proto__", "class", "first-name", "id"]
+  }`;
+
+  it("is written under a name Python can hold, with the key as its alias", () => {
+    expect(convert("json-schema", "pydantic", ODD)).toBe(`from pydantic import BaseModel, Field
+
+
+class Model(BaseModel):
+    id_2: str = Field(..., alias="_id")
+    proto__: int = Field(..., alias="__proto__")
+    class_: str = Field(..., alias="class")
+    first_name: str = Field(..., alias="first-name")
+    id: int
+`);
+  });
+
+  it("comes back from Pydantic as the key it was", () => {
+    const back = JSON.parse(convert("pydantic", "json-schema", convert("json-schema", "pydantic", ODD)));
+    expect(Object.keys(back.properties)).toEqual(["_id", "__proto__", "class", "first-name", "id"]);
+    expect(back.required).toEqual(["_id", "__proto__", "class", "first-name", "id"]);
+    expect(back.properties.__proto__).toEqual({ type: "integer" });
+  });
+
+  it("holds the payload to the same keys either way round", () => {
+    const written = convert("json-schema", "pydantic", ODD);
+    const payload = "{\"_id\": 1, \"__proto__\": \"x\", \"class\": 2, \"first-name\": 3, \"id\": \"y\"}";
+    expect(checkText("pydantic", written, payload)).toEqual(checkText("json-schema", ODD, payload));
+    expect(checkText("pydantic", written, "{}")).toEqual(checkText("json-schema", ODD, "{}"));
+  });
+
+  it("reads an alias wherever Pydantic takes one, and leaves a private attribute out", () => {
+    const source = `from typing import Annotated
+from pydantic import BaseModel, Field
+
+class S(BaseModel):
+    first_name: str = Field(alias="first-name")
+    last_name: Annotated[str, Field(alias="last-name")]
+    user_id: int = Field(..., validation_alias="userId", alias="user_id_out")
+    _cache: dict = {}
+`;
+    expect(check("pydantic", source, {})).toEqual([
+      "(root): Missing required property \"first-name\"",
+      "(root): Missing required property \"last-name\"",
+      "(root): Missing required property \"userId\"",
+    ]);
   });
 });
 

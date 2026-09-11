@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { composite, CONTRAST_LEVELS, contrastRatio, grade, luminance, writeRatio } from "../src/utilities/colour/contrast";
+import { inGamut } from "../src/utilities/colour/gamut";
 import { judgePainting, type Painting } from "../src/utilities/colour/interference";
-import { HARMONIES, harmony, inGamut, TONE_STEPS, tones } from "../src/utilities/colour/palette";
+import { HARMONIES, harmony, TONE_STEPS, tones } from "../src/utilities/colour/palette";
 import { parseColour } from "../src/utilities/colour/parse";
 import type { Rgba } from "../src/utilities/colour/rgba";
 import { toOklab, toPolar } from "../src/utilities/colour/spaces";
@@ -67,6 +68,22 @@ describe("parsing", () => {
         expect(channel, outside).toBeLessThanOrEqual(255);
       }
     }
+  });
+
+  it("gives up chroma rather than hue for a colour sRGB cannot show, as the palette does", () => {
+    const green = parseColour("oklch(70% 0.3 150)")!;
+    const [l, c, h] = toPolar(toOklab(green), 0);
+    expect(h).toBeCloseTo(150, 0);
+    expect(l).toBeCloseTo(0.7, 2);
+    expect(c).toBeLessThan(0.3);
+    expect(green).toEqual(inGamut(0.7, 0.3, 150, 1));
+
+    for (const same of ["oklab(70% -0.2598 0.15)", "lab(68.76% -94.04 67.48)", "lch(68.76% 115.75 144.34)"]) {
+      const [otherL, , otherH] = toPolar(toOklab(parseColour(same)!), 0);
+      expect(otherH, same).toBeCloseTo(150, 0);
+      expect(otherL, same).toBeCloseTo(0.7, 2);
+    }
+    expect(parseColour("oklch(70% 0.3 150 / 0.5)")).toEqual({ ...green, a: 0.5 });
   });
 });
 

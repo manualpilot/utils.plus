@@ -22,6 +22,11 @@ export function formatForMime(mime: string): OutputFormat | null {
   return FORMATS.find((format) => format.mime === mime) ?? null;
 }
 
+export function arrivedFormat(mime: string, offered: OutputFormat[]): OutputFormat {
+  const own = formatForMime(mime);
+  return own && offered.some((format) => format.value === own.value) ? own : FORMATS[0];
+}
+
 export function encodable(): OutputFormat[] {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 1;

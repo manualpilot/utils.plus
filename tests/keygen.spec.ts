@@ -1,5 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
 import { resolve } from "node:path";
+import { tool } from "./tool";
 
 const OPENPGP = `/@fs${resolve(import.meta.dirname, "../node_modules/openpgp/dist/openpgp.min.mjs")}`;
 
@@ -37,7 +38,7 @@ test("an SSH key pair arrives with the comment on its public half", async ({ pag
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(privateBox(page)).toHaveValue(/^-----BEGIN OPENSSH PRIVATE KEY-----\n/, { timeout: SLOW });
   await expect(publicBox(page)).toHaveValue(/^ssh-ed25519 \S+ me@example\.com$/);
-  await expect(page.getByText(/^SHA256:/)).toBeVisible();
+  await expect(tool(page).getByText(/^SHA256:/)).toBeVisible();
 });
 
 test("an SSH key with a passphrase arrives encrypted the way ssh-keygen encrypts one", async ({ page }) => {

@@ -2,8 +2,11 @@ import type { Schema } from "../../common/schema/ir";
 import { type Field, type FieldId, fieldNamed, FIELDS } from "./fields";
 
 export function detectField(name: string, schema: Schema): Field {
-  const declared = schema.kind === "string" && schema.format ? FORMAT_FIELDS[schema.format] : undefined;
-  const chosen = declared ?? fieldForName(name) ?? fallbackFor(schema);
+  const format = schema.kind === "string" ? schema.format : undefined;
+  const named = fieldForName(name);
+  const dated = format && named ? DATED[named]?.[format] : undefined;
+  const declared = format ? FORMAT_FIELDS[format] : undefined;
+  const chosen = dated ?? declared ?? named ?? fallbackFor(schema);
   const field = fieldNamed(chosen);
   return field ?? FIELDS.word;
 }
@@ -48,6 +51,12 @@ const FORMAT_FIELDS: Record<string, FieldId> = {
   uuid: "uuid",
 };
 
+const DATED: Partial<Record<FieldId, Record<string, FieldId>>> = {
+  birthDate: { "date-time": "birthDateTime", date: "birthDate" },
+  pastDateTime: { "date-time": "pastDateTime", date: "pastDate" },
+  futureDateTime: { "date-time": "futureDateTime", date: "futureDate" },
+};
+
 const NAME_PATTERNS: [RegExp, FieldId][] = [
   [/\b(first|given|fore)\s?name\b|^given$/, "firstName"],
   [/\b(last|sur|family)\s?name\b|^surname$/, "lastName"],
@@ -59,7 +68,7 @@ const NAME_PATTERNS: [RegExp, FieldId][] = [
   [/\b(job|employment)\s?title\b|^(role|position|occupation|job)$/, "jobTitle"],
   [/\b(department|division|team)\b/, "department"],
   [/\b(gender|sex)\b/, "gender"],
-  [/\b(birth\s?date|date of birth|birthday|dob)\b/, "birthDate"],
+  [/\b(birth\s?date|date of birth|birthday|dob|born)\b/, "birthDate"],
   [/^age$|\bage\b/, "age"],
 
   [/\bavatar\b|\b(profile|image|photo|picture|thumbnail|banner|cover)\s?(url|uri|src|link)?\b/, "imageUrl"],
@@ -100,9 +109,12 @@ const NAME_PATTERNS: [RegExp, FieldId][] = [
   [/\b(ean|upc|gtin|barcode)\b/, "ean"],
   [/\bcolou?r\b/, "hexColour"],
 
-  [/\b(created|inserted|registered|joined|published|posted)\b/, "pastDateTime"],
+  [
+    /\b(created|inserted|registered|joined|published|posted|updated|modified|deleted|archived|last seen)\b/,
+    "pastDateTime",
+  ],
   [/\b(expires?|expiry|expiration|due|scheduled|starts?|ends?|renews?)\b/, "futureDateTime"],
-  [/\b(updated|modified|deleted|archived|last seen|timestamp)\b/, "dateTime"],
+  [/\btimestamp\b/, "dateTime"],
   [/\bepoch\b|\bunix\b/, "epochSeconds"],
   [/\bduration\b/, "duration"],
   [/\bdate\b/, "date"],

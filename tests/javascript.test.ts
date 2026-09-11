@@ -57,6 +57,18 @@ describe("running a script", () => {
     engine.dispose();
   });
 
+  it("reports a runaway recursion as the engine's stack overflow, and runs the next script", async () => {
+    const engine = await start();
+    const overflow = await capture(engine, "console.log('before'); function f() { return f(); } f();");
+    expect(overflow.output).toContain("before\n");
+    expect(overflow.output).toContain("RangeError: Maximum call stack size exceeded");
+    expect(overflow.output).toContain("at f (<script>:1:");
+
+    const next = await capture(engine, "console.log(1 + 1);");
+    expect(next.output).toBe("2\n");
+    engine.dispose();
+  });
+
   it("has the language the engine arrived with and nothing fetched from anywhere", async () => {
     const { output } = await run(
       "console.log([3, 1, 2].toSorted().join(''), typeof structuredClone, typeof fetch, typeof require);",
@@ -93,6 +105,49 @@ describe("the event loop", () => {
     const { output } = await run("(async () => { throw new Error('unhandled') })();");
 
     expect(output).toContain("Uncaught (in promise) Error: unhandled");
+  });
+});
+
+describe("an engine that runs out of memory", () => {
+  const FILL = "const big = []; for (;;) big.push(new ArrayBuffer(1 << 26));";
+
+  it("reads nothing back from a heap with no room left, and says the engine is spent", async () => {
+    const engine = await start();
+    try {
+      const { output, scope } = await capture(engine, `let kept = 1; ${FILL}`);
+      expect(output).toContain("InternalError: out of memory");
+      expect(scope).toBeNull();
+      expect(engine.exhausted).toBe(true);
+    } finally {
+      engine.dispose();
+    }
+  }, 30000);
+
+  it("says the same of a session whose entry ran it out", async () => {
+    const engine = await start();
+    try {
+      await capture(engine, "let kept = 1", "javascript", true);
+      const { scope } = await capture(engine, FILL, "javascript", true);
+      expect(scope).toBeNull();
+      expect(engine.exhausted).toBe(true);
+    } finally {
+      engine.dispose();
+    }
+  }, 30000);
+
+  it("reads a run whose script caught the one allocation it was refused", async () => {
+    const engine = await start();
+    try {
+      const { output, scope } = await capture(
+        engine,
+        "let kept = 1; try { new ArrayBuffer(2 ** 30); } catch (error) { console.log(error.message); }",
+      );
+      expect(output).toBe("out of memory\n");
+      expect(named(scope, "kept")).toMatchObject({ value: "1" });
+      expect(engine.exhausted).toBe(false);
+    } finally {
+      engine.dispose();
+    }
   });
 });
 

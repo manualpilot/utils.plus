@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -26,7 +27,7 @@ test("a counter and a moment each produce the code their RFC publishes", async (
   await page.getByLabel("Time", { exact: true }).fill("59");
   await expect(code(page)).toHaveText("94287082");
   await expect(page.getByText("HMAC-SHA-1, 8 digits")).toBeVisible();
-  await expect(page.getByText("1 · 0x1")).toBeVisible();
+  await expect(tool(page).getByText("1 · 0x1")).toBeVisible();
 
   await mode(page, "HOTP").click();
   await expect(page.getByRole("heading", { name: "Counter-Based OTP" })).toBeVisible();
@@ -81,7 +82,7 @@ test("a blank secret says so once a code is asked for, and never before", async 
   await expect(code(page)).toHaveText(/^\d{6}$/);
 
   await page.getByRole("textbox", { name: "Secret" }).fill("JBSWY3DP1");
-  await expect(page.getByText("\"1\" is not a Base32 character")).toBeVisible();
+  await expect(tool(page).getByText("\"1\" is not a Base32 character")).toBeVisible();
   await expect(code(page)).toHaveCount(0);
 });
 

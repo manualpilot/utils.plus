@@ -1,6 +1,6 @@
 import { pythonLanguage } from "@codemirror/lang-python";
 import type { SyntaxNode } from "@lezer/common";
-import { type Definition, isNullable, type JsonValue, type NumberSchema, type ObjectSchema, type Property, type ReadResult, resolve, type Schema, type SchemaDocument, type SourceError, type StringSchema, union } from "./ir";
+import { type Definition, isNullable, type JsonValue, type NumberSchema, type ObjectSchema, own, type Property, type ReadResult, resolve, type Schema, type SchemaDocument, type SourceError, type StringSchema, union } from "./ir";
 
 export function readPydantic(text: string): ReadResult {
   const errors: SourceError[] = [];
@@ -67,14 +67,15 @@ function fieldsOf(text: string, body: SyntaxNode, models: Map<string, Schema>, e
     const typeDef = statement.getChild("TypeDef");
     if (!typeDef) continue;
 
-    const name = textOf(text, statement.getChild("VariableName"));
+    const variable = textOf(text, statement.getChild("VariableName"));
     const annotation = kids(typeDef).find(named);
-    if (!name || !annotation) continue;
-    if (subscriptOf(text, annotation)?.base === "ClassVar") continue;
+    if (!variable || !annotation) continue;
+    if (subscriptOf(text, annotation)?.base === "ClassVar" || variable.startsWith("_")) continue;
 
     const assigned = assignedValue(statement);
     const isField = assigned?.name === "CallExpression" && callName(text, assigned) === "Field";
     const field = isField ? fieldArguments(text, assigned!) : EMPTY_FIELD;
+    const name = aliasOf(field.keywords) ?? annotatedAlias(text, annotation) ?? variable;
 
     let schema = typeFor(text, annotation, models, errors);
     schema = applyField(schema, field.keywords, errors);
@@ -90,6 +91,25 @@ function fieldsOf(text: string, body: SyntaxNode, models: Map<string, Schema>, e
   }
 
   return properties;
+}
+
+function aliasOf(keywords: Map<string, JsonValue>): string | undefined {
+  for (const keyword of ["validation_alias", "alias"]) {
+    const alias = keywords.get(keyword);
+    if (typeof alias === "string") return alias;
+  }
+  return undefined;
+}
+
+function annotatedAlias(text: string, annotation: SyntaxNode): string | undefined {
+  const subscript = subscriptOf(text, annotation);
+  if (subscript?.base !== "Annotated") return undefined;
+  for (const arg of subscript.args.slice(1)) {
+    if (arg.name !== "CallExpression" || callName(text, arg) !== "Field") continue;
+    const alias = aliasOf(fieldArguments(text, arg).keywords);
+    if (alias !== undefined) return alias;
+  }
+  return undefined;
 }
 
 function defaultOf(field: FieldArguments): { defaulted: boolean; value: JsonValue | undefined } {
@@ -172,7 +192,7 @@ function typeFor(text: string, node: SyntaxNode, models: Map<string, Schema>, er
 
   const written = node.name === "String" ? pythonString(textOf(text, node)) : textOf(text, node);
   const name = lastName(written ?? "");
-  const builtin = BUILTIN_TYPES[name];
+  const builtin = own(BUILTIN_TYPES, name);
   if (builtin) return { ...builtin };
   if (models.has(name)) return { kind: "ref", name };
 
@@ -190,7 +210,7 @@ function annotations(text: string, args: SyntaxNode[], schema: Schema, errors: S
       out = applyField(out, keywords, errors);
       continue;
     }
-    const keyword = ANNOTATED_TYPES[called ?? ""];
+    const keyword = own(ANNOTATED_TYPES, called ?? "");
     if (keyword && positional.length > 0) out = applyField(out, new Map([[keyword, positional[0]]]), errors);
   }
   return out;
@@ -209,7 +229,7 @@ function applyField(schema: Schema, keywords: Map<string, JsonValue>, errors: So
 
   let inner = target;
   for (const [key, value] of keywords) {
-    const numeric = NUMBER_KEYWORDS[key];
+    const numeric = own(NUMBER_KEYWORDS, key);
     if (numeric && typeof value === "number") {
       if (inner.kind !== "number") {
         errors.push({ message: `${key} has no meaning on ${inner.kind}` });
@@ -323,7 +343,7 @@ function literalOf(text: string, node: SyntaxNode | undefined): JsonValue | unde
       return out;
     }
     case "DictionaryExpression": {
-      const out: { [key: string]: JsonValue } = {};
+      const out: { [key: string]: JsonValue } = Object.create(null);
       const children = kids(node).filter((child) => child.name !== "{" && child.name !== "}" && child.name !== ",");
       for (let index = 0; index + 1 < children.length; index += 2) {
         const key = literalOf(text, children[index]);
@@ -520,7 +540,8 @@ function emitModel(schema: ObjectSchema, name: string, state: Writing): string {
   state.emitted.add(name);
   state.used.add(name);
 
-  const fields = schema.properties.map((property) => field(property, name, state));
+  const names = fieldNames(schema.properties);
+  const fields = schema.properties.map((property, index) => field(property, names[index], name, state));
   need(state, "pydantic", "BaseModel");
 
   const lines = [`class ${name}(BaseModel):`];
@@ -530,13 +551,12 @@ function emitModel(schema: ObjectSchema, name: string, state: Writing): string {
   return name;
 }
 
-function field(property: Property, owner: string, state: Writing): string {
+function field(property: Property, name: string, owner: string, state: Writing): string {
   const schema = property.schema;
   const hint = `${owner}${pascal(property.name)}`;
   let type = annotation(schema, hint, state);
 
   const options: string[] = [];
-  const name = pythonName(property.name);
   if (name !== property.name) options.push(`alias=${pythonLiteral(property.name)}`);
   if (schema.title !== undefined && schema.kind !== "object") options.push(`title=${pythonLiteral(schema.title)}`);
   if (schema.description !== undefined) options.push(`description=${pythonLiteral(schema.description)}`);
@@ -603,7 +623,7 @@ function annotation(schema: Schema, hint: string, state: Writing): string {
       return schema.integer ? "int" : "float";
 
     case "string": {
-      const named = PYTHON_FORMATS[schema.format ?? ""];
+      const named = own(PYTHON_FORMATS, schema.format ?? "");
       if (!named) return "str";
       need(state, named.module, named.name);
       return named.name;
@@ -735,12 +755,63 @@ function singular(hint: string): string {
   return `${hint}Item`;
 }
 
-function pythonName(name: string): string {
-  const cleaned = name.replace(/[^A-Za-z0-9_]/g, "_");
-  return /^[A-Za-z_]/.test(cleaned) ? cleaned : `field_${cleaned}`;
+function fieldNames(properties: Property[]): string[] {
+  const taken = new Set(properties.map((property) => property.name).filter((key) => pythonName(key) === key));
+  return properties.map(({ name: key }) => {
+    const name = pythonName(key);
+    if (name === key) return name;
+    let free = name;
+    for (let index = 2; taken.has(free); index++) free = `${name}_${index}`;
+    taken.add(free);
+    return free;
+  });
+}
+
+function pythonName(key: string): string {
+  const cleaned = key.replace(/[^A-Za-z0-9_]/g, "_").replace(/^_+/, "");
+  const name = /^[A-Za-z]/.test(cleaned) ? cleaned : `field_${cleaned}`;
+  return PYTHON_KEYWORDS.has(name) ? `${name}_` : name;
 }
 
 const HASHABLE = new Set(["string", "number", "boolean", "literal", "enum"]);
+
+const PYTHON_KEYWORDS = new Set([
+  "False",
+  "None",
+  "True",
+  "and",
+  "as",
+  "assert",
+  "async",
+  "await",
+  "break",
+  "class",
+  "continue",
+  "def",
+  "del",
+  "elif",
+  "else",
+  "except",
+  "finally",
+  "for",
+  "from",
+  "global",
+  "if",
+  "import",
+  "in",
+  "is",
+  "lambda",
+  "nonlocal",
+  "not",
+  "or",
+  "pass",
+  "raise",
+  "return",
+  "try",
+  "while",
+  "with",
+  "yield",
+]);
 
 const IMPORT_ORDER = ["__future__", "datetime", "enum", "ipaddress", "typing", "uuid", "pydantic"];
 

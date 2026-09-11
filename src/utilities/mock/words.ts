@@ -239,7 +239,7 @@ export const LANGUAGE_TAGS = [
   "zh-CN",
 ];
 
-export const GENERIC_TLDS = ["com", "net", "org", "io", "dev", "app"];
+export const RESERVED_DOMAINS = ["example.com", "example.net", "example.org", "example", "test"];
 
 export const MAIL_DOMAINS = ["example.com", "example.org", "example.net", "test.example"];
 

@@ -12,6 +12,8 @@
   const timers = new Map();
   let nextTimer = 1;
 
+  let exhausted = false;
+
   const console = {
     log: (...args) => write(format(args) + "\n"),
     info: (...args) => write(format(args) + "\n"),
@@ -134,15 +136,16 @@
       try {
         timer.callback(...timer.args);
       } catch (error) {
-        write(describe(error) + "\n");
+        write(uncaught(error) + "\n");
       }
     }
   };
 
-  globalThis.__describe = describe;
+  globalThis.__describe = uncaught;
   globalThis.__inspect = inspect;
+  globalThis.__exhausted = () => exhausted;
 
-  globalThis.__rejected = (value) => write("Uncaught (in promise) " + describe(value) + "\n");
+  globalThis.__rejected = (value) => write("Uncaught (in promise) " + uncaught(value) + "\n");
 
   globalThis.__snapshot = (namesJson) => {
     const written = Object.getOwnPropertyNames(globalThis)
@@ -253,6 +256,7 @@
     try {
       return inspect(value, PREVIEW_DEPTH);
     } catch (error) {
+      if (outOfMemory(error)) exhausted = true;
       return `<unreadable: ${kindOf(error)}>`;
     }
   }
@@ -328,6 +332,15 @@
   }
 
   const baseline = new Set(Object.getOwnPropertyNames(globalThis));
+
+  function uncaught(error) {
+    if (outOfMemory(error)) exhausted = true;
+    return describe(error);
+  }
+
+  function outOfMemory(error) {
+    return error instanceof InternalError && error.message === "out of memory";
+  }
 
   function describe(error, withStack = true) {
     if (!(error instanceof Error)) return "Uncaught " + inspect(error);

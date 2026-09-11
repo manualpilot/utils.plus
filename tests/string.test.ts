@@ -42,6 +42,15 @@ describe("case", () => {
     expect(toTitleCase("something to write home for", "headline")).toBe("Something to Write Home For");
   });
 
+  it("capitalises the short words either side of a colon, a question mark or an exclamation", () => {
+    expect(toTitleCase("a tale of two cities: the story so far", "headline"))
+      .toBe("A Tale of Two Cities: The Story so Far");
+    expect(toTitleCase("what it is for: a guide", "headline")).toBe("What It Is For: A Guide");
+    expect(toTitleCase("why now? a look at the numbers", "headline")).toBe("Why Now? A Look at the Numbers");
+    expect(toTitleCase("stop! in the name of love", "headline")).toBe("Stop! In the Name of Love");
+    expect(toTitleCase("smith vs. the world", "headline")).toBe("Smith vs. the World");
+  });
+
   it("capitalises a sentence after whatever ended the one before it", () => {
     expect(toSentenceCase("hello world. THIS is a test! ok")).toBe("Hello world. This is a test! Ok");
     expect(toSentenceCase("  \"quoted\" text")).toBe("  \"Quoted\" text");
@@ -248,6 +257,14 @@ describe("counts", () => {
     expect(count("", "Words")).toBe("0");
     expect(count("", "Lines")).toBe("0");
     expect(count("   ", "Words")).toBe("0");
+  });
+
+  it("counts the lines the line operations see", () => {
+    expect(count("a\nb\n", "Lines")).toBe("2");
+    expect(count("a\r\nb\r\n", "Lines")).toBe("2");
+    expect(count("a\n\n", "Lines")).toBe("2");
+    expect(count("\n", "Lines")).toBe("1");
+    expect(count("a\nb", "Lines")).toBe("2");
   });
 
   it("counts graphemes only where they differ from code points", () => {

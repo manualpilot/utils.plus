@@ -17,14 +17,17 @@ export interface Plan {
   redirect: RequestRedirect;
   timeout: number | null;
   notes: Note[];
+  mixed: boolean;
   error: string | null;
 }
 
 export const NO_URL = "The command has no URL to send to";
 export const BAD_URL = "That URL cannot be read as one";
 export const NOT_HTTP = "A browser can only send this over http or https";
+export const ONE_METHOD =
+  "curl will not upload a file with -T and send data, a form or a HEAD besides, and runs nothing when asked to";
 
-export function planRequest(entries: Entry[]): Plan {
+export function planRequest(entries: Entry[], protocol: string): Plan {
   const options = entries.filter((entry): entry is OptionEntry => entry.kind === "option");
   const notes: Note[] = [];
   const seen = new Set<string>();
@@ -54,48 +57,53 @@ export function planRequest(entries: Entry[]): Plan {
     if (!DATA.has(option.name)) continue;
     const piece = dataPiece(option);
     if (piece === null) {
-      note(option.flag, option.name, "The value names a file, and there is no file here to read");
+      note(option.flag, option.name, UNREAD_FILE);
       continue;
     }
     pieces.push({ text: piece, json: option.name === "--json" });
   }
 
-  const data = pieces.length === 0
-    ? null
-    : pieces.map((piece, at) => (at === 0 ? "" : piece.json ? "" : "&") + piece.text).join("");
-  const json = pieces.some((piece) => piece.json);
+  const posted = options.some((option) => DATA.has(option.name));
+  const data = posted ? pieces.map((piece, at) => (at === 0 ? "" : piece.json ? "" : "&") + piece.text).join("") : null;
+  const json = options.some((option) => option.name === "--json");
 
+  let form = false;
   const fields: [string, string][] = [];
   for (const option of options) {
-    if (option.name !== "--form" && option.name !== "--form-string") continue;
+    if (!FORM.has(option.name)) continue;
     const split = option.value.indexOf("=");
     if (split < 0) {
       note(option.flag, `${option.name}:name`, "A form field is written name=value");
       continue;
     }
+    form = true;
     const value = option.value.slice(split + 1);
     if (option.name === "--form" && (value.startsWith("@") || value.startsWith("<"))) {
-      note(option.flag, option.name, "The value names a file, and there is no file here to read");
+      note(option.flag, option.name, UNREAD_FILE);
       continue;
     }
     fields.push([option.value.slice(0, split), value]);
   }
 
-  if (fields.length > 0 && data !== null) {
+  if (form && data !== null) {
     note("-F", "-F+-d", "curl sends a body or a form and not both, so the form is what goes");
   }
 
   const query = has("--get");
 
+  const upload = options.find((option) => option.name === "--upload-file");
+  if (upload) note(upload.flag, upload.name, STDIN.has(upload.value) ? UNREAD_STDIN : UNREAD_FILE);
+
   let method = "GET";
-  if (data !== null || fields.length > 0) method = "POST";
+  if (data !== null || form) method = "POST";
   if (has("--head")) method = "HEAD";
   if (query) method = "GET";
+  if (upload) method = "PUT";
   const requested = last("--request")?.value ?? "";
   if (requested !== "") method = requested;
 
   let body: BodyPlan | null = null;
-  if (fields.length > 0) body = { kind: "form", fields };
+  if (form) body = { kind: "form", fields };
   else if (data !== null && !query) body = { kind: "text", text: data };
 
   if (body !== null && NO_BODY.has(method.toUpperCase())) {
@@ -169,11 +177,12 @@ export function planRequest(entries: Entry[]): Plan {
     notes.push({ subject: urls[1], reason: "Only the first URL is sent; curl would fetch each of them in turn" });
   }
 
-  const plan: Plan = { url: "", method, headers, body, redirect, timeout, notes, error: null };
+  const plan: Plan = { url: "", method, headers, body, redirect, timeout, notes, mixed: false, error: null };
 
+  if (upload && (data !== null || form || has("--head"))) return { ...plan, error: ONE_METHOD };
   if (urls.length === 0) return { ...plan, error: NO_URL };
 
-  const written = SCHEME.test(urls[0]) ? urls[0] : `https://${urls[0]}`;
+  const written = SCHEME.test(urls[0]) ? urls[0] : `${guessScheme(urls[0])}://${urls[0]}`;
 
   let address: URL;
   try {
@@ -186,12 +195,47 @@ export function planRequest(entries: Entry[]): Plan {
 
   if (query && data) address.search = address.search === "" ? data : `${address.search.slice(1)}&${data}`;
 
-  return { ...plan, url: address.href };
+  const unnamed = address.pathname.endsWith("/") && !address.href.split("#")[0].includes("?");
+  if (upload && unnamed && !STDIN.has(upload.value)) address.pathname += remoteName(upload.value);
+
+  const mixed = protocol === "https:" && address.protocol === "http:" && !LOOPBACK.test(address.hostname);
+  if (mixed) notes.push({ subject: urls[0], reason: MIXED_CONTENT });
+
+  return { ...plan, url: address.href, mixed };
 }
 
 const SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
 
+const GUESSED = ["dict", "ftp", "imap", "ldap", "pop3", "smtp"];
+
+function guessScheme(written: string): string {
+  let host: string;
+  try {
+    host = new URL(`http://${written}`).hostname;
+  } catch {
+    return "http";
+  }
+  return GUESSED.find((scheme) => host.startsWith(`${scheme}.`)) ?? "http";
+}
+
+const LOOPBACK = /^(localhost|.+\.localhost|127(\.\d{1,3}){3}|\[::1\])$/;
+
+const MIXED_CONTENT = "A page served over https cannot fetch an http address: the browser blocks it as mixed content";
+
 const DATA = new Set(["--data", "--data-ascii", "--data-raw", "--data-binary", "--data-urlencode", "--json"]);
+
+const FORM = new Set(["--form", "--form-string"]);
+
+const UNREAD_FILE = "The value names a file, and with no file here to read the request is sent without it";
+
+const UNREAD_STDIN = "The upload is read from standard input, and with none here the request is sent without it";
+
+const STDIN = new Set(["-", "."]);
+
+function remoteName(file: string): string {
+  const name = file.slice(Math.max(file.lastIndexOf("/"), file.lastIndexOf("\\")) + 1);
+  return escapeAll(name).replace(/%[0-9A-F]{2}/g, (escape) => escape.toLowerCase());
+}
 
 const NO_BODY = new Set(["GET", "HEAD"]);
 
@@ -269,11 +313,9 @@ const SHOWN_BELOW = "The response is shown below rather than written anywhere";
 
 const UNSUPPORTED: Record<string, string> = {
   "--referer": "A browser sets Referer itself and will not take one",
-  "--cookie": "A browser sends its own cookies for the site, and a Cookie header set here is dropped",
+  "--cookie": "A page cannot hand a browser cookies to send, and it sends no cookies at all to another site",
   "--cookie-jar": NO_FILES,
   "--time-cond": "The page does not turn a date or a file into the condition header curl would work out",
-
-  "--upload-file": NO_FILES,
 
   "--aws-sigv4": "Signing a request is not something the page does",
   "--netrc": NO_FILES,

@@ -27,17 +27,21 @@ export function rankedFilter(
 export interface SearchTerms {
   name: string;
   codes: Set<string>;
+  whole: Set<string>;
+  aliases: Set<string>;
   rest: string[];
 }
 
 export function termRank(terms: SearchTerms | undefined, needle: string): number {
   if (!terms) return NO_MATCH;
   if (terms.codes.has(needle)) return 0;
-  if (terms.name.startsWith(needle)) return 1;
-  if (terms.name.includes(needle)) return 2;
+  if (terms.whole.has(needle)) return 1;
+  if (terms.aliases.has(needle)) return 2;
+  if (terms.name.startsWith(needle)) return 3;
+  if (terms.name.includes(needle)) return 4;
 
   const band = terms.rest.findIndex((text) => text.includes(needle));
-  return band === -1 ? NO_MATCH : 3 + band;
+  return band === -1 ? NO_MATCH : 5 + band;
 }
 
 function isItem(option: ComboboxParsedItem): option is Extract<ComboboxParsedItem, { value: unknown }> {

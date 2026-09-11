@@ -1,5 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
 import { utilities } from "../src/utility-registry";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -54,7 +55,7 @@ test("the editor keeps the shortcut, and hands it back when the caret leaves", a
   await expect(search(page)).toBeHidden();
   await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
 
-  await page.getByRole("heading", { name: "JSON" }).click();
+  await tool(page).getByRole("heading", { name: "JSON" }).click();
   await page.keyboard.press("Control+Space");
   await expect(search(page)).toBeFocused();
 });

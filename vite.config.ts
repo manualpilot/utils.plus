@@ -1,13 +1,14 @@
 import react from "@vitejs/plugin-react";
+import { execFileSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, extname, join } from "node:path";
+import { basename, dirname, extname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import type { Plugin, Rolldown } from "vite";
 import { defineConfig } from "vitest/config";
-import { documentFileName, HOME_PATH, PAGE_META, pageDocuments, type PagePath, robotsTxt, sitemapXml, withBody, withHead } from "./src/page-meta.ts";
-
-const METADATA_NAME = "utils-metadata";
-const METADATA_SRC = `/${METADATA_NAME}.ts`;
+import { type PageContent, type PageContents, pageDocuments, withBody, withHead } from "./src/page-document.ts";
+import { ATTRIBUTIONS_PATH, documentFileName, HOME_PATH, OG_IMAGE, PAGE_META, type PagePath, robotsTxt, sitemapXml } from "./src/page-meta.ts";
 
 export default defineConfig({
   root: "src",
@@ -28,7 +29,6 @@ export default defineConfig({
       input: {
         index: join(import.meta.dirname, "src/index.html"),
         "404": join(import.meta.dirname, "src/404.html"),
-        [METADATA_NAME]: join(import.meta.dirname, `src/${METADATA_NAME}.ts`),
       },
       output: { chunkFileNames, assetFileNames },
     },
@@ -54,7 +54,10 @@ function chunkFileNames(chunk: Rolldown.PreRenderedChunk): string {
   return `assets/${scopedName(name, chunk)}-[hash].js`;
 }
 
+const PAGE_CONTENT = /\/src\/page-content\/[^/]+\.ts$/;
+
 function scopedName(name: string, chunk: Rolldown.PreRenderedChunk): string {
+  if (PAGE_CONTENT.test(chunk.facadeModuleId ?? "")) return `page-content/${name}`;
   const editor = CODEMIRROR.exec(name);
   if (editor) return `codemirror/${editor[1] ?? "codemirror"}`;
   const icon = ICON.exec(name);
@@ -111,7 +114,10 @@ function packageOf(chunk: Rolldown.PreRenderedChunk): string | undefined {
 const DIRECTORY_NAMES = new Set("browser build cjs core dist esm exports index lib main module src".split(" "));
 
 function pageMetaFiles(): Plugin {
-  const files: Record<string, () => string> = { "/sitemap.xml": sitemapXml, "/robots.txt": robotsTxt };
+  const files: Record<string, () => string> = {
+    "/sitemap.xml": () => sitemapXml(lastModified()),
+    "/robots.txt": robotsTxt,
+  };
 
   return {
     name: "page-meta-files",
@@ -121,9 +127,17 @@ function pageMetaFiles(): Plugin {
     },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        const write = files[req.url?.split("?")[0] ?? ""];
+        const url = req.url?.split("?")[0] ?? "";
+        if (url === OG_IMAGE.path) {
+          readFile(OG_IMAGE_SOURCE).then((body) => {
+            res.setHeader("Content-Type", "image/png");
+            res.end(body);
+          }, next);
+          return;
+        }
+        const write = files[url];
         if (!write) return next();
-        res.setHeader("Content-Type", req.url?.startsWith("/sitemap") ? "application/xml" : "text/plain");
+        res.setHeader("Content-Type", url.startsWith("/sitemap") ? "application/xml" : "text/plain");
         res.end(write());
       });
     },
@@ -138,31 +152,66 @@ function pageMetaFiles(): Plugin {
     },
     generateBundle: {
       order: "post",
-      handler(_options, bundle) {
+      async handler(_options, bundle) {
         for (const [url, write] of Object.entries(files)) {
           this.emitFile({ type: "asset", fileName: url.slice(1), source: write() });
         }
+        this.emitFile({ type: "asset", fileName: OG_IMAGE.path.slice(1), source: await readFile(OG_IMAGE_SOURCE) });
 
         const index = bundle["index.html"];
         if (index?.type !== "asset") throw new Error("page-meta-files: index.html is not in the bundle");
 
-        const metadata = Object.values(bundle).find((file) => file.type === "chunk" && file.name === METADATA_NAME);
-        if (!metadata) throw new Error(`page-meta-files: ${METADATA_NAME} is not in the bundle`);
-
-        const template = index.source.toString();
-        if (!template.includes(METADATA_SRC)) {
-          throw new Error(`page-meta-files: index.html does not load ${METADATA_SRC}`);
-        }
-
-        const welcome = template.replace(METADATA_SRC, `/${metadata.fileName}`);
-        index.source = welcome;
-
-        for (const [fileName, source] of Object.entries(pageDocuments(welcome))) {
+        for (const [fileName, source] of Object.entries(pageDocuments(index.source.toString(), await pageContents()))) {
           this.emitFile({ type: "asset", fileName, source });
         }
       },
     },
   };
+}
+
+const OG_IMAGE_SOURCE = join(import.meta.dirname, "src/images/og-image.png");
+
+const CONTENT_DIR = join(import.meta.dirname, "src/page-content");
+
+async function pageContents(): Promise<PageContents> {
+  const contents: PageContents = {};
+  for (const file of readdirSync(CONTENT_DIR).filter((name) => name.endsWith(".ts"))) {
+    const path = `/${basename(file, ".ts")}` as keyof PageContents;
+    const module: { default: PageContent } = await import(pathToFileURL(join(CONTENT_DIR, file)).href);
+    contents[path] = module.default;
+  }
+  return contents;
+}
+
+function lastModified(): Partial<Record<PagePath, string>> {
+  const git = (...args: string[]) =>
+    execFileSync("git", ["-C", import.meta.dirname, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+      .trim();
+
+  try {
+    if (git("rev-parse", "--is-shallow-repository") !== "false") return warnUndated("the checkout is shallow");
+  } catch {
+    return warnUndated("there is no git history to read");
+  }
+
+  const dates: Partial<Record<PagePath, string>> = {};
+  for (const path of Object.keys(PAGE_META) as PagePath[]) {
+    const date = git("log", "-1", "--format=%cI", "--", ...sourcesOf(path));
+    if (date) dates[path] = date;
+  }
+  return dates;
+}
+
+function sourcesOf(path: PagePath): string[] {
+  if (path === HOME_PATH) return ["src/page-meta.ts", "src/welcome.tsx"];
+  if (path === ATTRIBUTIONS_PATH) return ["attribution", "src/attributions.tsx"];
+  const name = path.slice(1);
+  return [`src/utilities/${name}`, `src/page-content/${name}.ts`];
+}
+
+function warnUndated(reason: string): Partial<Record<PagePath, string>> {
+  console.warn(`page-meta-files: the sitemap carries no lastmod, because ${reason}`);
+  return {};
 }
 
 const DOCUMENT_URLS = new Map<string, string>(

@@ -138,6 +138,34 @@ describe("what it says an expression means", () => {
     expect(describe_(text, "quartz")).toBe(description);
   });
 
+  it.each(
+    [
+      ["*/90 * * * *", "0 * * * *", "unix"],
+      ["*/60 * * * *", "0 * * * *", "unix"],
+      ["10/90 * * * *", "10 * * * *", "unix"],
+      ["*/90,30 * * * *", "0,30 * * * *", "unix"],
+      ["0 */24 * * *", "0 0 * * *", "unix"],
+      ["30 12-14/5 * * *", "30 12 * * *", "unix"],
+      ["0 0 */40 * *", "0 0 1 * *", "unix"],
+      ["0 0 1 */12 *", "0 0 1 1 *", "unix"],
+      ["0 0 * * */7", "0 0 * * 0", "unix"],
+      ["*/60 * * * * *", "0 * * * * *", "seconds"],
+      ["15/60 */90 * * * *", "15 0 * * * *", "seconds"],
+      ["*/60 0 12 * * ?", "0 0 12 * * ?", "quartz"],
+      ["0 0 12 ? * */7", "0 0 12 ? * 1", "quartz"],
+      ["0 0 12 1 NOV-FEB/5 ?", "0 0 12 1 NOV ?", "quartz"],
+      ["0 0 12 1 1 ? */200", "0 0 12 1 1 ? 1970", "quartz"],
+    ] as const,
+  )("reads %s, a step with one value left, as %s", (text, same, flavour) => {
+    expect(describe_(text, flavour)).toBe(describe_(same, flavour));
+    expect(runs(text, 6, flavour)).toEqual(runs(same, 6, flavour));
+  });
+
+  it("says a step over the whole hour runs at minute 0 and not every 90 minutes", () => {
+    expect(describe_("*/90 * * * *")).toBe("At minute 0");
+    expect(describe_("0 */24 * * *")).toBe("At 00:00");
+  });
+
   it("expands a shorthand and says what it stood for", () => {
     expect(readCron("@daily", "unix")).toMatchObject({
       description: "At 00:00",

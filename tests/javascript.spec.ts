@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -171,6 +172,33 @@ test("what a stopped script printed is kept", async ({ page }) => {
   await page.getByRole("button", { name: "Stop" }).click();
   await expect(page.getByText("Stopped", { exact: true })).toBeVisible();
   await expect(output(page)).toContainText("printed before the loop");
+});
+
+test("a runaway recursion is reported like any other error, and the engine runs the next script", async ({ page }) => {
+  await openJavaScript(page);
+  await runScript(page, "console.log('before');\nfunction f() { return f(); }\nf();\n");
+
+  await expect(output(page)).toContainText("RangeError: Maximum call stack size exceeded", { timeout: BOOT });
+  await expect(output(page)).toContainText("at f (<script>:2:");
+  await expect(tool(page).getByText(/^Finished in [\d.]+s$/)).toBeVisible();
+
+  await runScript(page, "console.log('after');\n");
+  await expect(output(page)).toHaveText("after", { timeout: BOOT });
+  await expect(page.getByText("Starting JavaScript…")).toBeHidden();
+});
+
+test("a script that runs the engine out of memory says so, and the next run starts another", async ({ page }) => {
+  await openJavaScript(page);
+  await runScript(page, "let kept = 1;\nconst big = [];\nfor (;;) big.push(new ArrayBuffer(1 << 26));\n");
+
+  await expect(output(page)).toContainText("InternalError: out of memory", { timeout: BOOT });
+  await expect(tool(page).getByText("Out of memory", { exact: true })).toBeVisible();
+  await expect(tool(page).getByText("The engine ran out of memory, so the variables could not be read.")).toBeVisible();
+  await expect(tool(page)).not.toContainText("unreadable");
+
+  await runScript(page, "const again = new ArrayBuffer(1 << 26);\nconsole.log(again.byteLength);\n");
+  await expect(output(page)).toHaveText("67108864", { timeout: BOOT });
+  await expect(variables(page).getByRole("treeitem").filter({ hasText: "again" })).toBeVisible();
 });
 
 test("a script that never stops printing leaves the page usable", { tag: "@slow" }, async ({ page }) => {

@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -142,7 +143,7 @@ test.describe("the page", () => {
     await page.keyboard.type("1-800-FLOWERS");
 
     await expect(box(page)).toHaveValue("1800FLOWERS");
-    await expect(page.getByText("Not a valid number")).toBeVisible();
+    await expect(tool(page).getByText("Not a valid number")).toBeVisible();
     await expect(fact(page, "E.164")).toContainText("+11800");
   });
 
@@ -192,7 +193,7 @@ test.describe("the page", () => {
     await open(page);
     await box(page).fill("+61 2 93");
 
-    await expect(page.getByText("Not a valid number")).toBeVisible();
+    await expect(tool(page).getByText("Not a valid number")).toBeVisible();
     await expect(page.getByText("Too short", { exact: true })).toBeVisible();
   });
 
@@ -201,11 +202,11 @@ test.describe("the page", () => {
     await box(page).fill("000");
 
     await expect(page.locator("[data-short-number]")).toBeVisible();
-    await expect(page.getByText("Emergency")).toBeVisible();
-    await expect(page.getByText("Toll free")).toBeVisible();
-    await expect(page.getByText("Short code in Australia")).toBeVisible();
+    await expect(tool(page).getByText("Emergency")).toBeVisible();
+    await expect(tool(page).getByText("Toll free")).toBeVisible();
+    await expect(tool(page).getByText("Short code in Australia")).toBeVisible();
 
-    await expect(page.getByRole("heading", { name: "Formats" })).toHaveCount(0);
+    await expect(tool(page).getByRole("heading", { name: "Formats" })).toHaveCount(0);
     await expect(fact(page, "E.164")).toHaveCount(0);
     await expect(page.locator("[data-place]")).toHaveCount(0);
 
@@ -232,7 +233,7 @@ test.describe("the page", () => {
     await open(page);
     await box(page).fill("+86 138 0013");
 
-    await expect(page.getByText("Not a valid number")).toBeVisible();
+    await expect(tool(page).getByText("Not a valid number")).toBeVisible();
     await expect(page.locator("[data-place]")).toHaveCount(0);
   });
 

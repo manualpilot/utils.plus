@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -48,7 +49,7 @@ test("the sample pattern highlights each match and each group inside it", async 
   await expectHighlighted(page, ".cm-regex-group-1", ["01", "02", "12"]);
   await expectHighlighted(page, ".cm-regex-group-2", ["15", "29", "31"]);
 
-  await expect(page.getByText("3 matches")).toBeVisible();
+  await expect(tool(page).getByText("3 matches")).toBeVisible();
   await expect(page.getByText("Group 1 · year")).toBeVisible();
 });
 
@@ -107,6 +108,21 @@ test("a pattern that does not compile says so and paints nothing", async ({ page
 
   await replaceDocument(page, "pattern", "(closed)");
   await expect(page.getByText(/Invalid regular expression/)).toHaveCount(0);
+});
+
+test("a pattern that backtracks too much is stopped on its own thread, and the page says so", async ({ page }) => {
+  await openRegex(page);
+  await replaceDocument(page, "subject", `${"a".repeat(40)}!`);
+  await replaceDocument(page, "pattern", "^(a+)+$");
+
+  await expect(tool(page).getByText(/stopped because this pattern backtracks too much on this text/)).toBeVisible();
+  await expect(page.locator(".cm-content .cm-regex-match")).toHaveCount(0);
+  await expect(page.locator(".mantine-Card-root").last()).toContainText("Capturing group 1");
+
+  await replaceDocument(page, "pattern", "^a+");
+  await expectHighlighted(page, ".cm-regex-match", ["a".repeat(40)]);
+  await expect(tool(page).getByText(/backtracks too much/)).toHaveCount(0);
+  await expect(tool(page).getByText("1 match")).toBeVisible();
 });
 
 test("the pattern box stays on one line", async ({ page }) => {

@@ -1,4 +1,5 @@
 import { expect, Locator, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -215,7 +216,7 @@ test.describe("the page", () => {
     await pickView(page, "China");
     await expect(page.getByText("for the China point of view")).toBeVisible();
     await expect(page.locator(".country-map-own")).toHaveCount(0);
-    await expect(page.getByText("this land is inside the shape filed under China")).toBeVisible();
+    await expect(tool(page).getByText("this land is inside the shape filed under China")).toBeVisible();
 
     await pickView(page, "Default");
     await expect(page.getByText("Boundaries as Natural Earth draws them by default")).toBeVisible();
@@ -228,7 +229,7 @@ test.describe("the page", () => {
     await pick(page, "United States", "United States");
 
     await expect(fact(page, "Calling code")).toContainText("+1");
-    await expect(page.getByText("380 dialling prefixes")).toBeVisible();
+    await expect(tool(page).getByText("380 dialling prefixes")).toBeVisible();
     await expect(page.getByText("+1907", { exact: true })).toBeVisible();
     await expect(page.getByText("+1808", { exact: true })).toBeVisible();
   });
@@ -243,6 +244,17 @@ test.describe("the page", () => {
     await expect(page.getByText("None of its own")).toBeVisible();
     await expect(page.getByText("None recorded")).toBeVisible();
     await expect(fact(page, "ISO 3166-1 alpha-3")).toContainText("ATA");
+  });
+
+  test("says a code ISO never assigned is not ISO's", async ({ page }) => {
+    await open(page);
+
+    await pick(page, "Kosovo", "Kosovo");
+
+    await expect(tool(page).locator("[data-fact^=\"ISO 3166-1\"]")).toHaveCount(0);
+    await expect(fact(page, "Alpha-2, not ISO-assigned")).toContainText("XK");
+    await expect(fact(page, "Alpha-3, not ISO-assigned")).toContainText("UNK");
+    await expect(tool(page).getByText("Code is user assigned")).toBeVisible();
   });
 
   test("draws the flags from a font of this site's own rather than from whatever the system has", async ({ page }) => {
@@ -333,6 +345,6 @@ test.describe("a browser in a country Natural Earth publishes a point of view fo
 
     await pick(page, "Taiwan", "Taiwan");
     await expect(page.locator(".country-map-own")).toHaveCount(0);
-    await expect(page.getByText("this land is inside the shape filed under China")).toBeVisible();
+    await expect(tool(page).getByText("this land is inside the shape filed under China")).toBeVisible();
   });
 });

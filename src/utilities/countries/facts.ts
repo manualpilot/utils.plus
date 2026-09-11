@@ -1,4 +1,15 @@
+import type { Fact } from "../../common/fact-table";
 import { COUNTRIES, type Country } from "./list";
+
+export function isoCodes(country: Country): Fact[] {
+  const assigned = country.status === "officially-assigned";
+  const label = (part: string) => assigned ? `ISO 3166-1 ${part.toLowerCase()}` : `${part}, not ISO-assigned`;
+  return [
+    { label: label("Alpha-2"), value: country.cca2 },
+    { label: label("Alpha-3"), value: country.cca3 },
+    { label: label("Numeric"), value: country.ccn3 },
+  ];
+}
 
 export function callingCodes(country: Country): string[] {
   const { root, suffixes } = country.idd;

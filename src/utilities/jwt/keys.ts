@@ -12,11 +12,11 @@ export async function generateKey(alg: string, enc: string = DEFAULT_ENCRYPTION)
   return exportPKCS8(privateKey);
 }
 
-export async function loadKey(secret: string, alg: string, half: Half): Promise<CryptoKey | Uint8Array> {
+export async function loadKey(secret: string, alg: string, half: Half, kid?: unknown): Promise<CryptoKey | Uint8Array> {
   const text = secret.trim();
   if (!text) throw new Error("Required");
   if (text.startsWith("-----BEGIN")) return loadPem(text, alg, half);
-  if (text.startsWith("{")) return loadJwk(text, alg, half);
+  if (text.startsWith("{")) return loadJwk(text, alg, half, kid);
   if (!isSymmetric(alg)) throw new Error(`${alg} takes a key, so this needs a PEM or a JWK rather than a phrase`);
   if (isEncryption(alg)) return loadBytes(text, alg);
   return new TextEncoder().encode(secret);
@@ -49,15 +49,28 @@ async function loadPem(pem: string, alg: string, half: Half): Promise<CryptoKey>
   return spki ? importSPKI(pem, alg, { extractable: true }) : importX509(pem, alg, { extractable: true });
 }
 
-async function loadJwk(text: string, alg: string, half: Half): Promise<CryptoKey | Uint8Array> {
-  let jwk: JWK;
+async function loadJwk(text: string, alg: string, half: Half, kid: unknown): Promise<CryptoKey | Uint8Array> {
+  let parsed: JWK & { keys?: unknown };
   try {
-    jwk = JSON.parse(text) as JWK;
+    parsed = JSON.parse(text) as JWK;
   } catch {
     return Promise.reject(new Error("That key is not JSON"));
   }
+  const jwk = parsed.keys === undefined ? parsed : keyFromSet(parsed.keys, kid);
   const wanted = half === "public" && jwk.kty !== "oct" ? publicJwk(jwk) : jwk;
   return importJWK(wanted, alg, { extractable: true });
+}
+
+function keyFromSet(keys: unknown, kid: unknown): JWK {
+  if (!Array.isArray(keys) || keys.length === 0) throw new Error("That key set holds no keys");
+  if (typeof kid !== "string") {
+    if (keys.length === 1) return keys[0] as JWK;
+    throw new Error(`The token names no kid, and this set holds ${keys.length} keys to choose between`);
+  }
+  const named = (keys as JWK[]).filter((key) => key?.kid === kid);
+  if (named.length === 0) throw new Error(`No key in this set has the kid "${kid}" the token asks for`);
+  if (named.length > 1) throw new Error(`This set holds ${named.length} keys with the kid "${kid}"`);
+  return named[0];
 }
 
 export async function publicFromPrivate(key: CryptoKey, alg: string): Promise<CryptoKey> {

@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -242,6 +243,57 @@ test("the format decides what comes out, and the data URI says so", async ({ pag
   );
 });
 
+test("a picture comes back in the format it arrived in until another is chosen", async ({ page }) => {
+  await openImage(page);
+  await choose(page, await makePicture(page, "image/jpeg"), "photo.jpg");
+
+  await expect(page.getByRole("combobox", { name: "Format" })).toHaveValue("JPEG");
+  await expect(fact(page, "Type")).toHaveText("image/jpeg");
+  await settled(page);
+  expect(decodeHash(page.url()).format).toBeUndefined();
+
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save the picture" }).click();
+  expect((await saving).suggestedFilename()).toBe("photo.jpg");
+
+  await page.getByRole("combobox", { name: "Format" }).click();
+  await page.getByRole("option", { name: "PNG" }).click();
+  await expect(fact(page, "Type")).toHaveText("image/png");
+  await expect.poll(() => decodeHash(page.url()).format).toBe("png");
+});
+
+const SLOW_READ_MS = 1500;
+
+const DRAWN_MS = 500;
+
+test("a data URI read for a picture since re-rendered never lands in the box", async ({ page }) => {
+  await page.addInitScript((delay) => {
+    const read = FileReader.prototype.readAsDataURL;
+    const counted = window as unknown as { reads: number };
+    counted.reads = 0;
+    FileReader.prototype.readAsDataURL = function(this: FileReader, blob: Blob) {
+      this.addEventListener("loadend", () => counted.reads++);
+      setTimeout(() => read.call(this, blob), delay);
+    };
+  }, SLOW_READ_MS);
+  const reads = () => page.evaluate(() => (window as unknown as { reads: number }).reads);
+  const box = tool(page).getByRole("textbox", { name: "The picture as a data URI" });
+
+  await openImage(page);
+  await choose(page, await makePicture(page));
+  await settled(page);
+  await page.getByRole("button", { name: "Make a data URI" }).click();
+  await page.getByRole("combobox", { name: "Format" }).click();
+  await page.getByRole("option", { name: "JPEG" }).click();
+
+  await expect.poll(reads, { timeout: SLOW_READ_MS * 4 }).toBe(1);
+  await page.waitForTimeout(DRAWN_MS);
+  await expect(box).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Make a data URI" }).click();
+  await expect(box).toHaveValue(/^data:image\/jpeg;base64,/, { timeout: SLOW_READ_MS * 4 });
+});
+
 test("a resize comes out at the size that was asked for", async ({ page }) => {
   await openImage(page);
   await choose(page, await makePicture(page));
@@ -323,6 +375,82 @@ test("a date in the wrong spelling is marked as it is typed", async ({ page }) =
   await expect(page.getByText("YYYY:MM:DD HH:MM:SS")).toBeVisible();
   await page.getByRole("textbox", { name: "Date taken" }).fill("2026:08:23 14:05:00");
   await expect(page.getByText("YYYY:MM:DD HH:MM:SS")).toHaveCount(0);
+});
+
+test("a comment in any script is written into the file and reads back out of it", async ({ page }) => {
+  await openImage(page);
+  await choose(page, await makePicture(page, "image/jpeg"), "photo.jpg");
+
+  const comment = "Zürich – north, 😀 and Łódź";
+  await tab(page, "Metadata");
+  await page.getByRole("textbox", { name: "User comment" }).fill(comment);
+
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save with these changes" }).click();
+  const saved = await saving;
+
+  await page.reload();
+  await page.locator("input[type=\"file\"]").setInputFiles((await saved.path())!);
+  await expect(page.locator(".image-stage img")).toBeVisible();
+  await tab(page, "Metadata");
+  await expect(page.getByRole("textbox", { name: "User comment" })).toHaveValue(comment);
+  await expect(fact(page, "User comment")).toHaveText(comment);
+});
+
+test("a save with a marked box says which and writes nothing until it is put right", async ({ page }) => {
+  await openImage(page);
+  await choose(page, await makePicture(page, "image/jpeg"), "photo.jpg");
+  const downloads: string[] = [];
+  page.on("download", (download) => downloads.push(download.suggestedFilename()));
+
+  await tab(page, "Metadata");
+  await page.getByRole("textbox", { name: "Artist" }).fill("Łukasz");
+  await expect(tool(page).getByText("Only ASCII can be written here, and Ł is not")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save with these changes" })).toBeEnabled();
+  await page.getByRole("button", { name: "Save with these changes" }).click();
+  await expect(tool(page).getByText("Nothing is written while Artist is marked.")).toBeVisible();
+
+  await page.getByRole("textbox", { name: "Artist" }).fill("Lukasz");
+  await expect(tool(page).getByText("Nothing is written while")).toHaveCount(0);
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save with these changes" }).click();
+  const saved = await saving;
+  expect(downloads).toEqual(["photo.jpg"]);
+
+  await page.reload();
+  await page.locator("input[type=\"file\"]").setInputFiles((await saved.path())!);
+  await tab(page, "Metadata");
+  await expect(fact(page, "Artist")).toHaveText("Lukasz");
+});
+
+test("half a coordinate is only marked once a file is asked for, and is never written as a place", async ({ page }) => {
+  await openImage(page);
+  await choose(page, await makePicture(page, "image/jpeg"), "photo.jpg");
+  const downloads: string[] = [];
+  page.on("download", (download) => downloads.push(download.suggestedFilename()));
+
+  await tab(page, "Metadata");
+  await page.getByRole("textbox", { name: "Latitude" }).fill("10");
+  await expect(tool(page).getByText("Both halves of a coordinate, or neither")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Save with these changes" }).click();
+  await expect(tool(page).getByText("Both halves of a coordinate, or neither")).toBeVisible();
+  await expect(tool(page).getByText("Nothing is written while Longitude is marked.")).toBeVisible();
+
+  await tab(page, "Transform");
+  await settled(page);
+  await page.getByRole("button", { name: "Save the picture" }).click();
+  await expect(tool(page).getByText("Nothing is saved while Longitude is marked on the Metadata tab.")).toBeVisible();
+  await page.getByRole("button", { name: "Make a data URI" }).click();
+  await expect(page.getByRole("textbox", { name: "The picture as a data URI" })).toHaveCount(0);
+  expect(downloads).toEqual([]);
+
+  await page.getByRole("switch", { name: "Carry the metadata over" }).click();
+  await expect(tool(page).getByText("Nothing is saved while")).toHaveCount(0);
+  const saving = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save the picture" }).click();
+  await saving;
+  expect(downloads).toEqual(["photo.jpg"]);
 });
 
 test("the link carries the recipe and never the picture", async ({ page }) => {

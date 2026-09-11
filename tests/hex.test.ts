@@ -292,6 +292,20 @@ describe("what the first bytes say a file is", () => {
     expect(sniff(riff("WAVE"))).toBe("WAVE audio");
   });
 
+  it("tells a HEIF or AVIF picture from a video by the brand its box names", () => {
+    const box = (brand: string) => new Uint8Array([0, 0, 0, 0x18, ...ascii(`ftyp${brand}`), 0, 0, 0, 0]);
+    expect(sniff(box("heic"))).toBe("HEIC image");
+    expect(sniff(box("heix"))).toBe("HEIC image");
+    expect(sniff(box("hevc"))).toBe("HEIC image sequence");
+    expect(sniff(box("hevx"))).toBe("HEIC image sequence");
+    expect(sniff(box("mif1"))).toBe("HEIF image");
+    expect(sniff(box("msf1"))).toBe("HEIF image sequence");
+    expect(sniff(box("avif"))).toBe("AVIF image");
+    expect(sniff(box("avis"))).toBe("AVIF image sequence");
+    expect(sniff(box("isom"))).toBe("MP4 video");
+    expect(sniff(box("mp42"))).toBe("MP4 video");
+  });
+
   it("falls back to reading it as text, and to nothing at all", () => {
     expect(sniff(ascii("hello, world\n"))).toBe("Text (UTF-8)");
     expect(sniff(bytes(0x68, 0xe9, 0x6c, 0x6c, 0x6f))).toBe("Text (single-byte)");

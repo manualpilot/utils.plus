@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { type ExplainNode, explainPattern } from "../src/utilities/regex/explain";
 import { chooseFlags, normaliseFlags } from "../src/utilities/regex/flags";
-import { findMatches, summarise } from "../src/utilities/regex/match";
+import { compileError, findMatches, summarise } from "../src/utilities/regex/match";
 
 function found(source: string, flags: string, text: string): string[] {
   const result = findMatches(source, flags, text);
@@ -46,6 +46,14 @@ describe("finding matches", () => {
     const result = findMatches("(unclosed", "", "text");
     expect(result.error).toBeTruthy();
     expect(result.matches).toEqual([]);
+  });
+
+  it("quotes the pattern back with the flags that were asked for and no others", () => {
+    expect(findMatches("(?P<year>\\d{4})", "g", "2024").error).toBe(
+      "Invalid regular expression: /(?P<year>\\d{4})/g: Invalid group",
+    );
+    expect(compileError("(?P<year>\\d{4})", "")).toBe("Invalid regular expression: /(?P<year>\\d{4})/: Invalid group");
+    expect(compileError("(?<year>\\d{4})", "g")).toBeNull();
   });
 
   it("searches for nothing until there is a pattern", () => {

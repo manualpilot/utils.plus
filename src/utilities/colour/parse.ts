@@ -1,6 +1,7 @@
+import { intoGamut } from "./gamut";
 import { NAMED_HEX } from "./names";
 import { clampRgba, type Rgba } from "./rgba";
-import { cmykToRgb, fromLab, fromOklab, fromPolar, hslToRgb, hsvToRgb, type Vector } from "./spaces";
+import { cmykToRgb, fromPolar, hslToRgb, hsvToRgb, labToOklab, type Vector } from "./spaces";
 
 export function parseColour(text: string): Rgba | null {
   const value = text.trim().toLowerCase();
@@ -75,7 +76,7 @@ function readFunction(name: string, parts: string[], slashAlpha: number | null):
       const values = split.parts.map((part, index) => readNumber(part, scale[index]));
       if (!allNumbers(values)) return null;
       const lab: Vector = [values[0], values[1], values[2]];
-      return clampRgba({ ...(ok ? fromOklab(lab) : fromLab(lab)), a: split.alpha });
+      return intoGamut(ok ? lab : labToOklab(lab), split.alpha);
     }
     case "lch":
     case "oklch": {
@@ -90,7 +91,7 @@ function readFunction(name: string, parts: string[], slashAlpha: number | null):
       ];
       if (!allNumbers(values)) return null;
       const lab = fromPolar([values[0], values[1], values[2]]);
-      return clampRgba({ ...(ok ? fromOklab(lab) : fromLab(lab)), a: split.alpha });
+      return intoGamut(ok ? lab : labToOklab(lab), split.alpha);
     }
     default:
       return null;

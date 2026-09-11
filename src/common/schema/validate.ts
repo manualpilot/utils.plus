@@ -1,6 +1,6 @@
-import { checkFormat, formatNamed } from "../../common/schema/formats";
-import { describe, type JsonValue, type Schema, type SchemaDocument, typeOf } from "../../common/schema/ir";
-import { pointerOf } from "../../common/schema/locate";
+import { checkFormat, formatNamed } from "./formats";
+import { describe, type JsonValue, type Schema, type SchemaDocument, typeOf } from "./ir";
+import { pointerOf } from "./locate";
 
 export interface Problem {
   pointer: string;
@@ -15,7 +15,42 @@ export function validate(value: JsonValue, doc: SchemaDocument): Problem[] {
   return problems;
 }
 
+export function accepts(value: JsonValue, schema: Schema, doc: SchemaDocument): boolean {
+  return validate(value, { root: schema, defs: doc.defs }).length === 0;
+}
+
 function check(
+  value: JsonValue,
+  schema: Schema,
+  path: (string | number)[],
+  doc: SchemaDocument,
+  problems: Problem[],
+  visiting: Set<string>,
+) {
+  checkKind(value, schema, path, doc, problems, visiting);
+
+  const passes = (condition: Schema) => {
+    const found: Problem[] = [];
+    check(value, condition, path, doc, found, visiting);
+    return found.length === 0;
+  };
+
+  if (schema.not !== undefined && passes(schema.not)) {
+    const named = wholly(schema.not);
+    problems.push({
+      pointer: pointerOf(path),
+      message: named ? `Must not be ${named}` : "Must not match the schema under `not`",
+      keyword: "not",
+    });
+  }
+
+  if (schema.if !== undefined) {
+    const branch = passes(schema.if) ? schema.then : schema.else;
+    if (branch) check(value, branch, path, doc, problems, visiting);
+  }
+}
+
+function checkKind(
   value: JsonValue,
   schema: Schema,
   path: (string | number)[],
@@ -120,6 +155,24 @@ function check(
         const itemSchema = index < prefix.length ? prefix[index] : schema.items;
         check(item, itemSchema, [...path, index], doc, problems, visiting);
       });
+
+      const contains = schema.contains;
+      if (contains !== undefined) {
+        const accepted = value.filter((item, index) => {
+          const found: Problem[] = [];
+          check(item, contains, [...path, index], doc, found, visiting);
+          return found.length === 0;
+        }).length;
+        const named = wholly(contains);
+        const which = named ? `that is ${named}` : "that `contains` accepts";
+        const least = schema.minContains ?? 1;
+        if (accepted < least) {
+          say("minContains", `Must have at least ${plural(least, "item")} ${which}, found ${accepted}`);
+        }
+        if (schema.maxContains !== undefined && accepted > schema.maxContains) {
+          say("maxContains", `Must have at most ${plural(schema.maxContains, "item")} ${which}, found ${accepted}`);
+        }
+      }
       return;
     }
 
@@ -128,13 +181,32 @@ function check(
         return say("type", expected(schema, value));
       }
 
+      const has = (name: string) => Object.hasOwn(value, name);
       const declared = new Set(schema.properties.map((property) => property.name));
       for (const property of schema.properties) {
-        if (!(property.name in value)) {
+        if (!has(property.name)) {
           if (property.required) say("required", `Missing required property ${JSON.stringify(property.name)}`);
           continue;
         }
         check(value[property.name], property.schema, [...path, property.name], doc, problems, visiting);
+      }
+
+      for (const { name, requires } of schema.dependencies ?? []) {
+        if (!has(name)) continue;
+        for (const needed of requires.filter((one) => !has(one))) {
+          say(
+            "dependentRequired",
+            `Missing property ${JSON.stringify(needed)}, which ${JSON.stringify(name)} requires`,
+          );
+        }
+      }
+
+      const count = Object.keys(value).length;
+      if (schema.minProperties !== undefined && count < schema.minProperties) {
+        say("minProperties", `Must have at least ${properties(schema.minProperties)}, found ${count}`);
+      }
+      if (schema.maxProperties !== undefined && count > schema.maxProperties) {
+        say("maxProperties", `Must have at most ${properties(schema.maxProperties)}, found ${count}`);
       }
 
       for (const key of Object.keys(value)) {
@@ -146,7 +218,11 @@ function check(
             onKey: true,
           });
         }
-        if (declared.has(key) || schema.additional === undefined) continue;
+        const patterned = (schema.patterns ?? []).filter(({ pattern }) => compiled(pattern)?.test(key) ?? false);
+        for (const { schema: matched } of patterned) {
+          check(value[key], matched, [...path, key], doc, problems, visiting);
+        }
+        if (declared.has(key) || patterned.length > 0 || schema.additional === undefined) continue;
         if (schema.additional === false) {
           problems.push({
             pointer: pointerOf([...path, key]),
@@ -171,14 +247,18 @@ function check(
         check(value, option, path, doc, found, visiting);
         return { option, found };
       });
-      if (branches.some((branch) => branch.found.length === 0)) return;
+      const matched = branches.filter((branch) => branch.found.length === 0).length;
+      if (schema.exclusive && matched > 1) {
+        return say("oneOf", `Must match exactly one of ${describe(schema)}, but matches ${matched}`);
+      }
+      if (matched > 0) return;
 
       const admitting = branches.filter(({ option }) => admits(option, value, doc));
       if (admitting.length === 1) {
         problems.push(...admitting[0].found);
         return;
       }
-      say("anyOf", `Expected ${describe(schema)}, found ${typeOf(value)}`);
+      say(schema.exclusive ? "oneOf" : "anyOf", `Expected ${describe(schema)}, found ${typeOf(value)}`);
     }
   }
 }
@@ -231,7 +311,33 @@ export function equal(a: JsonValue, b: JsonValue): boolean {
   const left = a as { [key: string]: JsonValue };
   const right = b as { [key: string]: JsonValue };
   const keys = Object.keys(left);
-  return keys.length === Object.keys(right).length && keys.every((key) => key in right && equal(left[key], right[key]));
+  return keys.length === Object.keys(right).length
+    && keys.every((key) => Object.hasOwn(right, key) && equal(left[key], right[key]));
+}
+
+function wholly(schema: Schema): string | undefined {
+  if (schema.not !== undefined || schema.if !== undefined) return undefined;
+  switch (schema.kind) {
+    case "null":
+    case "boolean":
+    case "literal":
+    case "enum":
+    case "ref":
+      return describe(schema);
+    case "number":
+      return [schema.minimum, schema.maximum, schema.exclusiveMinimum, schema.exclusiveMaximum, schema.multipleOf]
+          .every((bound) => bound === undefined)
+        ? describe(schema)
+        : undefined;
+    case "string":
+      return [schema.minLength, schema.maxLength, schema.pattern].every((bound) => bound === undefined)
+        ? describe(schema)
+        : undefined;
+    case "union":
+      return schema.options.every((option) => wholly(option) !== undefined) ? describe(schema) : undefined;
+    default:
+      return undefined;
+  }
 }
 
 function firstRepeat(items: JsonValue[]): [number, number] | null {
@@ -256,17 +362,25 @@ function decimalsOf(value: number): number {
 }
 
 function matches(pattern: string, value: string): boolean {
+  return compiled(pattern)?.test(value) ?? true;
+}
+
+export function compiled(pattern: string): RegExp | undefined {
   try {
-    return new RegExp(pattern, "u").test(value);
+    return new RegExp(pattern, "u");
   } catch {
     try {
-      return new RegExp(pattern).test(value);
+      return new RegExp(pattern);
     } catch {
-      return true;
+      return undefined;
     }
   }
 }
 
 function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function properties(count: number): string {
+  return `${count} ${count === 1 ? "property" : "properties"}`;
 }

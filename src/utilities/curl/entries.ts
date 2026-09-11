@@ -1,4 +1,5 @@
 import { defaultFlag, findLong, type OptionSpec } from "./options";
+import type { Shell } from "./shell";
 
 export type Entry = UrlEntry | OptionEntry | UnknownEntry;
 
@@ -6,6 +7,7 @@ export interface UrlEntry {
   kind: "url";
   value: string;
   flag: string | null;
+  variables?: string[];
 }
 
 export interface OptionEntry {
@@ -13,6 +15,7 @@ export interface OptionEntry {
   name: string;
   flag: string;
   value: string;
+  variables?: string[];
 }
 
 export interface UnknownEntry {
@@ -23,6 +26,7 @@ export interface UnknownEntry {
 export interface Command {
   entries: Entry[];
   error: string | null;
+  shell: Shell;
 }
 
 export interface Slot<T extends Entry> {

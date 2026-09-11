@@ -7,6 +7,7 @@ export const ATTRIBUTIONS_PATH = "/attributions";
 
 export const PAGE_META = {
   "/": {
+    label: "Home",
     title: "Developer Tools That Run in Your Browser",
     description:
       "Encoders, hashes, key generators, JSON, JWT, diff, cron and more, running entirely in your browser. No server-side processing, no third-party requests, no tracking.",
@@ -20,6 +21,7 @@ export const PAGE_META = {
     ],
   },
   "/calculator": {
+    label: "Calculator",
     title: "Programmer & Scientific Calculator",
     description:
       "Add, shift, rotate and mask 8- to 64-bit words in hex, octal or decimal, with every bit on screen and read as an IEEE 754 float — or switch to trigonometry.",
@@ -39,6 +41,7 @@ export const PAGE_META = {
     ],
   },
   "/certificate": {
+    label: "Certificate",
     title: "X.509 Certificate Decoder & Generator",
     description:
       "Decode a certificate, a signing request or an SSH key — names, expiry, fingerprints, chain order — or generate a self-signed one, a root CA, or one signed by it.",
@@ -58,6 +61,7 @@ export const PAGE_META = {
     ],
   },
   "/codec": {
+    label: "Codec",
     title: "Base64, Base32, Hex, Gzip, Morse & ROT13 Codec",
     description:
       "Encode and decode Base64, Base32, hex, decimal, binary, NATO, Morse and gzip, or run text through ROT13, Caesar, Vigenère and XOR. Nothing leaves the browser.",
@@ -85,6 +89,7 @@ export const PAGE_META = {
     ],
   },
   "/colour": {
+    label: "Colour",
     title: "Colour Converter, Contrast & Palette",
     description:
       "Convert between hex, RGB, HSL, CMYK, LAB and OKLCH, check WCAG contrast, build a palette in OKLCH, and see any of it through colour blindness.",
@@ -107,6 +112,7 @@ export const PAGE_META = {
     ],
   },
   "/config": {
+    label: "Config",
     title: "YAML, JSON, TOML & .env Converter",
     description:
       "Convert a configuration between YAML, JSON, TOML, .env and Java properties, keeping every value's type across the flat formats that have none.",
@@ -122,6 +128,7 @@ export const PAGE_META = {
     ],
   },
   "/converter": {
+    label: "Converter",
     title: "Unit Converter for Length, Mass & Data",
     description:
       "Convert distance, area, volume, mass, temperature, speed, data, energy, power and pressure between metric, imperial and SI units, to twelve digits.",
@@ -138,6 +145,7 @@ export const PAGE_META = {
     ],
   },
   "/countries": {
+    label: "Countries",
     title: "ISO 3166 Country Code & Data Lookup",
     description:
       "Pick any of 250 countries and read back its ISO 3166 codes, calling code, capital, currencies, languages, land borders, area and name in two dozen languages.",
@@ -154,6 +162,7 @@ export const PAGE_META = {
     ],
   },
   "/cron": {
+    label: "Cron",
     title: "Cron Expression Builder & Parser",
     description:
       "Write or read a cron expression field by field, in Unix or Quartz flavour, and see the next runs in your own time zone or UTC before you schedule it.",
@@ -169,6 +178,7 @@ export const PAGE_META = {
     ],
   },
   "/cryptography": {
+    label: "Cryptography",
     title: "AES, ChaCha, NaCl, PGP & age Encryption",
     description:
       "Encrypt and decrypt text or a file with AES-GCM, AES-CBC, AES-CTR, ChaCha20-Poly1305, NaCl secretbox and box, OpenPGP, or age with post-quantum keys.",
@@ -193,6 +203,7 @@ export const PAGE_META = {
     ],
   },
   "/csv": {
+    label: "CSV",
     title: "CSV Viewer, Parser & Data Table",
     description:
       "Paste or drop a CSV, TSV or any delimited file and read it as a sortable table beside its own text, with the delimiter worked out for you. Nothing is uploaded.",
@@ -208,6 +219,7 @@ export const PAGE_META = {
     ],
   },
   "/curl": {
+    label: "curl",
     title: "curl Command Builder, Parser & Runner",
     description:
       "Build a curl command argument by argument, or paste one in and have it taken apart into fields you can edit — then Send it as a fetch and read what came back.",
@@ -228,9 +240,10 @@ export const PAGE_META = {
     ],
   },
   "/diff": {
+    label: "Diff",
     title: "Text & Code Diff Checker",
     description:
-      "Compare two texts side by side, with the changed words marked rather than the whole line and syntax highlighting for eighteen languages. Nothing is uploaded.",
+      "Compare two texts side by side, with the changed words marked rather than the whole line and syntax highlighting for sixteen languages. Nothing is uploaded.",
     keywords: [
       "diff checker",
       "text compare",
@@ -243,6 +256,7 @@ export const PAGE_META = {
     ],
   },
   "/har": {
+    label: "HAR",
     title: "HAR Viewer & HTTP Archive Analyser",
     description:
       "Open a HAR recording from Chrome, Firefox or Safari and read every request — headers, cookies, bodies and timings — filtered by any field. Nothing is uploaded.",
@@ -260,6 +274,7 @@ export const PAGE_META = {
     ],
   },
   "/hasher": {
+    label: "Hasher",
     title: "Hash & Key Derivation Calculator",
     description:
       "Hash text or a file with MD5, SHA-1, SHA-2, SHA-3, BLAKE2, BLAKE3, CRC32, xxHash or MurmurHash, or derive a key with Argon2, bcrypt, scrypt or PBKDF2, in the tab.",
@@ -281,6 +296,7 @@ export const PAGE_META = {
     ],
   },
   "/hex": {
+    label: "Hex",
     title: "Hex Editor & Binary File Viewer",
     description:
       "Open any file and read every byte of it, in hex and as text, patch the bytes in place, search for a signature, then save the file back out. Nothing is uploaded.",
@@ -300,6 +316,7 @@ export const PAGE_META = {
     ],
   },
   "/image": {
+    label: "Image",
     title: "Image Converter, Resizer & EXIF Editor",
     description:
       "Open a picture, read and edit its EXIF and metadata, crop, resize, turn and colour it, then save it as PNG, JPEG, WebP or AVIF, or as a data URI. Nothing is uploaded.",
@@ -321,6 +338,7 @@ export const PAGE_META = {
     ],
   },
   "/ip-address": {
+    label: "IP Address",
     title: "IPv4, IPv6 & CIDR Subnet Calculator",
     description:
       "Work out subnet ranges, masks and host counts from any CIDR block, split it into smaller ones, convert an address to an integer, and expand or compress IPv6.",
@@ -340,6 +358,7 @@ export const PAGE_META = {
     ],
   },
   "/javascript": {
+    label: "JavaScript",
     title: "Run JavaScript & TypeScript in the Browser",
     description:
       "Run a JavaScript or TypeScript script, or work at a REPL, on a WebAssembly engine served from this page — output as it is written and a panel of what the run left bound.",
@@ -357,6 +376,7 @@ export const PAGE_META = {
     ],
   },
   "/json": {
+    label: "JSON",
     title: "JSON Formatter, Validator, Repair & JSONPath",
     description:
       "Format, minify, sort, repair and query JSON with JSONPath, without rounding a big number or dropping a duplicate key. The document stays in the browser.",
@@ -375,6 +395,7 @@ export const PAGE_META = {
     ],
   },
   "/jwt": {
+    label: "JWT",
     title: "JWT Decoder, Verifier & Builder",
     description:
       "Read a JSON Web Token's header and claims, check its signature or decrypt a JWE, and build, sign or encrypt a new one. Every key is made and used in the tab.",
@@ -395,6 +416,7 @@ export const PAGE_META = {
     ],
   },
   "/keygen": {
+    label: "Keygen",
     title: "SSH, PGP, age & JSON Web Key Generator",
     description:
       "Generate SSH, PGP, WireGuard and age keys — post-quantum ML-KEM included — plus JSON Web Keys and random secrets. The private half never leaves your browser.",
@@ -414,6 +436,7 @@ export const PAGE_META = {
     ],
   },
   "/markdown": {
+    label: "Markdown",
     title: "Markdown Editor with Live Preview",
     description:
       "Write Markdown with a formatting bar and read it back rendered as you type, side by side or one at a time, in GitHub, CommonMark or original flavour.",
@@ -430,6 +453,7 @@ export const PAGE_META = {
     ],
   },
   "/mock": {
+    label: "Mock Data",
     title: "Mock Data Generator from a JSON Schema",
     description:
       "Generate seeded rows of sample data from a JSON Schema, Zod or Pydantic model — names, emails, addresses, Luhn-valid cards, IBANs, ISBNs — as JSON, CSV or SQL.",
@@ -451,6 +475,7 @@ export const PAGE_META = {
     ],
   },
   "/otp": {
+    label: "OTP",
     title: "TOTP, HOTP & OCRA One-Time Password Calculator",
     description:
       "Work out a TOTP, HOTP or OCRA one-time password from a shared secret, with the algorithm, digits, counter and challenge the token uses. The secret never leaves the tab.",
@@ -469,6 +494,7 @@ export const PAGE_META = {
     ],
   },
   "/password": {
+    label: "Password",
     title: "Password & Passphrase Generator",
     description:
       "Generate a strong random password at the length and mix of lowercase, uppercase, digits and symbols you want, or a memorable passphrase made of real English words.",
@@ -489,6 +515,7 @@ export const PAGE_META = {
     ],
   },
   "/phone-number": {
+    label: "Phone Number",
     title: "Phone Number Validator & Lookup",
     description:
       "Parse a phone number against any of 245 dialling regions, see whether it is valid, where its range was issued, who carries it and what time it is there.",
@@ -507,9 +534,10 @@ export const PAGE_META = {
     ],
   },
   "/python": {
+    label: "Python",
     title: "Run Python in the Browser",
     description:
-      "Run a Python script or work at a REPL with the whole standard library, output as it is written and a panel of what the run left bound. No server and no install.",
+      "Run a Python script or work at a REPL with the standard library to hand, output as it is written and a panel of what the run left bound. No server and no install.",
     keywords: [
       "online python",
       "run python in browser",
@@ -521,6 +549,7 @@ export const PAGE_META = {
     ],
   },
   "/qr-code": {
+    label: "QR Code",
     title: "WiFi, vCard & URL QR Code Generator",
     description:
       "Make a QR code for a link, a WiFi network, a contact card, an email, a phone number or an SMS, drawn as you type and saved as an SVG or a PNG. Nothing is fetched.",
@@ -537,6 +566,7 @@ export const PAGE_META = {
     ],
   },
   "/regex": {
+    label: "Regex",
     title: "Regex Tester & Explainer",
     description:
       "Write a regular expression, watch every match and capture group light up in your own text, and read a line-by-line breakdown of what the pattern does.",
@@ -552,6 +582,7 @@ export const PAGE_META = {
     ],
   },
   "/schema": {
+    label: "Schema",
     title: "JSON Schema, Zod & Pydantic Validator",
     description:
       "Check a JSON payload against a JSON Schema, Zod or Pydantic model with every error marked in place, and convert a schema between all three.",
@@ -568,6 +599,7 @@ export const PAGE_META = {
     ],
   },
   "/sql": {
+    label: "SQL",
     title: "SQLite & Postgres Playground",
     description:
       "Run SQL against a real SQLite or PostgreSQL database running entirely in your browser, with a schema tree, a results grid and a log of everything it did.",
@@ -584,6 +616,7 @@ export const PAGE_META = {
     ],
   },
   "/string": {
+    label: "String",
     title: "Case Converter, Line Sorter & Text Escaper",
     description:
       "Convert camel, snake, kebab, Pascal, title and sentence case, sort, dedupe, wrap and shuffle lines, slugify, count words, and escape for HTML, JS, C, shell and SQL.",
@@ -605,6 +638,7 @@ export const PAGE_META = {
     ],
   },
   "/time": {
+    label: "Time",
     title: "Timestamp, Duration & Time Zone Converter",
     description:
       "Convert a Unix timestamp across time zones and read it as ISO 8601 or RFC 2822, parse a duration like 1h 30m or PT1H30M, and count the days between two dates.",
@@ -625,6 +659,7 @@ export const PAGE_META = {
     ],
   },
   "/unicode": {
+    label: "Unicode",
     title: "Unicode Character & Code Point Inspector",
     description:
       "Names, categories, scripts, UTF-8, UTF-16 and UTF-32 bytes, every escape form, NFC/NFD/NFKC/NFKD, and the invisible, bidi and lookalike characters hiding in a text.",
@@ -646,6 +681,7 @@ export const PAGE_META = {
     ],
   },
   "/unique-id": {
+    label: "Unique ID",
     title: "UUID, ULID & NanoID Generator",
     description:
       "Generate UUIDs v1 through v8 and NanoID, CUID2, ULID, KSUID, XID, TypeID, MongoDB ObjectId, Firebase PushID, Snowflake and Sonyflake IDs, singly or by the batch.",
@@ -664,6 +700,7 @@ export const PAGE_META = {
     ],
   },
   "/url": {
+    label: "URL",
     title: "URL Parser & Query String Builder",
     description:
       "Take a URL apart into scheme, host, port, path, query and fragment, and edit its query parameters unescaped in a builder that stays in step with the address.",
@@ -680,6 +717,7 @@ export const PAGE_META = {
     ],
   },
   "/attributions": {
+    label: "Attributions",
     title: "Open Source Attributions",
     description:
       "The licences and copyright notices of every open source package bundled into utils+, reproduced in full as their own terms ask for.",
@@ -689,14 +727,33 @@ export const PAGE_META = {
 
 export type PagePath = keyof typeof PAGE_META;
 
+export type UtilityPath = Exclude<PagePath, typeof HOME_PATH | typeof ATTRIBUTIONS_PATH>;
+
 export interface PageMeta {
+  label: string;
   title: string;
   description: string;
   keywords: string[];
   noindex?: true;
 }
 
+export const CATEGORIES: readonly Category[] = [
+  { name: "Data", paths: ["/json", "/csv", "/config", "/schema", "/mock", "/unique-id", "/diff", "/markdown"] },
+  { name: "Text and encoding", paths: ["/codec", "/string", "/unicode", "/regex", "/url", "/hex"] },
+  { name: "Security", paths: ["/hasher", "/cryptography", "/keygen", "/jwt", "/certificate", "/otp", "/password"] },
+  { name: "Network", paths: ["/curl", "/har", "/ip-address"] },
+  { name: "Code", paths: ["/javascript", "/python", "/sql"] },
+  { name: "Time and place", paths: ["/time", "/cron", "/countries", "/phone-number"] },
+  { name: "Everyday", paths: ["/calculator", "/converter", "/colour", "/image", "/qr-code"] },
+];
+
+export interface Category {
+  name: string;
+  paths: UtilityPath[];
+}
+
 const NOT_FOUND_META: PageMeta = {
+  label: "Not found",
   title: "Page Not Found",
   description: "No utility lives at this address. The list of everything utils+ can do is one click away.",
   keywords: [],
@@ -707,6 +764,10 @@ export function pageMeta(path: string): PageMeta {
   return PAGE_META[path as PagePath] ?? NOT_FOUND_META;
 }
 
+export function isUtilityPath(path: string): path is UtilityPath {
+  return path in PAGE_META && path !== HOME_PATH && path !== ATTRIBUTIONS_PATH;
+}
+
 export function documentTitle(meta: PageMeta): string {
   return `${meta.title} · ${SITE_NAME}`;
 }
@@ -715,26 +776,38 @@ export function canonicalUrl(path: string): string {
   return `${SITE_ORIGIN}${path}`;
 }
 
+export const OG_IMAGE = {
+  path: "/og-image.png",
+  width: 1200,
+  height: 630,
+  alt: "utils+: developer tools that run in your browser",
+};
+
 export function headMeta(path: string): HeadMeta {
   const meta = pageMeta(path);
   const title = documentTitle(meta);
   const url = canonicalUrl(path);
+  const image = canonicalUrl(OG_IMAGE.path);
 
   return {
     title,
     canonical: url,
     metas: [
       { attribute: "name", key: "description", content: meta.description },
-      { attribute: "name", key: "keywords", content: meta.keywords.join(", ") },
       { attribute: "name", key: "robots", content: meta.noindex ? "noindex, follow" : "index, follow" },
       { attribute: "property", key: "og:type", content: "website" },
       { attribute: "property", key: "og:site_name", content: SITE_NAME },
       { attribute: "property", key: "og:title", content: title },
       { attribute: "property", key: "og:description", content: meta.description },
       { attribute: "property", key: "og:url", content: url },
-      { attribute: "name", key: "twitter:card", content: "summary" },
+      { attribute: "property", key: "og:image", content: image },
+      { attribute: "property", key: "og:image:width", content: String(OG_IMAGE.width) },
+      { attribute: "property", key: "og:image:height", content: String(OG_IMAGE.height) },
+      { attribute: "property", key: "og:image:alt", content: OG_IMAGE.alt },
+      { attribute: "name", key: "twitter:card", content: "summary_large_image" },
       { attribute: "name", key: "twitter:title", content: title },
       { attribute: "name", key: "twitter:description", content: meta.description },
+      { attribute: "name", key: "twitter:image", content: image },
     ],
   };
 }
@@ -751,101 +824,8 @@ export interface MetaTag {
   content: string;
 }
 
-export function utilityPaths(): PagePath[] {
-  return (Object.keys(PAGE_META) as PagePath[]).filter((path) => path !== HOME_PATH && path !== ATTRIBUTIONS_PATH);
-}
-
-export function structuredData(path: string): StructuredData | undefined {
-  if (path !== HOME_PATH) return undefined;
-
-  return {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebSite",
-        "@id": WEBSITE_ID,
-        name: SITE_NAME,
-        url: canonicalUrl(HOME_PATH),
-        description: pageMeta(HOME_PATH).description,
-      },
-      {
-        "@type": "ItemList",
-        name: `${SITE_NAME} utilities`,
-        numberOfItems: utilityPaths().length,
-        itemListElement: utilityPaths().map((utility, index) => ({
-          "@type": "ListItem",
-          position: index + 1,
-          item: utilityData(utility),
-        })),
-      },
-    ],
-  };
-}
-
-function utilityData(path: PagePath): Record<string, unknown> {
-  const meta = pageMeta(path);
-
-  return {
-    "@type": "WebApplication",
-    name: meta.title,
-    description: meta.description,
-    url: canonicalUrl(path),
-    applicationCategory: "DeveloperApplication",
-    operatingSystem: "Any",
-    browserRequirements: "Requires JavaScript",
-    isPartOf: { "@id": WEBSITE_ID },
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  };
-}
-
-const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
-
-export interface StructuredData {
-  "@context": string;
-  "@graph": Record<string, unknown>[];
-}
-
-export function headHtml(path: string): string {
-  const { title, canonical, metas } = headMeta(path);
-
-  return [
-    `<title>${escapeHtml(title)}</title>`,
-    ...metas.map(({ attribute, key, content }) => `<meta ${attribute}="${key}" content="${escapeHtml(content)}" />`),
-    `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
-  ].join("\n  ");
-}
-
-export function withHead(html: string, path: string): string {
-  return html.replace(HEAD_BLOCK, `${HEAD_OPEN}\n  ${headHtml(path)}\n  ${HEAD_CLOSE}`);
-}
-
-const HEAD_OPEN = "<!--page-head-->";
-const HEAD_CLOSE = "<!--/page-head-->";
-
-const HEAD_BLOCK = /<!--page-head-->(?:[\s\S]*?<!--\/page-head-->)?/;
-
-export function bodyHtml(path: string): string {
-  const meta = pageMeta(path);
-
-  return `<div class="page-fallback"><h1>${escapeHtml(meta.title)}</h1><p>${escapeHtml(meta.description)}</p></div>`;
-}
-
-export function withBody(html: string, path: string): string {
-  return html.replace(BODY_BLOCK, () => `${BODY_OPEN}${bodyHtml(path)}${BODY_CLOSE}`);
-}
-
-const BODY_OPEN = "<!--page-body-->";
-const BODY_CLOSE = "<!--/page-body-->";
-
-const BODY_BLOCK = /<!--page-body-->(?:[\s\S]*?<!--\/page-body-->)?/;
-
-export function pageDocuments(index: string): Record<string, string> {
-  const paths = (Object.keys(PAGE_META) as PagePath[]).filter((path) => path !== HOME_PATH);
-  const documents: Record<string, string> = {};
-
-  for (const path of paths) documents[documentFileName(path)] = withBody(withHead(index, path), path);
-
-  return documents;
+export function utilityPaths(): UtilityPath[] {
+  return (Object.keys(PAGE_META) as PagePath[]).filter(isUtilityPath);
 }
 
 export function documentFileName(path: PagePath): string {
@@ -856,8 +836,13 @@ export function indexablePaths(): PagePath[] {
   return (Object.keys(PAGE_META) as PagePath[]).filter((path) => !pageMeta(path).noindex);
 }
 
-export function sitemapXml(): string {
-  const urls = indexablePaths().map((path) => `  <url>\n    <loc>${escapeHtml(canonicalUrl(path))}</loc>\n  </url>`);
+export function sitemapXml(lastModified: Partial<Record<PagePath, string>> = {}): string {
+  const urls = indexablePaths().map((path) => {
+    const modified = lastModified[path];
+    const lines = [`    <loc>${escapeHtml(canonicalUrl(path))}</loc>`];
+    if (modified) lines.push(`    <lastmod>${escapeHtml(modified)}</lastmod>`);
+    return ["  <url>", ...lines, "  </url>"].join("\n");
+  });
 
   return [
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
@@ -878,7 +863,7 @@ export function robotsTxt(): string {
   ].join("\n");
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

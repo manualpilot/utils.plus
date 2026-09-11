@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -50,6 +51,28 @@ test("the sample opens with its one fault marked in the payload and listed under
   await expect(page.locator(".cm-content .cm-schema-problem")).toHaveText(["\"SW1Y\""]);
   await expect(page.locator(".cm-content .cm-schema-problem-line")).toHaveCount(1);
   await expect(page.getByText("1 problem")).toBeVisible();
+});
+
+test("a property another one requires is marked on the object that lacks it, and the note says what converts", async ({ page }) => {
+  await openSchema(page);
+  await replaceDocument(
+    page,
+    "source",
+    JSON.stringify({
+      type: "object",
+      properties: { payment: { type: "object", dependentRequired: { card: ["billing"] } } },
+    }),
+  );
+  await replaceDocument(page, "second", "{\n  \"payment\": { \"card\": \"4242\" }\n}");
+
+  await expect(problems(page)).toHaveCount(1);
+  await expect(problems(page).first()).toContainText("Missing property \"billing\", which \"card\" requires");
+  await expect(page.locator(".cm-content .cm-schema-problem")).toHaveText(["\"payment\""]);
+  await expect(
+    tool(page).getByText(
+      "`dependentRequired` is checked against the payload, but converting to Zod or Pydantic leaves it out",
+    ),
+  ).toBeVisible();
 });
 
 test("fixing the payload clears the mark and the list with it", async ({ page }) => {

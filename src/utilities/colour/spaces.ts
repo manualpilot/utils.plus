@@ -69,12 +69,16 @@ export function toLab(colour: Rgba): Vector {
   return xyzToLab(apply(XYZ_D65_TO_D50, apply(LINEAR_TO_XYZ, toLinear(colour))));
 }
 
-export function fromLab(lab: Vector): { r: number; g: number; b: number } {
-  return fromLinear(apply(XYZ_TO_LINEAR, apply(XYZ_D50_TO_D65, labToXyz(lab))));
+export function labToOklab(lab: Vector): Vector {
+  return linearToOklab(apply(XYZ_TO_LINEAR, apply(XYZ_D50_TO_D65, labToXyz(lab))));
 }
 
 export function toOklab(colour: Rgba): Vector {
-  const [l, m, s] = apply(LINEAR_TO_LMS, toLinear(colour));
+  return linearToOklab(toLinear(colour));
+}
+
+function linearToOklab(linear: Vector): Vector {
+  const [l, m, s] = apply(LINEAR_TO_LMS, linear);
   return apply(LMS_TO_OKLAB, [Math.cbrt(l), Math.cbrt(m), Math.cbrt(s)]);
 }
 

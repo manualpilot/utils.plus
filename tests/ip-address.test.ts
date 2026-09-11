@@ -8,7 +8,7 @@ import { type Address, BITS, type Family, familyOf, prefixOf, readCidr, withPref
 import { administrationOf, asRangeOf, multicastGroup } from "../src/utilities/ip-address/registry";
 import { originsOf } from "../src/utilities/ip-address/roa";
 import { shardFor } from "../src/utilities/ip-address/shards";
-import { classify } from "../src/utilities/ip-address/special";
+import { classify, reservationOf, reservations } from "../src/utilities/ip-address/special";
 import roaIndex from "../src/utilities/ip-address/tables/roa-index.json";
 import { embeddedIpv4, writeAddress, writeArpa, writeBinary, writeCidr, writeExpanded, writeHex, writeInteger, writeValue } from "../src/utilities/ip-address/write";
 
@@ -296,6 +296,30 @@ describe("classify", () => {
   });
 });
 
+describe("reservationOf", () => {
+  it("names the block IANA set an address aside in", () => {
+    expect(reservationOf(address("192.168.1.130"))).toMatchObject({ cidr: "192.168.0.0/16", rfc: "RFC 1918" });
+    expect(reservationOf(address("2001:db8::1", "ipv6"))).toMatchObject({
+      cidr: "2001:db8::/32",
+      name: "Documentation",
+    });
+    expect(reservationOf(address("100.64.0.1"))?.name).toBe("Shared Address Space");
+    expect(reservationOf(address("198.51.100.7"))?.cidr).toBe("198.51.100.0/24");
+    expect(reservationOf(address("fd12::1", "ipv6"))?.cidr).toBe("fc00::/7");
+    expect(reservationOf(address("239.255.255.250"))?.name).toBe("Multicast");
+    expect(reservationOf(address("127.0.0.1"))?.name).toBe("Loopback");
+    expect(reservationOf(address("169.254.1.1"))?.name).toBe("Link Local");
+    expect(reservationOf(address("ff02::1", "ipv6"))?.name).toBe("Multicast");
+  });
+
+  it("has nothing to say about space a registry hands out", () => {
+    expect(reservationOf(address("8.8.8.8"))).toBeUndefined();
+    expect(reservationOf(address("2001:4860:4860::8888", "ipv6"))).toBeUndefined();
+    expect(reservationOf(address("2620:4f:8000::1", "ipv6"))).toBeUndefined();
+    expect(reservationOf(address("4000::1", "ipv6"))).toBeUndefined();
+  });
+});
+
 describe("the width field and the text it edits", () => {
   it("shows the family's full width for an address written without one", () => {
     expect(prefixOf("192.168.1.1", "ipv4")).toBe(32);
@@ -463,6 +487,21 @@ describe("the registries a shard is fetched from", () => {
 
   it("reads an AS number's delegation off the same number line", async () => {
     expect(await asDelegationOf(15169)).toMatchObject({ rir: "arin", country: "US", date: "2000-03-30" });
+  });
+
+  it("keeps a delegation apart from the one beside it that went to somebody else", async () => {
+    expect(await asDelegationOf(15169)).toMatchObject({ first: 15169n, last: 15169n });
+    expect(await asDelegationOf(15170)).toMatchObject({ first: 15170n, last: 15170n });
+    const found = await delegationOf(address("1.1.8.1"));
+    expect([found?.first, found?.last]).toEqual([address("1.1.8.0").value, address("1.1.8.255").value]);
+  });
+
+  it("finds no delegation at either end of any block IANA set aside", async () => {
+    for (const { family, start, end, special } of reservations()) {
+      for (const value of [start, end]) {
+        expect(await delegationOf({ family, value, zone: "" }), special.cidr).toBeUndefined();
+      }
+    }
   });
 
   it("finds an authorisation signed far above the address", async () => {

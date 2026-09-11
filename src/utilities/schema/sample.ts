@@ -48,7 +48,7 @@ function build(schema: Schema, doc: SchemaDocument, visiting: Set<string>): Json
     }
 
     case "object": {
-      const out: { [key: string]: JsonValue } = {};
+      const out: { [key: string]: JsonValue } = Object.create(null);
       for (const property of schema.properties) out[property.name] = build(property.schema, doc, visiting);
       return out;
     }
@@ -60,7 +60,7 @@ function build(schema: Schema, doc: SchemaDocument, visiting: Set<string>): Json
 
     case "intersection": {
       const parts = schema.parts.map((part) => build(part, doc, visiting));
-      if (parts.every(isPlainObject)) return Object.assign({}, ...parts);
+      if (parts.every(isPlainObject)) return Object.assign(Object.create(null), ...parts);
       return parts[0] ?? null;
     }
   }

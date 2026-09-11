@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { readContainer } from "../src/utilities/image/container";
 import { clampRect, dragRect, fitAspect, fitPreview, handleAt, localPoint, moveRect, resizeRect, turnTransform } from "../src/utilities/image/crop";
-import { applyEdits, editsFrom, locationProblem, problem, rewrite } from "../src/utilities/image/edits";
+import { applyEdits, editsFrom, locationProblem, markedBoxes, problem, rewrite, withheldBecause } from "../src/utilities/image/edits";
 import { carriesExif, readExifBlock, sniff, stripMetadata, webpCanvas, writeExifBlock } from "../src/utilities/image/embed";
 import { countEntries, emptyExif, type Exif, findEntry, readExif, writeExif } from "../src/utilities/image/exif";
 import { applyMatrix, cssFilter, isNeutral, matchPreset, matrixFor, NEUTRAL } from "../src/utilities/image/filters";
+import { arrivedFormat, FORMATS } from "../src/utilities/image/formats";
 import { PANEL_ORDER, PANELS, panelTitle, reorderPanels, togglePanel } from "../src/utilities/image/panels";
 import { readDataUri, stem } from "../src/utilities/image/source";
 import { coordinate, degreesMinutesSeconds, readComment, tagName, tagText, toCoordinate, writeComment } from "../src/utilities/image/tags";
@@ -197,6 +198,38 @@ describe("what a tag says", () => {
     expect(Array.from(writeComment("hi").subarray(0, 8))).toEqual([0x41, 0x53, 0x43, 0x49, 0x49, 0, 0, 0]);
   });
 
+  it.each(["Hello", "Zürich", "Zürich – north", "Hello 😀"])(
+    "reads back the comment %j exactly as it was written",
+    (text) => {
+      expect(readComment(writeComment(text))).toBe(text);
+      const exif = emptyExif();
+      exif.ifds.exif = [{ tag: 37510, type: 7, value: writeComment(text) }];
+      expect(readComment(findEntry(readExif(writeExif(exif))!.ifds.exif, 37510)!.value)).toBe(text);
+    },
+  );
+
+  it("writes ASCII where it will do and UTF-16 in the block's own byte order where it will not", () => {
+    expect(ascii("ASCII\0\0\0")).toEqual(Array.from(writeComment("plain").subarray(0, 8)));
+    const written = writeComment("Zürich");
+    expect(Array.from(written.subarray(0, 8))).toEqual(ascii("UNICODE\0"));
+    expect(Array.from(written.subarray(8, 12))).toEqual([0x5a, 0x00, 0xfc, 0x00]);
+    expect(written.length).toBe(8 + 2 * "Zürich".length);
+  });
+
+  it("reads every character code the format has, in whichever order the block was written", () => {
+    const utf16 = (text: string, little: boolean) => {
+      const out = new DataView(new ArrayBuffer(text.length * 2));
+      for (let at = 0; at < text.length; at++) out.setUint16(at * 2, text.charCodeAt(at), little);
+      return new Uint8Array(out.buffer);
+    };
+    expect(readComment(bytes(ascii("UNICODE\0"), utf16("Łódź 😀", false)), false)).toBe("Łódź 😀");
+    expect(readComment(bytes(ascii("UNICODE\0"), utf16("Łódź", true)), true)).toBe("Łódź");
+    expect(readComment(bytes(ascii("UNICODE\0"), [0xff, 0xfe], utf16("Łódź", true)), false)).toBe("Łódź");
+    expect(readComment(bytes(ascii("JIS\0\0\0\0\0"), [0x46, 0x7c, 0x4b, 0x5c]))).toBe("日本");
+    expect(readComment(bytes([0, 0, 0, 0, 0, 0, 0, 0], new TextEncoder().encode("Zürich")))).toBe("Zürich");
+    expect(readComment(bytes(ascii("ASCII\0\0\0"), [0x5a, 0xfc, 0x72, 0x69, 0x63, 0x68]))).toBe("Zürich");
+  });
+
   it("turns three rationals and a hemisphere into a place and back again", () => {
     const south = toCoordinate(-33.865143);
     expect(coordinate(south, "S")).toBeCloseTo(-33.865143, 5);
@@ -342,13 +375,67 @@ describe("editing what a file says", () => {
     expect(problem("taken", "2026:08:23 14:05:00")).toBeNull();
     expect(problem("taken", "2026-08-23")).toBe("YYYY:MM:DD HH:MM:SS");
     expect(problem("artist", "Someone")).toBeNull();
-    expect(problem("artist", "Someone 😀")).toBe("Only Latin-1 characters are kept");
+    expect(problem("artist", "Someone 😀")).toBe("Only ASCII can be written here, and 😀 is not");
     expect(problem("comment", "Anything 😀")).toBeNull();
 
-    expect(locationProblem("", "")).toEqual([null, null]);
-    expect(locationProblem("10", "")[1]).toBe("Both halves of a coordinate, or neither");
-    expect(locationProblem("100", "10")[0]).toBe("A latitude runs from -90 to 90");
-    expect(locationProblem("10", "10")).toEqual([null, null]);
+    expect(locationProblem("", "", true)).toEqual([null, null]);
+    expect(locationProblem("10", "", true)[1]).toBe("Both halves of a coordinate, or neither");
+    expect(locationProblem("100", "10", true)[0]).toBe("A latitude runs from -90 to 90");
+    expect(locationProblem("10", "10", true)).toEqual([null, null]);
+  });
+
+  it("refuses anything but ASCII in a text tag, and says which character", () => {
+    expect(problem("artist", "Zürich")).toBe("Only ASCII can be written here, and ü is not");
+    expect(problem("description", "Zürich – north")).toBe("Only ASCII can be written here, and ü is not");
+    expect(problem("artist", "Łukasz")).toBe("Only ASCII can be written here, and Ł is not");
+    expect(problem("comment", "Łukasz")).toBeNull();
+    expect(problem("artist", "Zürich", "Zürich")).toBeNull();
+    expect(problem("taken", "2026:08:23", "2026:08:23")).toBeNull();
+  });
+
+  it("holds half a coordinate back until a file has been asked for", () => {
+    expect(locationProblem("10", "", false)).toEqual([null, null]);
+    expect(locationProblem("100", "", false)).toEqual(["A latitude runs from -90 to 90", null]);
+    expect(locationProblem("10", "", true)).toEqual([null, "Both halves of a coordinate, or neither"]);
+  });
+
+  it("names every box that would stop a save, whether or not it is showing yet", () => {
+    const arrived = editsFrom(sample());
+    const edits = { ...arrived, fields: { ...arrived.fields, artist: "Łukasz", taken: "2026-08-23" }, longitude: "" };
+    expect(markedBoxes(edits, arrived).map(({ label }) => label)).toEqual(["Artist", "Date taken", "Longitude"]);
+    expect(markedBoxes(arrived, arrived)).toEqual([]);
+    expect(withheldBecause(markedBoxes(edits, arrived))).toBe("Artist, Date taken, and Longitude are marked");
+    expect(withheldBecause(markedBoxes({ ...arrived, longitude: "" }, arrived))).toBe("Longitude is marked");
+  });
+
+  it("writes nothing it has flagged, leaving the tag as the file had it", () => {
+    const arrived = editsFrom(sample());
+    const renamed = applyEdits(sample(), {
+      ...arrived,
+      fields: { ...arrived.fields, make: "Łukasz", artist: "Łukasz" },
+    });
+    expect(findEntry(renamed.ifds.image, 271)?.value).toBe("Nikon");
+    expect(findEntry(renamed.ifds.image, 315)).toBeUndefined();
+
+    const misdated = applyEdits(sample(), { ...arrived, fields: { ...arrived.fields, taken: "2026-08-23" } });
+    expect(findEntry(misdated.ifds.exif, 36867)).toBeUndefined();
+
+    const half = applyEdits(null, { fields: {}, orientation: "", latitude: "10", longitude: "" });
+    expect(half.ifds.gps).toEqual([]);
+    const halved = applyEdits(sample(), { ...arrived, latitude: "10", longitude: "" });
+    expect(halved.ifds.gps).toEqual(sample().ifds.gps);
+    const pastThePole = applyEdits(sample(), { ...arrived, latitude: "100" });
+    expect(pastThePole.ifds.gps).toEqual(sample().ifds.gps);
+  });
+
+  it("keeps a tag nobody touched byte for byte, whatever it holds", () => {
+    const raw = [0x93, 0x5a, 0xc3, 0xbc, 0x72, 0x69, 0x63, 0x68, 0x94, 0x00];
+    const arrived = readExif(asciiBlock(315, raw))!;
+    const edits = editsFrom(arrived);
+    const changed = applyEdits(arrived, { ...edits, fields: { ...edits.fields, description: "A caption" } });
+    const written = writeExif(changed);
+    expect(findEntry(readExif(written)!.ifds.image, 270)?.value).toBe("A caption");
+    expect(indexOf(written, raw)).toBeGreaterThan(0);
   });
 
   it("rewrites the bytes and leaves the pixels where they were", () => {
@@ -358,6 +445,24 @@ describe("editing what a file says", () => {
     const cleared = rewrite(written, "png", null, true)!;
     expect(readExifBlock(cleared, "png")).toBeNull();
     expect(chunkTypes(cleared)).toEqual(["IHDR", "IDAT", "IEND"]);
+  });
+});
+
+describe("the format a picture comes back in", () => {
+  const offered = FORMATS.filter((format) => format.value !== "avif");
+
+  it("is the one it arrived in, where this browser will write that", () => {
+    expect(arrivedFormat("image/jpeg", offered).value).toBe("jpeg");
+    expect(arrivedFormat("image/webp", offered).value).toBe("webp");
+    expect(arrivedFormat("image/png", offered).value).toBe("png");
+    expect(arrivedFormat("image/avif", FORMATS).value).toBe("avif");
+  });
+
+  it("is PNG for a picture no canvas here can write back", () => {
+    expect(arrivedFormat("image/gif", offered).value).toBe("png");
+    expect(arrivedFormat("image/bmp", offered).value).toBe("png");
+    expect(arrivedFormat("image/avif", offered).value).toBe("png");
+    expect(arrivedFormat("image/heic", offered).value).toBe("png");
   });
 });
 
@@ -592,6 +697,26 @@ describe("a picture pasted as a string", () => {
     expect(stem("")).toBe("image");
   });
 });
+
+function asciiBlock(tag: number, raw: number[]): Uint8Array {
+  const out = new Uint8Array(8 + 2 + 12 + 4 + raw.length);
+  const view = new DataView(out.buffer);
+  out.set([0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00]);
+  view.setUint16(8, 1, true);
+  view.setUint16(10, tag, true);
+  view.setUint16(12, 2, true);
+  view.setUint32(14, raw.length, true);
+  view.setUint32(18, 26, true);
+  out.set(raw, 26);
+  return out;
+}
+
+function indexOf(haystack: Uint8Array, needle: number[]): number {
+  for (let at = 0; at + needle.length <= haystack.length; at++) {
+    if (needle.every((byte, index) => haystack[at + index] === byte)) return at;
+  }
+  return -1;
+}
 
 function chunkTypes(png: Uint8Array): string[] {
   const view = new DataView(png.buffer, png.byteOffset, png.byteLength);

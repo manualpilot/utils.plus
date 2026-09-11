@@ -1,7 +1,7 @@
-import { Button, Center, Container, Image, Loader, MantineProvider, Stack, Text, Title } from "@mantine/core";
+import { Center, Image, Loader, MantineProvider } from "@mantine/core";
 import { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch } from "wouter";
 
 import notFound from "./images/not-found.png";
 
@@ -10,10 +10,10 @@ import "@mantine/core/styles.css";
 import "@mantine/spotlight/styles.css";
 import "./global.css";
 
-import { IconArrowsShuffle } from "./icons";
 import { Layout } from "./layout";
 import { cssVariablesResolver, theme } from "./theme";
-import { ATTRIBUTIONS_PATH, randomUtility, utilities } from "./utility-registry";
+import { ATTRIBUTIONS_PATH, utilities } from "./utility-registry";
+import { Welcome } from "./welcome";
 
 const Attributions = lazy(() => import("./attributions"));
 
@@ -42,27 +42,3 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </Layout>
   </MantineProvider>,
 );
-
-function Welcome() {
-  const [, setLocation] = useLocation();
-
-  return (
-    <Container flex={1} style={{ display: "flex", flexDirection: "column" }}>
-      <Center flex={1}>
-        <Stack align="center" gap="md">
-          <Title order={1}>Welcome to utils+</Title>
-          <Text c="dimmed" ta="center" maw={600}>
-            A collection of handy developer tools. Everything happens locally right here in your browser. There is no
-            invasive tracking, no server-side processing, and your data never leaves your machine.
-          </Text>
-          <Button
-            leftSection={<IconArrowsShuffle size="1rem" />}
-            onClick={() => setLocation(randomUtility().path)}
-          >
-            Random Utility
-          </Button>
-        </Stack>
-      </Center>
-    </Container>
-  );
-}

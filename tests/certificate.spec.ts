@@ -1,5 +1,6 @@
 import { expect, Page, test } from "@playwright/test";
 import { ED25519, EXPIRED, INTERMEDIATE, LEAF, LEAF_KEY, ROOT, SSH_ED25519 } from "./certificate-fixtures";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -54,7 +55,7 @@ test("a certificate and the key it belongs with are matched to each other", asyn
   await openCertificate(page);
   await input(page).fill(`${LEAF}\n${LEAF_KEY}`);
 
-  await expect(page.getByText("Private key matches")).toBeVisible();
+  await expect(tool(page).getByText("Private key matches")).toBeVisible();
   await expect(page.getByText("Matches example.test")).toBeVisible();
 });
 
@@ -62,14 +63,14 @@ test("a key that belongs to nothing here is told so, and the certificate is left
   await openCertificate(page);
   await input(page).fill(`${ED25519}\n${LEAF_KEY}`);
 
-  await expect(page.getByText("Matches nothing here")).toBeVisible();
-  await expect(page.getByText("Private key matches")).toHaveCount(0);
+  await expect(tool(page).getByText("Matches nothing here")).toBeVisible();
+  await expect(tool(page).getByText("Private key matches")).toHaveCount(0);
 });
 
 test("the share link carries the certificate and never the private key", async ({ page }) => {
   await openCertificate(page);
   await input(page).fill(`${LEAF}\n${LEAF_KEY}`);
-  await expect(page.getByText("Private key matches")).toBeVisible();
+  await expect(tool(page).getByText("Private key matches")).toBeVisible();
 
   await expect.poll(() => page.evaluate(() => window.location.hash)).not.toBe("");
   const shared = await page.evaluate(() => {
@@ -109,7 +110,7 @@ test("a certificate past its window says so in red rather than in a date nobody 
   await input(page).fill(EXPIRED);
 
   await expect(page.getByText(/^Expired \d+ years ago$/)).toBeVisible();
-  await expect(page.getByText("Self-issued")).toBeVisible();
+  await expect(tool(page).getByText("Self-issued")).toBeVisible();
 });
 
 test("an SSH public key is fingerprinted the way ssh-keygen prints it", async ({ page }) => {
@@ -147,7 +148,7 @@ test("everything is read with third-party requests blocked", async ({ page }) =>
   await input(page).fill(`${LEAF}\n${LEAF_KEY}\n${INTERMEDIATE}\n${ROOT}\n${SSH_ED25519}`);
 
   await expect(page.locator("[data-item]")).toHaveCount(5);
-  await expect(page.getByText("Private key matches")).toBeVisible();
+  await expect(tool(page).getByText("Private key matches")).toBeVisible();
   expect(blocked).toEqual([]);
 });
 

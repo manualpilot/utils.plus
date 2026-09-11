@@ -22,6 +22,9 @@ export const BLOCKED = "The request never left the browser. That is almost alway
   + "response from another site where that site sends an Access-Control-Allow-Origin header, and curl in a terminal "
   + "is under no such rule. A host that is down and a name that does not resolve look the same from here.";
 
+export const MIXED = "The browser blocked the request as mixed content: this page is served over https and the address "
+  + "is http, which curl in a terminal is under no rule about. Send it to an https address if the host has one.";
+
 export async function send(plan: Plan, signal: AbortSignal): Promise<Outcome> {
   const started = performance.now();
 
@@ -78,7 +81,7 @@ export function explain(error: unknown, plan: Plan, stopped: boolean): string {
     if (error.name === "AbortError") return STOPPED;
   }
 
-  if (error instanceof TypeError) return BLOCKED;
+  if (error instanceof TypeError) return plan.mixed ? MIXED : BLOCKED;
   return error instanceof Error ? error.message : String(error);
 }
 

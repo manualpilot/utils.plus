@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { exportPKCS8, exportSPKI, generateKeyPair } from "jose";
-import { describe, expect, it } from "vitest";
+import { exportJWK, exportPKCS8, exportSPKI, generateKeyPair } from "jose";
+import { beforeAll, describe, expect, it } from "vitest";
 import { decryptToken, encryptToken, isWrongKey } from "../src/utilities/jwt/encrypt";
 import { parseFieldValue, starterForm, writeFieldValue } from "../src/utilities/jwt/fields";
 import { generateKey } from "../src/utilities/jwt/keys";
@@ -258,6 +258,54 @@ describe("signing and checking", () => {
     await expect(verifySignature(token, await exportSPKI(publicKey), "EdDSA")).resolves.toBe(true);
   });
 
+  describe("against a JWKS", () => {
+    let pairs: CryptoKeyPair[] = [];
+    let set = "";
+    const signed = async (headers: Field[]) =>
+      (await signToken({ alg: "ES256", headers, claims, secret: await exportPKCS8(pairs[1].privateKey) })).token;
+
+    beforeAll(async () => {
+      pairs = await Promise.all(["first", "second"].map(() => generateKeyPair("ES256", { extractable: true })));
+      set = JSON.stringify({
+        keys: [
+          { ...await exportJWK(pairs[0].publicKey), kid: "first", use: "sig" },
+          { ...await exportJWK(pairs[1].publicKey), kid: "second", use: "sig" },
+        ],
+      });
+    });
+
+    it("checks the signature against the key the header's kid names", async () => {
+      await expect(verifySignature(await signed([field("kid", "second")]), set, "ES256")).resolves.toBe(true);
+      await expect(verifySignature(await signed([field("kid", "first")]), set, "ES256")).resolves.toBe(false);
+    });
+
+    it("says which kid the token asked for when no key in the set has it", async () => {
+      await expect(verifySignature(await signed([field("kid", "third")]), set, "ES256")).rejects.toThrow(
+        "No key in this set has the kid \"third\" the token asks for",
+      );
+    });
+
+    it("takes the only key a set holds when the token names none, and says so when there are more", async () => {
+      const one = JSON.stringify({ keys: [await exportJWK(pairs[1].publicKey)] });
+      await expect(verifySignature(await signed([]), one, "ES256")).resolves.toBe(true);
+      await expect(verifySignature(await signed([]), set, "ES256")).rejects.toThrow(
+        "The token names no kid, and this set holds 2 keys",
+      );
+    });
+
+    it("signs with a set of private keys, picked by the kid in the header rows", async () => {
+      const privates = JSON.stringify({
+        keys: [
+          { ...await exportJWK(pairs[0].privateKey), kid: "first" },
+          { ...await exportJWK(pairs[1].privateKey), kid: "second" },
+        ],
+      });
+      const result = await signToken({ alg: "ES256", headers: [field("kid", "second")], claims, secret: privates });
+      expect(result.keyError).toBeNull();
+      await expect(verifySignature(result.token, set, "ES256")).resolves.toBe(true);
+    });
+  });
+
   it("says a phrase is not a key for an algorithm that signs with one", async () => {
     const result = await signToken({ alg: "EdDSA", headers: [], claims, secret: "hunter2" });
     expect(result.keyError).toBe("EdDSA takes a key, so this needs a PEM or a JWK rather than a phrase");
@@ -355,6 +403,33 @@ describe("encrypting and opening", () => {
     );
     await expect(decryptToken(token, publicKey, "ECDH-ES+A256KW")).rejects.toThrow(
       "That is a public key, and this needs the private half",
+    );
+  }, 30000);
+
+  it("encrypts to the key a JWKS names by kid, and opens with the one the token's kid names", async () => {
+    const alg = "ECDH-ES+A256KW";
+    const pairs = await Promise.all(["old", "new"].map(() => generateKeyPair(alg, { extractable: true })));
+    const keys = async (half: "privateKey" | "publicKey") =>
+      JSON.stringify({
+        keys: await Promise.all(
+          pairs.map(async (pair, at) => ({ ...await exportJWK(pair[half]), kid: ["old", "new"][at] })),
+        ),
+      });
+
+    const sent = await encryptToken({
+      alg,
+      enc: "A256GCM",
+      headers: [field("kid", "new")],
+      claims,
+      secret: await keys("publicKey"),
+    });
+    expect(sent.keyError).toBeNull();
+    expect((await decryptToken(sent.token, await keys("privateKey"), alg)).claims).toEqual(
+      { iss: "utils.plus", sub: "John Doe" },
+    );
+    const without = JSON.stringify({ keys: [{ ...await exportJWK(pairs[0].privateKey), kid: "old" }] });
+    await expect(decryptToken(sent.token, without, alg)).rejects.toThrow(
+      "No key in this set has the kid \"new\" the token asks for",
     );
   }, 30000);
 

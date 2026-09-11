@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -457,7 +458,7 @@ test("a query shows its matches beside the document, and follows it as it is typ
   await openQuery(page);
 
   await expect.poll(() => readResult(page)).toBe("[\n  \"x\",\n  \"y\"\n]");
-  await expect(page.getByText("2 matches")).toBeVisible();
+  await expect(tool(page).getByText("2 matches")).toBeVisible();
 
   await setDocument(page, "{\"users\": [{\"name\": \"z\"}]}");
   await expect.poll(() => readResult(page)).toBe("[\n  \"z\"\n]");

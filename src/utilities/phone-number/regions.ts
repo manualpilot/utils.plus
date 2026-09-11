@@ -101,7 +101,7 @@ export const regionFilter = rankedFilter(rankOf, (search) => fold(search.replace
 function rankOf(code: string, needle: string): number {
   const terms = SEARCH_TERMS.get(code);
   if (!terms) return NO_MATCH;
-  if (terms.code === needle || terms.calling === needle) return 0;
+  if (terms.code === needle || terms.calling === needle || terms.reserved === needle) return 0;
   if (terms.name.startsWith(needle)) return 1;
   if (terms.name.includes(needle)) return 2;
   return terms.calling.startsWith(needle) ? 3 : NO_MATCH;
@@ -111,12 +111,16 @@ interface RegionTerms {
   name: string;
   code: string;
   calling: string;
+  reserved?: string;
 }
+
+const RESERVED_CODES: Record<string, string> = { GB: "uk" };
 
 const SEARCH_TERMS = new Map<string, RegionTerms>(
   REGIONS.map((region) => [region.code, {
     name: fold(region.name),
     code: fold(region.code),
     calling: region.callingCode,
+    reserved: RESERVED_CODES[region.code],
   }]),
 );

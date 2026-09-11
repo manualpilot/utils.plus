@@ -133,7 +133,7 @@ export default function Config() {
   };
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle directory="config">Config</UtilityTitle>
 
       <Card withBorder shadow="sm" radius="md">

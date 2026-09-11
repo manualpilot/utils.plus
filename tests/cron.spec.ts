@@ -1,4 +1,5 @@
 import { expect, Page, test } from "@playwright/test";
+import { tool } from "./tool";
 
 const BASE = process.env.PW_BASE_URL ?? "";
 
@@ -38,7 +39,7 @@ test("a field cleared to nothing keeps its place in the row", async ({ page }) =
   await expect(field(page, "Hour")).toHaveValue("");
   await expect(field(page, "Day of week")).toHaveValue("MON-FRI");
   await expect(page.getByText("Unix cron takes 5 fields; this has 4")).toBeVisible();
-  await expect(page.getByText("Next runs")).toBeHidden();
+  await expect(tool(page).getByText("Next runs")).toBeHidden();
 
   await field(page, "Hour").fill("6");
   await expect(expression(page)).toHaveValue("0 6 * * MON-FRI");
@@ -57,7 +58,7 @@ test("a shorthand is read, and shows the fields it stands for", async ({ page })
 
   await expression(page).fill("@reboot");
   await expect(description(page)).toHaveText("When cron starts");
-  await expect(page.getByText("Next runs")).toBeHidden();
+  await expect(tool(page).getByText("Next runs")).toBeHidden();
 });
 
 test("switching flavour rewrites the expression rather than breaking it", async ({ page }) => {
@@ -75,14 +76,14 @@ test("the runs are worked out in the zone the reader picked, not just written in
   await openCron(page);
   await expression(page).fill("0 0 1 1 *");
 
-  const firstRun = page.getByRole("row").first();
-  await expect(page.getByText("Europe/Berlin")).toBeHidden();
+  const firstRun = tool(page).getByRole("row").first();
+  await expect(tool(page).getByText("Europe/Berlin")).toBeHidden();
   await expect(firstRun).toContainText("Jan 01");
   await expect(firstRun).toContainText("00:00:00");
 
   await page.getByText("Local", { exact: true }).click();
 
-  await expect(page.getByText("Europe/Berlin")).toBeVisible();
+  await expect(tool(page).getByText("Europe/Berlin")).toBeVisible();
   await expect(firstRun).toContainText("Jan 01");
   await expect(firstRun).toContainText("00:00:00");
 });

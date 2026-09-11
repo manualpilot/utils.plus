@@ -1,4 +1,4 @@
-export type ConfigValue = null | boolean | number | string | ConfigValue[] | { [key: string]: ConfigValue };
+export type ConfigValue = null | boolean | number | bigint | string | ConfigValue[] | { [key: string]: ConfigValue };
 
 export type ReadResult = { ok: true; value: ConfigValue } | { ok: false; error: ReadError };
 
@@ -33,7 +33,12 @@ export function readScalar(text: string): ConfigValue {
   if (text === "true") return true;
   if (text === "false") return false;
   if (text === "null") return null;
+  if (INTEGER.test(text)) return exactInteger(BigInt(text));
   return NUMERIC.test(text) && String(Number(text)) === text ? Number(text) : text;
+}
+
+export function exactInteger(value: bigint): number | bigint {
+  return value >= -MAX_SAFE && value <= MAX_SAFE ? Number(value) : value;
 }
 
 export function writeScalar(value: ConfigValue): string {
@@ -47,7 +52,12 @@ export function ambiguousAsText(text: string): boolean {
 export function describe(value: ConfigValue): string {
   if (Array.isArray(value)) return "a list";
   if (value === null) return "null";
+  if (typeof value === "bigint") return "a single number";
   return typeof value === "string" ? "a single string" : `a single ${typeof value}`;
 }
 
 const NUMERIC = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
+
+const INTEGER = /^(?:0|-?[1-9]\d*)$/;
+
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);

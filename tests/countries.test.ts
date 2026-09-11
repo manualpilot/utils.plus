@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { FALLBACK_COUNTRY, localCountryCode } from "../src/common/local-country";
-import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, languageName, languageRows, nativeNameRows } from "../src/utilities/countries/facts";
+import { areaText, callingCodes, coordinates, currencyRows, decimalDegrees, demonymRows, isoCodes, languageName, languageRows, nativeNameRows } from "../src/utilities/countries/facts";
 import { borderCountries, COUNTRIES, COUNTRY_OPTIONS, countryFilter, findCountry, pickCountry, VIEW_OPTIONS } from "../src/utilities/countries/list";
 import { type Box, flight, type Framing, mapOf, prepare } from "../src/utilities/countries/map";
 import { boundariesOf, DEFAULT_VIEW, localView, pickView, type View, VIEW_CODES } from "../src/utilities/countries/shapes";
@@ -91,6 +91,13 @@ describe("the picker's search", () => {
     expect(ranked.indexOf("RE")).toBeLessThan(ranked.indexOf("MX"));
   });
 
+  it("ranks a name typed in full above a label that only begins with it or holds it", () => {
+    expect(search("uk")[0]).toBe("GB");
+    expect(search("holland")).toEqual(["NL", "BQ"]);
+    expect(search("sudan")[0]).toBe("SD");
+    expect(search("guyana")[0]).toBe("GY");
+  });
+
   it("offers the whole list for an empty box and none of it for a word no country answers to", () => {
     expect(search("")).toHaveLength(COUNTRIES.length);
     expect(search("   ")).toHaveLength(COUNTRIES.length);
@@ -148,6 +155,21 @@ describe("the facts", () => {
     expect(callingCodes(country("RU"))).toEqual(["+73", "+74", "+75", "+78", "+79"]);
     expect(callingCodes(country("US"))).toHaveLength(380);
     expect(callingCodes(country("AQ"))).toEqual([]);
+  });
+
+  it("names ISO 3166-1 beside a code ISO assigned, and never beside one it did not", () => {
+    expect(isoCodes(country("AU"))).toEqual([
+      { label: "ISO 3166-1 alpha-2", value: "AU" },
+      { label: "ISO 3166-1 alpha-3", value: "AUS" },
+      { label: "ISO 3166-1 numeric", value: "036" },
+    ]);
+    const kosovo = isoCodes(country("XK"));
+    expect(kosovo.map((row) => row.value)).toEqual(["XK", "UNK", ""]);
+    expect(kosovo.map((row) => row.label)).toEqual([
+      "Alpha-2, not ISO-assigned",
+      "Alpha-3, not ISO-assigned",
+      "Numeric, not ISO-assigned",
+    ]);
   });
 
   it("gives an area in both units, and none at all where the data does not know it", () => {
@@ -283,6 +305,11 @@ describe("the boundaries", () => {
       ["BQ", "BV", "CC", "CX", "GF", "GP", "MQ", "RE", "SJ", "TK", "YT"],
     );
     expect(DEFAULT_BOUNDARIES.absent.RE).toBe("FR");
+  });
+
+  it("leaves Kosovo out of thirteen points of view, the United Kingdom's among them", () => {
+    const without = VIEW_CODES.filter((code) => "XK" in boundaryFile(`views/${code}.json`).absent);
+    expect(without).toEqual(["AR", "CN", "ES", "GB", "GR", "ID", "IN", "MA", "NP", "PS", "RU", "UA", "VN"]);
   });
 });
 

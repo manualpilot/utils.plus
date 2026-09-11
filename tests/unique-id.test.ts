@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { generateId } from "../src/utilities/unique-id/generate";
 import { ID_TYPES, type IdSettings } from "../src/utilities/unique-id/types";
 
@@ -83,14 +83,85 @@ describe("generateId", () => {
     expect(generateId("typeid", settings({ prefix: "" }))).not.toContain("_");
   });
 
-  it("keeps a burst of PushIDs in ascending order", () => {
-    const ids = batch("pushid", 200);
-    expect([...ids].sort()).toEqual(ids);
-  });
+  it.each(["uuid-v6", "uuid-v7", "ulid", "typeid", "pushid", "cuid"])(
+    "keeps a burst of %s in ascending order",
+    (type) => {
+      const ids = batch(type, 1000);
+      expect([...ids].sort()).toEqual(ids);
+    },
+  );
 
   it("stamps the current second into the types that carry one", () => {
     const now = Math.floor(Date.now() / 1000);
     const objectId = parseInt(generateId("objectid", settings()).slice(0, 8), 16);
     expect(Math.abs(objectId - now)).toBeLessThan(2);
+  });
+});
+
+const GREGORIAN_OFFSET = 122192928000000000n;
+const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+const TICKS: Record<string, (hex: string) => bigint> = {
+  "uuid-v1": (hex) => BigInt(`0x${hex.slice(13, 16)}${hex.slice(8, 12)}${hex.slice(0, 8)}`),
+  "uuid-v6": (hex) => BigInt(`0x${hex.slice(0, 12)}${hex.slice(13, 16)}`),
+};
+
+const hexOf = (id: string) => id.replace(/-/g, "");
+const ticksOf = (type: string, id: string) => TICKS[type](hexOf(id)) - GREGORIAN_OFFSET;
+const clockSequenceOf = (id: string) => parseInt(hexOf(id).slice(16, 20), 16) & 0x3fff;
+
+const MILLISECONDS: Record<string, (id: string) => number> = {
+  "uuid-v7": (id) => parseInt(hexOf(id).slice(0, 12), 16),
+  ulid: (id) => [...id.slice(0, 10)].reduce((value, digit) => value * 32 + CROCKFORD.indexOf(digit), 0),
+};
+
+let clock = Date.UTC(2026, 8, 11, 12);
+const nextMillisecond = () => (clock += 1000);
+
+function madeAt(millisecond: number, type: string, size: number): string[] {
+  vi.spyOn(Date, "now").mockReturnValue(millisecond);
+  const ids = batch(type, size);
+  vi.restoreAllMocks();
+  return ids;
+}
+
+describe("the clock inside a time-based ID", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each(["uuid-v1", "uuid-v6"])("stamps %s with the millisecond it was made in, counting up in ticks", (type) => {
+    const now = nextMillisecond();
+    const ticks = madeAt(now, type, 1000).map((id) => ticksOf(type, id));
+    for (const tick of ticks) expect(tick / 10000n).toBe(BigInt(now));
+    for (let i = 1; i < ticks.length; i++) expect(ticks[i] - ticks[i - 1]).toBe(1n);
+  });
+
+  it("sorts a v6 batch in the order it was made, across the turn of a millisecond as well", () => {
+    const now = nextMillisecond();
+    const ids = [...madeAt(now, "uuid-v6", 1000)];
+    for (let ms = 1; ms <= 100; ms++) ids.push(...madeAt(now + ms, "uuid-v6", 20));
+    expect([...ids].sort()).toEqual(ids);
+  });
+
+  it("keeps one clock sequence until the clock is set back, and changes it then", () => {
+    const now = nextMillisecond();
+    const ids = [...madeAt(now, "uuid-v1", 100), ...madeAt(now + 1, "uuid-v6", 100)];
+    expect(new Set(ids.map(clockSequenceOf)).size).toBe(1);
+
+    const [setBack] = madeAt(now - 5, "uuid-v1", 1);
+    expect(clockSequenceOf(setBack)).not.toBe(clockSequenceOf(ids[0]));
+  });
+
+  it.each(["uuid-v7", "ulid", "typeid"])("sorts a %s batch inside one millisecond in the order it was made", (type) => {
+    const now = nextMillisecond();
+    const ids = [...madeAt(now, type, 1000), ...madeAt(now + 1, type, 1000)];
+    expect([...ids].sort()).toEqual(ids);
+  });
+
+  it.each(["uuid-v7", "ulid"])("leaves the millisecond a %s carries the one it was made in", (type) => {
+    const now = nextMillisecond();
+    for (const id of madeAt(now, type, 1000)) expect(MILLISECONDS[type](id)).toBe(now);
+    for (const id of madeAt(now + 1, type, 10)) expect(MILLISECONDS[type](id)).toBe(now + 1);
   });
 });

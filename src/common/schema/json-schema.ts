@@ -1,4 +1,4 @@
-import { type ArraySchema, type Definition, type JsonValue, type NumberSchema, type ObjectSchema, type Property, type ReadResult, type Schema, type SchemaDocument, type SourceError, type StringSchema, union } from "./ir";
+import { type Applicators, type ArraySchema, conditional, type Definition, type Dependency, exclusive, type JsonValue, type Meta, type NumberSchema, type ObjectSchema, type PatternProperty, type Property, type ReadResult, type Schema, type SchemaDocument, type SourceError, type StringSchema, union } from "./ir";
 import { parseJson } from "./locate";
 
 export const DIALECT = "https://json-schema.org/draft/2020-12/schema";
@@ -39,6 +39,22 @@ function convert(value: JsonValue, errors: SourceError[]): Schema {
     ...value.default !== undefined ? { default: value.default } : {},
   };
 
+  const schema = shape(value, meta, errors);
+  const conditions = applicators(value, errors);
+  if (conditions.not?.kind === "unknown" && !conditional(conditions.not)) return { ...meta, kind: "never" };
+  if (conditions.not) note(errors, leftOut("not"));
+  if (conditions.if) note(errors, leftOut("if"));
+  for (const keyword of UNCHECKED) {
+    if (value[keyword] !== undefined) note(errors, `\`${keyword}\` is not checked, and every conversion leaves it out`);
+  }
+
+  if (!conditions.not && !conditions.if) return schema;
+  return conditional(schema)
+    ? { kind: "intersection", parts: [schema, { kind: "unknown", ...conditions }] }
+    : { ...schema, ...conditions };
+}
+
+function shape(value: { [key: string]: JsonValue }, meta: Meta, errors: SourceError[]): Schema {
   const ref = text(value.$ref);
   if (ref !== undefined) {
     const name = refName(ref);
@@ -60,22 +76,41 @@ function convert(value: JsonValue, errors: SourceError[]): Schema {
   return { ...meta, ...union(types.map((name) => forType(name, value, errors))) };
 }
 
+function applicators(value: { [key: string]: JsonValue }, errors: SourceError[]): Applicators {
+  const out: Applicators = {};
+  if (value.not !== undefined) out.not = convert(value.not, errors);
+  if (value.if !== undefined && (value.then !== undefined || value.else !== undefined)) {
+    out.if = convert(value.if, errors);
+    if (value.then !== undefined) out.then = convert(value.then, errors);
+    if (value.else !== undefined) out.else = convert(value.else, errors);
+  }
+  return out;
+}
+
+function note(errors: SourceError[], message: string) {
+  if (!errors.some((error) => error.message === message)) errors.push({ message });
+}
+
+function leftOut(keyword: string): string {
+  return `\`${keyword}\` is checked against the payload, but converting to Zod or Pydantic leaves it out`;
+}
+
 function compose(value: { [key: string]: JsonValue }, errors: SourceError[]): Schema | null {
   const parts: Schema[] = [];
 
   if (Array.isArray(value.allOf)) parts.push(...value.allOf.map((item) => convert(item, errors)));
-  for (const keyword of ["anyOf", "oneOf"] as const) {
-    const branches = value[keyword];
-    if (Array.isArray(branches)) parts.push(union(branches.map((item) => convert(item, errors))));
+  if (Array.isArray(value.anyOf)) parts.push(union(value.anyOf.map((item) => convert(item, errors))));
+  if (Array.isArray(value.oneOf)) {
+    parts.push(exclusive(value.oneOf.map((item) => convert(item, errors))));
+    note(
+      errors,
+      "`oneOf` is checked as exactly one, but converting to Zod or Pydantic writes it as a union that allows several",
+    );
   }
   if (parts.length === 0) return null;
 
   const types = typesOf(value, errors);
   if (types.length > 0) parts.unshift(union(types.map((name) => forType(name, value, errors))));
-
-  if (value.not !== undefined) {
-    errors.push({ message: "`not` is carried through the conversion but is not checked against the payload" });
-  }
 
   return parts.length === 1 ? parts[0] : { kind: "intersection", parts };
 }
@@ -141,6 +176,9 @@ function arraySchema(value: { [key: string]: JsonValue }, errors: SourceError[])
     : undefined;
   const rest = Array.isArray(value.items) ? value.additionalItems : value.items;
 
+  const contains = value.contains === undefined ? undefined : convert(value.contains, errors);
+  if (contains) note(errors, leftOut("contains"));
+
   return {
     kind: "array",
     items: rest === undefined ? { kind: "unknown" } : convert(rest, errors),
@@ -148,6 +186,7 @@ function arraySchema(value: { [key: string]: JsonValue }, errors: SourceError[])
     ...pick(value, "minItems", number),
     ...pick(value, "maxItems", number),
     ...value.uniqueItems === true ? { uniqueItems: true } : {},
+    ...contains ? { contains, ...pick(value, "minContains", number), ...pick(value, "maxContains", number) } : {},
   };
 }
 
@@ -168,9 +207,22 @@ function objectSchema(value: { [key: string]: JsonValue }, errors: SourceError[]
     }
   }
 
+  const patterns: PatternProperty[] = [];
   if (isObject(value.patternProperties)) {
-    errors.push({ message: "`patternProperties` is carried through the conversion but is not checked" });
+    for (const [pattern, child] of Object.entries(value.patternProperties)) {
+      patterns.push({ pattern, schema: convert(child, errors) });
+    }
+    note(errors, leftOut("patternProperties"));
   }
+
+  for (const keyword of ["minProperties", "maxProperties"]) {
+    if (number(value[keyword]) !== undefined) note(errors, leftOut(keyword));
+  }
+
+  const dependencies = [
+    ...dependenciesOf(value, "dependentRequired", errors),
+    ...dependenciesOf(value, "dependencies", errors),
+  ];
 
   const additional = value.additionalProperties;
   const names = isObject(value.propertyNames) ? text(value.propertyNames.pattern) : undefined;
@@ -180,7 +232,30 @@ function objectSchema(value: { [key: string]: JsonValue }, errors: SourceError[]
     properties,
     ...additional === undefined ? {} : { additional: additional === false ? false : convert(additional, errors) },
     ...names !== undefined ? { keyPattern: names } : {},
+    ...patterns.length > 0 ? { patterns } : {},
+    ...pick(value, "minProperties", number),
+    ...pick(value, "maxProperties", number),
+    ...dependencies.length > 0 ? { dependencies } : {},
   };
+}
+
+function dependenciesOf(value: { [key: string]: JsonValue }, keyword: string, errors: SourceError[]): Dependency[] {
+  const bag = value[keyword];
+  if (!isObject(bag)) return [];
+
+  const out: Dependency[] = [];
+  for (const [name, requires] of Object.entries(bag)) {
+    if (Array.isArray(requires)) {
+      out.push({ name, requires: requires.filter((item): item is string => typeof item === "string") });
+    } else {
+      note(
+        errors,
+        `\`${keyword}\` naming a schema rather than a list of keys is not checked, and every conversion leaves it out`,
+      );
+    }
+  }
+  if (out.length > 0) note(errors, leftOut(keyword));
+  return out;
 }
 
 function refName(ref: string): string | undefined {
@@ -193,7 +268,7 @@ export function writeJsonSchema(doc: SchemaDocument): string {
   for (const def of doc.defs) collectRefs(def.schema, referenced);
   if (doc.root.kind !== "ref") collectRefs(doc.root, referenced);
 
-  const rootName = doc.root.kind === "ref" ? doc.root.name : undefined;
+  const rootName = doc.root.kind === "ref" && !conditional(doc.root) ? doc.root.name : undefined;
   const inlined = rootName !== undefined && !referenced.has(rootName)
     ? doc.defs.find((def) => def.name === rootName)
     : undefined;
@@ -210,6 +285,10 @@ export function writeJsonSchema(doc: SchemaDocument): string {
 }
 
 function collectRefs(schema: Schema, into: Set<string>) {
+  for (const condition of [schema.not, schema.if, schema.then, schema.else]) {
+    if (condition) collectRefs(condition, into);
+  }
+
   switch (schema.kind) {
     case "ref":
       into.add(schema.name);
@@ -217,10 +296,12 @@ function collectRefs(schema: Schema, into: Set<string>) {
     case "array":
       collectRefs(schema.items, into);
       for (const item of schema.prefix ?? []) collectRefs(item, into);
+      if (schema.contains) collectRefs(schema.contains, into);
       return;
     case "object":
       for (const property of schema.properties) collectRefs(property.schema, into);
       if (schema.additional) collectRefs(schema.additional, into);
+      for (const pattern of schema.patterns ?? []) collectRefs(pattern.schema, into);
       return;
     case "union":
       for (const option of schema.options) collectRefs(option, into);
@@ -236,6 +317,10 @@ function emit(schema: Schema): { [key: string]: JsonValue } {
   if (schema.description !== undefined) meta.description = schema.description;
 
   const body = emitBody(schema);
+  if (schema.not !== undefined && schema.kind !== "never") body.not = emit(schema.not);
+  if (schema.if !== undefined) body.if = emit(schema.if);
+  if (schema.then !== undefined) body.then = emit(schema.then);
+  if (schema.else !== undefined) body.else = emit(schema.else);
   if (schema.default !== undefined) body.default = schema.default;
   return { ...meta, ...body };
 }
@@ -284,6 +369,9 @@ function emitBody(schema: Schema): { [key: string]: JsonValue } {
         ...pick(schema, "minItems", number),
         ...pick(schema, "maxItems", number),
         ...schema.uniqueItems ? { uniqueItems: true } : {},
+        ...schema.contains ? { contains: emit(schema.contains) } : {},
+        ...pick(schema, "minContains", number),
+        ...pick(schema, "maxContains", number),
       };
 
     case "object": {
@@ -300,10 +388,21 @@ function emitBody(schema: Schema): { [key: string]: JsonValue } {
           ? {}
           : { additionalProperties: schema.additional === false ? false : emit(schema.additional) },
         ...schema.keyPattern !== undefined ? { propertyNames: { pattern: schema.keyPattern } } : {},
+        ...schema.patterns
+          ? {
+            patternProperties: Object.fromEntries(schema.patterns.map((entry) => [entry.pattern, emit(entry.schema)])),
+          }
+          : {},
+        ...pick(schema, "minProperties", number),
+        ...pick(schema, "maxProperties", number),
+        ...schema.dependencies
+          ? { dependentRequired: Object.fromEntries(schema.dependencies.map((entry) => [entry.name, entry.requires])) }
+          : {},
       };
     }
 
     case "union": {
+      if (schema.exclusive) return { oneOf: schema.options.map(emit) };
       if (schema.options.every((option) => option.kind === "literal")) {
         return { enum: schema.options.map((option) => (option as { value: JsonValue }).value) };
       }
@@ -333,8 +432,20 @@ function pick(source: object, key: string, as: (value: JsonValue | undefined) =>
 }
 
 const TYPE_KEYWORDS: [string, string[]][] = [
-  ["object", ["properties", "required", "additionalProperties", "propertyNames", "patternProperties"]],
-  ["array", ["items", "prefixItems", "minItems", "maxItems", "uniqueItems"]],
+  ["object", [
+    "properties",
+    "required",
+    "additionalProperties",
+    "propertyNames",
+    "patternProperties",
+    "minProperties",
+    "maxProperties",
+    "dependentRequired",
+    "dependencies",
+  ]],
+  ["array", ["items", "prefixItems", "minItems", "maxItems", "uniqueItems", "contains", "minContains", "maxContains"]],
   ["string", ["minLength", "maxLength", "pattern", "format"]],
   ["number", ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf"]],
 ];
+
+const UNCHECKED = ["dependentSchemas", "unevaluatedProperties", "unevaluatedItems"];

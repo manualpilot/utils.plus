@@ -1,16 +1,17 @@
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { describe, expect, it } from "vitest";
 import type { JsonValue, SchemaDocument } from "../src/common/schema/ir";
 import { type LanguageId, LANGUAGES } from "../src/common/schema/languages";
-import { checkCard, checkEan, checkIban, checkImei, checkIsbn, eanDigit, ibanCheckDigits, identify, isbn10Digit, luhnDigit, luhnHolds } from "../src/utilities/mock/checksums";
+import { validate } from "../src/common/schema/validate";
+import { checkCard, checkEan, checkIban, checkImei, checkIsbn, eanDigit, EXAMPLE_NUMBER, ibanCheckDigits, identify, isbn10Digit, luhnDigit, luhnHolds } from "../src/utilities/mock/checksums";
 import { fieldForName, normalise } from "../src/utilities/mock/detect";
 import { FIELDS } from "../src/utilities/mock/fields";
 import { generateBatch, type Optionality, rowName, rowSchema } from "../src/utilities/mock/generate";
-import { LOCALES } from "../src/utilities/mock/locales";
+import { type LocaleId, LOCALES } from "../src/utilities/mock/locales";
 import { stringFromPattern } from "../src/utilities/mock/pattern";
 import { SAMPLE_JSON_SCHEMA, SAMPLE_PYDANTIC, SAMPLE_ZOD } from "../src/utilities/mock/samples";
 import { freshSeed, Rng, rowRng } from "../src/utilities/mock/seed";
 import { FORMATS } from "../src/utilities/mock/write";
-import { validate } from "../src/utilities/schema/validate";
 
 function read(language: LanguageId, source: string): SchemaDocument {
   const { document, errors } = LANGUAGES[language].read(source);
@@ -215,6 +216,197 @@ describe("every row satisfies the schema it was generated from", () => {
   });
 });
 
+describe("the keywords that say more than a shape", () => {
+  function holds(schema: object, count = 60) {
+    const doc = read("json-schema", JSON.stringify(schema));
+    for (const optional of ["always", "sometimes", "never"] as Optionality[]) {
+      const { rows, notes } = generateBatch(doc, options({ count, optional }));
+      expect(problemsIn(doc, rows), optional).toEqual([]);
+      expect(notes, optional).toEqual([]);
+    }
+    return generateBatch(doc, options({ count, optional: "sometimes" })).rows as Record<string, JsonValue>[];
+  }
+
+  it("keeps a property called __proto__ as the key it is, in the rows and in the files", () => {
+    const doc = read(
+      "json-schema",
+      "{\"type\":\"object\",\"properties\":{\"__proto__\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"}},"
+        + "\"required\":[\"__proto__\",\"name\"],\"additionalProperties\":false}",
+    );
+    const { rows } = generateBatch(doc, options({ count: 5 }));
+    expect(problemsIn(doc, rows)).toEqual([]);
+    for (const row of rows) expect(Object.hasOwn(row as object, "__proto__")).toBe(true);
+    expect(FORMATS.json.write(rows, "People")).toContain("\"__proto__\":");
+    expect(FORMATS.csv.write(rows, "People").split("\r\n")[0]).toBe("__proto__,name");
+  });
+
+  it("matches exactly one branch of a oneOf", () => {
+    holds({
+      type: "object",
+      properties: {
+        amount: { oneOf: [{ type: "integer" }, { type: "number" }] },
+        payment: {
+          oneOf: [
+            {
+              type: "object",
+              properties: { kind: { const: "card" }, last4: { type: "string", pattern: "^[0-9]{4}$" } },
+              required: ["kind", "last4"],
+            },
+            {
+              type: "object",
+              properties: { kind: { const: "bank" }, iban: { type: "string" } },
+              required: ["kind", "iban"],
+            },
+          ],
+        },
+        code: { type: "integer", minimum: 1, maximum: 30, oneOf: [{ multipleOf: 3 }, { multipleOf: 5 }] },
+      },
+      required: ["amount", "payment", "code"],
+    });
+  });
+
+  it("puts the items `contains` asks for into a list, as many as minContains and maxContains allow", () => {
+    holds({
+      type: "object",
+      properties: {
+        roles: {
+          type: "array",
+          items: { enum: ["admin", "editor", "viewer"] },
+          contains: { const: "admin" },
+          maxItems: 3,
+          uniqueItems: true,
+        },
+        scores: {
+          type: "array",
+          items: { type: "integer", minimum: 0, maximum: 9 },
+          contains: { minimum: 8 },
+          minContains: 2,
+          maxContains: 3,
+          maxItems: 6,
+        },
+      },
+      required: ["roles", "scores"],
+    });
+  });
+
+  it("writes as many properties as minProperties asks for and no more than maxProperties allows", () => {
+    holds({
+      type: "object",
+      properties: { a: { type: "string" }, b: { type: "string" }, c: { type: "string" }, d: { type: "string" } },
+      minProperties: 3,
+      maxProperties: 3,
+    });
+    holds({ type: "object", additionalProperties: { type: "integer" }, minProperties: 6 });
+  });
+
+  it("brings the keys a present key depends on, in either spelling of dependentRequired", () => {
+    const properties = { name: { type: "string" }, creditCard: { type: "string" }, billingAddress: { type: "string" } };
+    holds({
+      type: "object",
+      properties,
+      required: ["name"],
+      dependentRequired: { creditCard: ["billingAddress", "cvv"] },
+    });
+    holds({ type: "object", properties, required: ["name"], dependencies: { creditCard: ["billingAddress"] } });
+  });
+
+  it("builds the then or the else an if asks for, and both turn up", () => {
+    const rows = holds({
+      type: "object",
+      properties: { country: { enum: ["US", "CA"] }, postcode: { type: "string" } },
+      required: ["country", "postcode"],
+      if: { properties: { country: { const: "US" } } },
+      then: { properties: { postcode: { pattern: "^[0-9]{5}$" } } },
+      else: { properties: { postcode: { pattern: "^[A-Z][0-9][A-Z] [0-9][A-Z][0-9]$" } } },
+    });
+    expect(new Set(rows.map((row) => row.country))).toEqual(new Set(["US", "CA"]));
+
+    holds({
+      type: "object",
+      properties: { plan: { enum: ["free", "pro"] }, seats: { type: "integer", minimum: 1, maximum: 50 } },
+      required: ["plan", "seats"],
+      if: { properties: { plan: { const: "free" } } },
+      then: { properties: { seats: { maximum: 1 } } },
+    });
+  });
+
+  it("steers clear of what a not rules out", () => {
+    holds({
+      type: "object",
+      properties: {
+        username: { type: "string", not: { enum: ["root", "admin"] } },
+        level: { type: "integer", minimum: 0, maximum: 3, not: { const: 0 } },
+        anything: { not: { type: "string" } },
+      },
+      required: ["username", "level", "anything"],
+    });
+  });
+
+  it("holds a key patternProperties matches to that pattern's schema as well", () => {
+    holds({
+      type: "object",
+      properties: { name: { type: "string" }, owner_id: { type: "string" } },
+      patternProperties: { "_id$": { type: "string", format: "uuid" } },
+      required: ["name", "owner_id"],
+    });
+    holds({
+      type: "object",
+      patternProperties: { "^S_[a-z]{3}$": { type: "string" }, "^I_[a-z]{3}$": { type: "integer" } },
+      additionalProperties: false,
+      minProperties: 2,
+    });
+  });
+
+  it("says so on the batch when a keyword asks for what no row can be", () => {
+    const cases: [object, string][] = [
+      [{
+        type: "object",
+        properties: { pick: { oneOf: [{ type: "string" }, { type: "string" }] } },
+        required: ["pick"],
+      }, "oneOf"],
+      [
+        { type: "object", properties: { flag: { type: "boolean", not: { type: "boolean" } } }, required: ["flag"] },
+        "not",
+      ],
+      [
+        { type: "object", properties: { a: { type: "string" } }, additionalProperties: false, minProperties: 2 },
+        "minProperties",
+      ],
+      [
+        {
+          type: "object",
+          properties: { a: { type: "string" }, b: { type: "string" } },
+          required: ["a", "b"],
+          maxProperties: 1,
+        },
+        "maxProperties",
+      ],
+      [
+        {
+          type: "object",
+          properties: { a: { type: "string" } },
+          required: ["a"],
+          additionalProperties: false,
+          dependentRequired: { a: ["b"] },
+        },
+        "dependentRequired",
+      ],
+      [
+        {
+          type: "object",
+          properties: { list: { type: "array", items: { type: "integer" }, contains: { type: "string" } } },
+          required: ["list"],
+        },
+        "minContains",
+      ],
+    ];
+    for (const [schema, keyword] of cases) {
+      const { notes } = generateBatch(read("json-schema", JSON.stringify(schema)), options({ count: 5 }));
+      expect(notes.join(" "), keyword).toContain(`\`${keyword}\``);
+    }
+  });
+});
+
 describe("what a property is called", () => {
   it("reads a name written in any of the ways a schema writes one", () => {
     for (const spelling of ["firstName", "first_name", "FIRST-NAME", "first name", "FirstName"]) {
@@ -278,7 +470,21 @@ describe("the checksums", () => {
   it("names the digit that would have made a card hold", () => {
     const result = checkCard("4242424242424243");
     expect(result?.valid).toBe(false);
+    expect(result?.found).toBe("3");
     expect(result?.expected).toBe("2");
+  });
+
+  it("names an IBAN's check digits where they sit rather than its last two", () => {
+    const result = checkIban("GB82 WEST 1234 5698 7654 33");
+    expect(result?.valid).toBe(false);
+    expect(result?.found).toBe("82");
+    expect(result?.expected).toBe("55");
+  });
+
+  it("offers a placeholder its own check accepts", () => {
+    const candidates = identify(EXAMPLE_NUMBER);
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const candidate of candidates) expect(candidate.valid, candidate.format).toBe(true);
   });
 
   it("ignores the spaces and hyphens a number is written with", () => {
@@ -382,10 +588,105 @@ describe("the generated numbers are the ones the checkers accept", () => {
   });
 
   it("keeps a made-up address inside the ranges reserved for documentation", () => {
-    const stream = rng();
-    for (let i = 0; i < 100; i++) {
-      expect(String(FIELDS.ipv6.generate(stream, LOCALES["en-US"]))).toMatch(/^2001:0db8:/);
-      expect(String(FIELDS.imageUrl.generate(stream, LOCALES["en-US"]))).toMatch(/^https:\/\/example\.com\//);
+    for (const locale of Object.values(LOCALES)) {
+      const stream = rng();
+      for (let i = 0; i < 100; i++) {
+        for (const field of ["url", "imageUrl"] as const) {
+          expect(new URL(String(FIELDS[field].generate(stream, locale))).hostname).toSatisfy(isReservedHost);
+        }
+        for (const field of ["domain", "hostname"] as const) {
+          expect(String(FIELDS[field].generate(stream, locale))).toSatisfy(isReservedHost);
+        }
+        expect(String(FIELDS.email.generate(stream, locale)).split("@")[1]).toSatisfy(isReservedHost);
+        expect(String(FIELDS.ipv4.generate(stream, locale))).toMatch(DOCUMENTATION_IPV4);
+        expect(String(FIELDS.ipv6.generate(stream, locale))).toMatch(/^2001:0db8:/);
+      }
+    }
+  });
+
+  it("keeps to the same names and ranges when it is a schema's format that asks for them", () => {
+    const doc = read(
+      "json-schema",
+      JSON.stringify({
+        type: "object",
+        properties: {
+          site: { type: "string", format: "uri" },
+          server: { type: "string", format: "hostname" },
+          contact: { type: "string", format: "email" },
+          address: { type: "string", format: "ipv4" },
+          webhook: { type: "string" },
+          clientIp: { type: "string" },
+        },
+        required: ["site", "server", "contact", "address", "webhook", "clientIp"],
+      }),
+    );
+    for (const row of generateBatch(doc, options({ count: 100 })).rows as Record<string, string>[]) {
+      expect(new URL(row.site).hostname).toSatisfy(isReservedHost);
+      expect(new URL(row.webhook).hostname).toSatisfy(isReservedHost);
+      expect(row.server).toSatisfy(isReservedHost);
+      expect(row.contact.split("@")[1]).toSatisfy(isReservedHost);
+      expect(row.address).toMatch(DOCUMENTATION_IPV4);
+      expect(row.clientIp).toMatch(DOCUMENTATION_IPV4);
+    }
+  });
+});
+
+function isReservedHost(host: string): boolean {
+  return /(^|\.)(example\.(com|net|org)|example|test)$/.test(host);
+}
+
+const DOCUMENTATION_IPV4 = /^(192\.0\.2|198\.51\.100|203\.0\.113)\.(25[0-5]|2[0-4]\d|1?\d?\d)$/;
+
+describe("a name that says when", () => {
+  const ANCHOR = Date.UTC(2025, 0, 1);
+  const YEAR = 365.2425 * 24 * 60 * 60 * 1000;
+
+  it("keeps its range under a date format, which says only how the instant is written", () => {
+    const doc = read(
+      "json-schema",
+      JSON.stringify({
+        type: "object",
+        properties: {
+          createdAt: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
+          deletedOn: { type: "string", format: "date" },
+          birthDate: { type: "string", format: "date" },
+          bornAt: { type: "string", format: "date-time" },
+          expiresAt: { type: "string", format: "date-time" },
+          dueDate: { type: "string", format: "date" },
+        },
+        required: ["createdAt", "updated_at", "deletedOn", "birthDate", "bornAt", "expiresAt", "dueDate"],
+      }),
+    );
+    const { rows } = generateBatch(doc, options({ count: 300 }));
+    expect(problemsIn(doc, rows)).toEqual([]);
+
+    for (const row of rows as Record<string, string>[]) {
+      for (const past of ["createdAt", "updated_at", "deletedOn"]) {
+        expect(Date.parse(row[past]), `${past} ${row[past]}`).toBeLessThanOrEqual(ANCHOR);
+      }
+      for (const born of ["birthDate", "bornAt"]) {
+        expect(Date.parse(row[born]), `${born} ${row[born]}`).toBeLessThanOrEqual(ANCHOR - YEAR * 18);
+        expect(Date.parse(row[born]), `${born} ${row[born]}`).toBeGreaterThanOrEqual(ANCHOR - YEAR * 81);
+      }
+      for (const future of ["expiresAt", "dueDate"]) {
+        expect(Date.parse(row[future]), `${future} ${row[future]}`).toBeGreaterThanOrEqual(ANCHOR);
+      }
+    }
+  });
+
+  it("still lets a format decide what a name that does not say when becomes", () => {
+    const doc = read(
+      "json-schema",
+      JSON.stringify({
+        type: "object",
+        properties: { updatedBy: { type: "string", format: "uuid" }, createdAt: { type: "string", format: "time" } },
+        required: ["updatedBy", "createdAt"],
+      }),
+    );
+    for (const row of generateBatch(doc, options({ count: 20 })).rows as Record<string, string>[]) {
+      expect(row.updatedBy).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4/);
+      expect(row.createdAt).toMatch(/^\d{2}:\d{2}:\d{2}Z$/);
     }
   });
 });
@@ -412,6 +713,58 @@ describe("the locales", () => {
   it("keeps an accented name whole where the locale writes one", () => {
     const names = LOCALES["de-DE"].surnames.join(" ");
     expect(names).toContain("Müller");
+  });
+
+  it("writes a UK postcode in a shape, with letters and an area, that Royal Mail actually uses", () => {
+    const stream = new Rng("postcodes");
+    for (let i = 0; i < 500; i++) {
+      const postcode = String(FIELDS.postcode.generate(stream, LOCALES["en-GB"]));
+      expect(postcode).toMatch(UK_POSTCODE);
+      expect(postcode.match(/^[A-Z]+/)?.[0]).toSatisfy((area: string) => UK_POSTCODE_AREAS.has(area));
+    }
+  });
+});
+
+const UK_POSTCODE =
+  /^([A-PR-UWYZ]\d{1,2}|[A-PR-UWYZ][A-HK-Y]\d{1,2}|[A-PR-UWYZ]\d[A-HJKPSTUW]|[A-PR-UWYZ][A-HK-Y]\d[ABEHMNPRVWXY]) \d[ABD-HJLNP-UW-Z]{2}$/;
+
+const UK_POSTCODE_AREAS = new Set(
+  ("AB AL B BA BB BD BH BL BN BR BS BT CA CB CF CH CM CO CR CT CV CW DA DD DE DG DH DL DN DT DY E EC EH EN EX FK FY "
+    + "G GL GU HA HD HG HP HR HS HU HX IG IP IV KA KT KW KY L LA LD LE LL LN LS LU M ME MK ML N NE NG NN NP NR NW "
+    + "OL OX PA PE PH PL PO PR RG RH RM S SA SE SG SK SL SM SN SO SP SR SS ST SW SY TA TD TF TN TQ TR TS TW UB W WA "
+    + "WC WD WF WN WR WS WV YO ZE").split(" "),
+);
+
+describe("a made-up phone number rings nobody", () => {
+  const RESERVED: Record<LocaleId, RegExp> = {
+    "en-US": /^\+1 [2-9]\d\d 555-01\d\d$/,
+    "en-GB": /^\+44 (7700 900|20 7946 0|161 496 0)\d{3}$/,
+    "de-DE": /^\+49 ((30 23125|69 90009|40 66969|221 4710|89 99998) \d{3}|(171 39200|176 040690) \d{2})$/,
+    "fr-FR": /^\+33 (1 99 00|2 61 91|3 53 01|4 65 71|5 36 49|6 39 98) \d{2} \d{2}$/,
+    "es-ES": /^\+34 3\d{2} (\d{2} \d{2} \d{2}|\d{3} \d{3})$/,
+    "it-IT": /^\+39 [269]\d{2} \d{3} \d{4}$/,
+    "ja-JP": /^\+81 (3-0\d{3}|[34]0-\d{4})-\d{4}$/,
+  };
+
+  for (const locale of Object.values(LOCALES)) {
+    it(`keeps ${locale.id} inside the range it is meant to use, at a length its country dials`, () => {
+      const stream = new Rng(`phones ${locale.id}`);
+      for (let i = 0; i < 300; i++) {
+        const phone = String(FIELDS.phone.generate(stream, locale));
+        expect(phone).toMatch(RESERVED[locale.id]);
+        expect(parsePhoneNumberFromString(phone)?.isPossible(), phone).toBe(true);
+      }
+    });
+  }
+
+  it("writes numbers no plan assigns where the regulator keeps no range for fiction", () => {
+    for (const id of ["es-ES", "it-IT", "ja-JP"] as const) {
+      const stream = new Rng(`unassigned ${id}`);
+      for (let i = 0; i < 300; i++) {
+        const phone = String(FIELDS.phone.generate(stream, LOCALES[id]));
+        expect(parsePhoneNumberFromString(phone)?.isValid(), phone).toBe(false);
+      }
+    }
   });
 });
 

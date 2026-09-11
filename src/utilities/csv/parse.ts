@@ -9,8 +9,10 @@ export interface CsvTable {
 }
 
 export function readCsv(text: string, choice: string, header: boolean): CsvTable {
-  const delimiter = choice === AUTO ? sniffDelimiter(text) : choice;
-  const { records, unterminated } = parseRecords(text, delimiter);
+  const declared = declaredDelimiter(text);
+  const body = declared ? text.slice(declared.line.length) : text;
+  const delimiter = choice !== AUTO ? choice : declared ? declared.delimiter : sniffDelimiter(body);
+  const { records, unterminated } = parseRecords(body, delimiter);
 
   const width = records.reduce((most, record) => Math.max(most, record.length), 0);
   const titles = header ? records[0] ?? [] : [];
@@ -23,6 +25,11 @@ export function readCsv(text: string, choice: string, header: boolean): CsvTable
     ragged: rows.filter((row) => row.length !== width).length,
     unterminated,
   };
+}
+
+function declaredDelimiter(text: string): { delimiter: string; line: string } | null {
+  const match = SEP_LINE.exec(text);
+  return match ? { delimiter: match[1], line: match[0] } : null;
 }
 
 export function columnTitle(name: string | undefined, at: number): string {
@@ -115,6 +122,8 @@ export function sniffDelimiter(text: string): string {
 }
 
 const BOM = 0xfeff;
+
+const SEP_LINE = /^\uFEFF?sep=([^\r\n])(?:\r\n|\r|\n|$)/i;
 
 const SNIFF_LIMIT = 64 * 1024;
 const SNIFF_ROWS = 20;

@@ -212,6 +212,97 @@ describe("TOML", () => {
   });
 });
 
+describe("an integer too large for a double", () => {
+  const BIG = 12345678901234567890n;
+  const LONG = 9007199254740993n;
+
+  it("keeps every digit on the way in from the three formats that nest", () => {
+    expect(read("json", "{\"id\": 12345678901234567890, \"small\": 3, \"negative\": -12345678901234567890}")).toEqual({
+      id: BIG,
+      small: 3,
+      negative: -BIG,
+    });
+    expect(read("yaml", "id: 12345678901234567890\nsmall: 3\n")).toEqual({ id: BIG, small: 3 });
+    expect(read("toml", "id = 9007199254740993\nsmall = 3\n")).toEqual({ id: LONG, small: 3 });
+  });
+
+  it("keeps every digit on the way in from a flat format, where it spells itself exactly", () => {
+    expect(readScalar("12345678901234567890")).toBe(BIG);
+    expect(readScalar("-9007199254740993")).toBe(-LONG);
+    expect(readScalar("012345678901234567890")).toBe("012345678901234567890");
+  });
+
+  it("writes every digit back out of every format that can hold it", () => {
+    const value = { id: BIG, list: [LONG] };
+    expect(write("json", value).text).toBe(
+      "{\n  \"id\": 12345678901234567890,\n  \"list\": [\n    9007199254740993\n  ]\n}\n",
+    );
+    expect(write("yaml", value).text).toBe("id: 12345678901234567890\nlist:\n  - 9007199254740993\n");
+    expect(write("env", value).text).toBe("id=12345678901234567890\nlist__0=9007199254740993\n");
+    expect(write("properties", value).text).toBe("id=12345678901234567890\nlist.0=9007199254740993\n");
+    expect(write("toml", { id: LONG }).text).toBe("id = 9007199254740993\n");
+  });
+
+  it.each(FORMAT_IDS.flatMap((from) => FORMAT_IDS.map((to) => ({ from, to }))))(
+    "carries one from $from to $to without rounding it",
+    ({ from, to }) => {
+      const text = write(from, { id: LONG, name: "api" }).text;
+      expect(read(to, convert(from, to, text))).toEqual({ id: LONG, name: "api" });
+    },
+  );
+
+  it("names one TOML cannot hold rather than writing it as something else", () => {
+    expect(write("toml", { id: BIG, name: "api", ids: [1n, BIG] })).toEqual({
+      text: "name = \"api\"\n",
+      lost: ["id", "ids"],
+    });
+  });
+
+  it("quotes a string of digits a flat format would otherwise read back as one", () => {
+    expect(write("env", { id: "12345678901234567890" }).text).toBe("id=\"12345678901234567890\"\n");
+  });
+
+  it("still calls a single one a number when there is nowhere to put it", () => {
+    expect(writeToml(BIG)).toEqual({
+      ok: false,
+      message: "A TOML document is a table of keys, and this one is a single number.",
+    });
+  });
+});
+
+describe("a string a YAML 1.1 reader would take for something else", () => {
+  const STRINGS = [
+    "no",
+    "Yes",
+    "on",
+    "OFF",
+    "y",
+    "n",
+    "01234",
+    "12:30",
+    "1:20:30",
+    "0x1F",
+    "+12",
+    "1_000",
+    "2001-12-14",
+    "~",
+    "<<",
+  ];
+
+  it("is quoted wherever it lands, as a value or as a key", () => {
+    const value = Object.fromEntries(STRINGS.map((text) => [text, text]));
+    const { text } = write("yaml", value);
+    for (const line of text.trimEnd().split("\n")) expect(line).toMatch(/^"[^"]+": "[^"]+"$/);
+    expect(read("yaml", text)).toEqual(value);
+  });
+
+  it("leaves everything that means the same in both alone", () => {
+    expect(write("yaml", { name: "api", port: 8080, debug: false, ratio: 1.5, none: null }).text).toBe(
+      "name: api\nport: 8080\ndebug: false\nratio: 1.5\nnone: null\n",
+    );
+  });
+});
+
 describe("YAML and JSON", () => {
   it("read an empty document as the same nothing", () => {
     expect(read("yaml", "")).toBe(null);

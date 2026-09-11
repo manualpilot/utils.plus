@@ -49,7 +49,7 @@ test("moving to another utility drops the fragment", async ({ page }) => {
   await page.getByPlaceholder("Text to encode").fill("codec only");
   await expect.poll(() => hashState(page).input).toBe("codec only");
 
-  await page.getByText("Unique ID", { exact: true }).click();
+  await page.locator(".app-navbar").getByText("Unique ID", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Generate Unique ID" })).toBeVisible();
 
   await page.waitForTimeout(SETTLE_MS);
@@ -62,7 +62,7 @@ test("coming back to a tracked URL restores it", async ({ page }) => {
   await page.getByPlaceholder("Text to encode").fill("before leaving");
   await expect.poll(() => hashState(page).input).toBe("before leaving");
 
-  await page.getByText("JSON", { exact: true }).click();
+  await page.locator(".app-navbar").getByText("JSON", { exact: true }).click();
   await expect(page.locator(".cm-editor").first()).toBeVisible();
 
   await page.goBack();

@@ -127,6 +127,14 @@ describe("the zone search", () => {
     expect(search("auckland")[0]).toBe("Pacific/Auckland");
   });
 
+  it("ranks a country typed in full above a name that only begins with it", () => {
+    expect(search("india")[0]).toBe("Asia/Kolkata");
+    const australia = search("australia");
+    const macquarie = australia.indexOf("Antarctica/Macquarie");
+    expect(macquarie).toBeGreaterThan(0);
+    expect(australia.slice(0, macquarie).every((zone) => zone.startsWith("Australia/"))).toBe(true);
+  });
+
   it("offers the whole list for a search nobody has typed into, and none of it for a word nowhere on earth", () => {
     expect(search("   ")).toEqual(TIME_ZONES);
     expect(search("zzzz")).toEqual([]);

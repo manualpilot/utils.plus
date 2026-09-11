@@ -107,6 +107,27 @@ describe("readCsv", () => {
     expect(table.columns).toEqual([]);
     expect(table.rows).toEqual([]);
   });
+
+  it("takes the delimiter from a sep= line and never reads that line as a record", () => {
+    const table = readCsv("sep=;\nid;name\n1;Ada, Countess", "auto", true);
+    expect(table.delimiter).toBe(";");
+    expect(table.columns).toEqual(["id", "name"]);
+    expect(table.rows).toEqual([["1", "Ada, Countess"]]);
+
+    expect(readCsv("\uFEFFsep=|\r\na|b\r\n", "auto", false).rows).toEqual([["a", "b"]]);
+    expect(readCsv("sep=\t\na\tb", "auto", false).delimiter).toBe("\t");
+  });
+
+  it("keeps a delimiter somebody chose over the one a sep= line declares, and still drops the line", () => {
+    const table = readCsv("sep=;\na,b;c", ",", false);
+    expect(table.delimiter).toBe(",");
+    expect(table.rows).toEqual([["a", "b;c"]]);
+  });
+
+  it("reads a first line that only looks like a declaration as the record it is", () => {
+    expect(readCsv("sep=;;\na;b", "auto", false).rows).toEqual([["sep=", "", ""], ["a", "b"]]);
+    expect(readCsv("sep,name\n1,Ada", "auto", true).columns).toEqual(["sep", "name"]);
+  });
 });
 
 describe("columnTitle", () => {

@@ -11,7 +11,7 @@ import { administrationOf, asRangeOf, multicastGroup } from "./registry";
 import { type Origins, useOrigins } from "./roa";
 import { ASN, FAMILIES, type Mode, MODE_OPTIONS, pickAddress, pickAsn, pickFamily, pickMode, pickSplit, pickText, SPLIT_LIMIT, titleOf } from "./settings";
 import type { Reading as ShardReading } from "./shards";
-import { classify, REACH_COLOUR, REACH_LABEL } from "./special";
+import { classify, REACH_COLOUR, REACH_LABEL, reservationOf } from "./special";
 import { embeddedIpv4, writeAddress, writeArpa, writeBinary, writeCidr, writeCount, writeExpanded, writeHex, writeInteger, writeValue } from "./write";
 
 export default function IpAddress() {
@@ -145,7 +145,8 @@ function Analysis({ reading, probe, onProbe, splitPrefix, onSplitPrefix }: Analy
 
   const administration = administrationOf(address);
   const group = multicastGroup(address);
-  const delegation = useDelegation(address);
+  const reserved = reservationOf(address);
+  const delegation = useDelegation(reserved ? undefined : address);
   const origins = useOrigins(address);
 
   return (
@@ -171,16 +172,28 @@ function Analysis({ reading, probe, onProbe, splitPrefix, onSplitPrefix }: Analy
         <Stack gap="sm">
           <CardTitle reading={delegation.reading}>Registry</CardTitle>
           <FactTable
-            rows={[
-              { label: "Administered by", value: administration?.designation ?? "" },
-              { label: "IANA block", value: administration?.cidr ?? "" },
-              { label: "IANA status", value: administration?.status ?? "" },
-              { label: "IANA record", value: administration?.date ?? "" },
-              ...delegationRows(delegation.answer, family),
-              { label: "Whois", value: administration?.whois ?? "" },
-              { label: "RDAP", value: administration?.rdap ?? "" },
-            ]}
+            rows={reserved
+              ? [
+                { label: "Set aside for", value: reserved.name },
+                { label: "Defined in", value: reserved.rfc },
+                { label: "IANA block", value: reserved.cidr },
+              ]
+              : [
+                { label: "Administered by", value: administration?.designation ?? "" },
+                { label: "IANA block", value: administration?.cidr ?? "" },
+                { label: "IANA status", value: administration?.status ?? "" },
+                { label: "IANA record", value: administration?.date ?? "" },
+                ...delegationRows(delegation.answer, family),
+                { label: "Whois", value: administration?.whois ?? "" },
+                { label: "RDAP", value: administration?.rdap ?? "" },
+              ]}
           />
+          {reserved && (
+            <Text size="sm" c="dimmed">
+              IANA's special-purpose registry set this block aside, so no regional registry administers it and nothing
+              in it was delegated.
+            </Text>
+          )}
           {delegation.answer?.country && (
             <Text size="sm" c="dimmed">
               The country is where the resource was registered, not where it is used or routed.

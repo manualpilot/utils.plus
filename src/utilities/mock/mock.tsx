@@ -7,7 +7,7 @@ import { isLanguage, LANGUAGE_OPTIONS, type LanguageId, LANGUAGES } from "../../
 import { useInitialHashState, useRegisterShareState } from "../../common/share-state";
 import { UtilityTitle } from "../../common/utility-title";
 import { IconAlertTriangle, IconCheck, IconCircleCheck, IconCircleX, IconCopy, IconDice5, IconDownload } from "../../icons";
-import { type Candidate, identify } from "./checksums";
+import { type Candidate, EXAMPLE_NUMBER, identify } from "./checksums";
 import { outputExtensions, schemaExtensions } from "./editor";
 import { generateBatch, type Optionality, rowName } from "./generate";
 import { isLocale, LOCALE_OPTIONS, type LocaleId } from "./locales";
@@ -118,7 +118,7 @@ export default function Mock() {
   };
 
   return (
-    <Stack flex={1} mih={0} gap="md">
+    <Stack flex={1} className="fill-screen" gap="md">
       <UtilityTitle
         directory="mock"
         control={
@@ -293,7 +293,7 @@ export default function Mock() {
               <TextInput
                 label="Number"
                 description="A payment card, an IBAN, an ISBN, a barcode or an IMEI — spaces and hyphens are ignored"
-                placeholder="4539 5789 0080 5187"
+                placeholder={EXAMPLE_NUMBER}
                 value={value}
                 onChange={(event) => setValue(event.currentTarget.value)}
                 spellCheck={false}
@@ -324,8 +324,8 @@ function Verdict({ candidate }: { candidate: Candidate }) {
           {candidate.detail && <Text size="sm" c="dimmed">{candidate.detail}</Text>}
           {candidate.expected && (
             <Text size="sm" c="dimmed">
-              The check digit here is{" "}
-              <Text span ff="monospace">{candidate.normalised.slice(-candidate.expected.length)}</Text>, where{" "}
+              {candidate.found.length > 1 ? "The check digits here are" : "The check digit here is"}{" "}
+              <Text span ff="monospace">{candidate.found}</Text>, where{" "}
               <Text span ff="monospace">{candidate.expected}</Text> is what would hold.
             </Text>
           )}
