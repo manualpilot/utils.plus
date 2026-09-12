@@ -14,8 +14,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - run: npm ci
+      - uses: ./.github/actions/site-data
       - run: npm run outdated
-      - run: npm run build
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run playwright

@@ -1,0 +1,34 @@
+name: site data
+description: Restore what npm run data generates, so a generator reaches its publisher only when its pin has moved.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@main
+      with:
+        path: |
+          src/utilities/phone-number/maps
+          src/utilities/phone-number/short-numbers.json
+        key: phone-geo-${{ hashFiles('scripts/generate-phone-geo.ts') }}
+    - uses: actions/cache@main
+      with:
+        path: |
+          src/utilities/countries/views
+          src/utilities/countries/world.json
+        key: country-shapes-${{ hashFiles('scripts/generate-country-shapes.ts') }}
+    - uses: actions/cache@main
+      with:
+        path: |
+          src/utilities/unicode/names
+          src/utilities/unicode/tables
+        key: unicode-${{ hashFiles('scripts/generate-unicode.ts') }}
+    - uses: actions/cache@main
+      with:
+        path: |
+          src/utilities/ip-address/tables
+          src/utilities/ip-address/delegations
+        key: ip-registry-${{ hashFiles('scripts/generate-ip-registry.ts', 'scripts/ip-shards.ts') }}
+    - uses: actions/cache@main
+      with:
+        path: src/utilities/ip-address/roas
+        key: ip-roas-${{ hashFiles('scripts/generate-ip-roas.ts', 'scripts/ip-shards.ts') }}
