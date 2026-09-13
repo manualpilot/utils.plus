@@ -8,13 +8,16 @@ import { pathToFileURL } from "node:url";
 import type { Plugin, Rolldown } from "vite";
 import { defineConfig } from "vitest/config";
 import { type PageContent, type PageContents, pageDocuments, withBody, withHead } from "./src/page-document.ts";
+import { type ManifestPath, manifestPaths, manifestUrl, type PageManifest, pageModule } from "./src/page-manifest.ts";
 import { ATTRIBUTIONS_PATH, documentFileName, HOME_PATH, OG_IMAGE, PAGE_META, type PagePath, robotsTxt, sitemapXml } from "./src/page-meta.ts";
+
+const BUILD_TIME = new Date().toISOString();
 
 export default defineConfig({
   root: "src",
   publicDir: false,
   css: { postcss: join(import.meta.dirname, "conf") },
-  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
+  define: { __BUILD_TIME__: JSON.stringify(BUILD_TIME) },
   build: {
     outDir: "../dist",
     emptyOutDir: true,
@@ -33,7 +36,7 @@ export default defineConfig({
       output: { chunkFileNames, assetFileNames },
     },
   },
-  plugins: [react(), pyodideAssets(), pageMetaFiles()],
+  plugins: [react(), pyodideAssets(), pageManifests(), pageMetaFiles()],
   test: {
     root: import.meta.dirname,
     globals: true,
@@ -46,7 +49,7 @@ export default defineConfig({
 
   optimizeDeps: {
     exclude: ["@sqlite.org/sqlite-wasm", "@electric-sql/pglite", "@docx-editor.dev/core", "@docx-editor.dev/fonts"],
-    entries: ["index.html", "utilities/**/*.ts"],
+    entries: ["index.html", "utilities/**/*.{ts,tsx}", "attributions.tsx"],
   },
 });
 
@@ -217,6 +220,73 @@ function sourcesOf(path: PagePath): string[] {
 function warnUndated(reason: string): Partial<Record<PagePath, string>> {
   console.warn(`page-meta-files: the sitemap carries no lastmod, because ${reason}`);
   return {};
+}
+
+function pageManifests(): Plugin {
+  const source = (path: ManifestPath) => join(import.meta.dirname, "src", pageModule(path));
+  let command: "build" | "serve" = "serve";
+
+  return {
+    name: "page-manifests",
+    configResolved(config) {
+      command = config.command;
+    },
+    buildStart() {
+      if (command !== "build") return;
+      for (const path of manifestPaths()) {
+        this.emitFile({ type: "chunk", id: source(path), name: path.slice(1), preserveSignature: "exports-only" });
+      }
+    },
+    configureServer(server) {
+      const pages = new Map(manifestPaths().map((path) => [manifestUrl(path), path]));
+      server.middlewares.use((req, res, next) => {
+        const path = pages.get(req.url?.split("?")[0] ?? "");
+        if (!path) return next();
+        const manifest: PageManifest = {
+          build: BUILD_TIME,
+          module: `/${pageModule(path)}`,
+          imports: [],
+          css: [],
+        };
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify(manifest));
+      });
+    },
+    generateBundle: {
+      order: "post",
+      handler(_options, bundle) {
+        for (const path of manifestPaths()) {
+          const entry = Object.values(bundle).find((file) =>
+            file.type === "chunk" && file.facadeModuleId === source(path)
+          );
+          if (entry?.type !== "chunk") throw new Error(`page-manifests: ${path} has no entry in the bundle`);
+          const manifest: PageManifest = {
+            build: BUILD_TIME,
+            module: `/${entry.fileName}`,
+            ...dependencies(entry, bundle),
+          };
+          this.emitFile({ type: "asset", fileName: manifestUrl(path).slice(1), source: JSON.stringify(manifest) });
+        }
+      },
+    },
+  };
+}
+
+function dependencies(
+  entry: Rolldown.OutputChunk,
+  bundle: Rolldown.OutputBundle,
+): Pick<PageManifest, "imports" | "css"> {
+  const imports = new Set<string>();
+  const css = new Set<string>(entry.viteMetadata?.importedCss);
+  const visit = (fileName: string) => {
+    const chunk = bundle[fileName];
+    if (chunk?.type !== "chunk" || imports.has(fileName)) return;
+    imports.add(fileName);
+    chunk.viteMetadata?.importedCss.forEach((file) => css.add(file));
+    chunk.imports.forEach(visit);
+  };
+  entry.imports.forEach(visit);
+  return { imports: [...imports].map((file) => `/${file}`), css: [...css].map((file) => `/${file}`) };
 }
 
 const DOCUMENT_URLS = new Map<string, string>(

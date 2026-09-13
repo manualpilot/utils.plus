@@ -1,5 +1,7 @@
 declare const __BUILD_TIME__: string;
 
+export const BUILD_TIME = __BUILD_TIME__;
+
 export const BUILD_DATE = `${__BUILD_TIME__.slice(0, 16).replace("T", " ")} UTC`;
 
 export function currentAsOf(publications: string): string {
